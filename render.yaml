@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: bunyards-coin-stamps
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
