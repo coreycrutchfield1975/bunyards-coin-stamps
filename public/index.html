@@ -217,6 +217,20 @@
   .btn-whatnot{background:linear-gradient(135deg,#ff6b35,#e64e1a);color:#fff;margin-top:20px;display:inline-block;}
   .btn-whatnot:hover{opacity:.9;transform:translateY(-2px);}
 
+
+  /* TEAM */
+  .team-section{background:#2b1a0e;padding:80px 0;}
+  .team-grid{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin-top:40px;}
+  .team-card{background:rgba(255,255,255,0.05);border:1px solid rgba(196,158,84,0.3);border-radius:16px;padding:40px 32px;max-width:340px;text-align:center;transition:transform 0.3s,box-shadow 0.3s;}
+  .team-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(196,158,84,0.2);}
+  .team-avatar{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#8b6914);display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 20px;border:3px solid var(--gold);}
+  .team-name{font-family:'Playfair Display',serif;font-size:22px;color:#fff;margin-bottom:6px;}
+  .team-role{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+  .team-bio{font-size:15px;color:rgba(255,255,255,0.7);line-height:1.8;}
+  .team-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;}
+  .team-tag{background:rgba(196,158,84,0.15);border:1px solid rgba(196,158,84,0.4);color:var(--gold);font-size:12px;padding:4px 12px;border-radius:20px;}
+  .team-section .section-title{color:#fff;}
+
   /* BIO */
   .bio-bg{background:var(--parchment);}
   .bio-grid{display:grid;grid-template-columns:340px 1fr;gap:60px;align-items:start;}
@@ -365,6 +379,7 @@
       <a href="/shop">Shop</a>
       <a href="#whatnot">WhatNot</a>
       <a href="#dale">Meet Dale</a>
+      <a href="#team">Our Team</a>
       <a href="#contact">Contact</a>
       <a href="https://www.facebook.com/p/Bunyards-100090638094075/" target="_blank" rel="noopener">📘 Facebook</a>
     </div>
@@ -380,6 +395,7 @@
   <a href="/shop" onclick="closeMenu()">Shop</a>
   <a href="#whatnot" onclick="closeMenu()">WhatNot</a>
   <a href="#dale" onclick="closeMenu()">Meet Dale</a>
+  <a href="#team" onclick="closeMenu()">Our Team</a>
   <a href="#contact" onclick="closeMenu()">Contact</a>
 </div>
 
@@ -515,6 +531,45 @@
         <a href="https://www.whatnot.com/search?query=bunyards" target="_blank" class="btn btn-whatnot">Find Us on WhatNot →</a>
       </div>
       <div style="font-size:80px;">🔴</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- TEAM -->
+<section id="team" class="team-section">
+  <div class="container">
+    <h2 class="section-title" style="text-align:center;">Our Team</h2>
+    <p style="text-align:center;color:rgba(255,255,255,0.6);max-width:580px;margin:0 auto;">The people behind the counter who make Bunyards a great place to buy, sell, and learn about coins.</p>
+    <div class="team-grid">
+
+      <!-- Dale -->
+      <div class="team-card">
+        <div class="team-avatar">🏛️</div>
+        <div class="team-name">William Dale Bunyard</div>
+        <div class="team-role">Owner &amp; Lead Numismatist</div>
+        <div class="team-bio">A lifelong numismatist with decades of expertise spanning US coinage, ancient Roman &amp; Greek coins, foreign currency, stamps, and precious metals. ANA member, published researcher, and passionate educator.</div>
+        <div class="team-tags">
+          <span class="team-tag">Ancient Coins</span>
+          <span class="team-tag">US Currency</span>
+          <span class="team-tag">Bullion</span>
+          <span class="team-tag">Stamps</span>
+        </div>
+      </div>
+
+      <!-- Trevor -->
+      <div class="team-card">
+        <div class="team-avatar">🪙</div>
+        <div class="team-name">Trevor Quade</div>
+        <div class="team-role">Part-Time Staff &amp; Coin Enthusiast</div>
+        <div class="team-bio">Trevor is a genuine coin and currency enthusiast who brings energy and knowledge to every interaction. Whether you're a first-time visitor or a seasoned collector, Trevor's friendly, approachable nature makes every visit to Bunyards a great experience. He loves meeting new people and sharing his passion for numismatics.</div>
+        <div class="team-tags">
+          <span class="team-tag">Coins &amp; Currency</span>
+          <span class="team-tag">Customer Service</span>
+          <span class="team-tag">Collector</span>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -677,6 +732,7 @@
       <a href="#services">Services</a>
       <a href="/shop">Shop</a>
       <a href="#dale">Meet Dale</a>
+      <a href="#team">Our Team</a>
       <a href="#contact">Contact</a>
       <a href="https://www.facebook.com/p/Bunyards-100090638094075/" target="_blank" rel="noopener">📘 Facebook</a>
     </div>
@@ -763,7 +819,7 @@ function submitForm(e){
 }
 
 // Active nav on scroll
-const sections=['home','about','services','shop','whatnot','dale','contact'];
+const sections=['home','about','services','shop','whatnot','dale','team','contact'];
 function updateNav(){
   let current='home';
   sections.forEach(id=>{
