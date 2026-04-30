@@ -2,6 +2,9 @@ services:
   - type: web
     name: bunyards-coin-stamps
     env: node
+    plan: free
     buildCommand: npm install
     startCommand: node server.js
-    plan: free
+    domains:
+      - bunyardscoins.com
+      - www.bunyardscoins.com
