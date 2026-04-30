@@ -290,6 +290,36 @@ async function sendOrderEmail(order) {
 }
 
 // ── Page routes ──────────────────────────────────────────────────────────────
+
+// METALS PROXY — Yahoo Finance, 5-min cache
+const metalsCache = {};
+const METALS_TTL = 5 * 60 * 1000;
+const YAHOO_MAP = { XAU:'GC=F', XAG:'SI=F' };
+
+app.get('/api/metals/:sym', async (req, res) => {
+  const sym = req.params.sym.toUpperCase();
+  const cached = metalsCache[sym];
+  if (cached && Date.now() - cached.ts < METALS_TTL) return res.json(cached.data);
+  const yticker = YAHOO_MAP[sym];
+  if (!yticker) return res.status(400).json({ error: 'Unknown symbol' });
+  try {
+    const yr = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${yticker}?interval=1m&range=1d`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    if (!yr.ok) throw new Error(`Yahoo ${yr.status}`);
+    const yj = await yr.json();
+    const price = yj?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (!price) throw new Error('No price in response');
+    const data = { symbol: sym, price: parseFloat(price.toFixed(2)), currency: 'USD' };
+    metalsCache[sym] = { data, ts: Date.now() };
+    res.json(data);
+  } catch(e) {
+    console.log(`[metals] ERROR ${sym}:`, e.message);
+    res.status(502).json({ error: e.message });
+  }
+});
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.get('/shop.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));

@@ -218,6 +218,19 @@
   .btn-whatnot:hover{opacity:.9;transform:translateY(-2px);}
 
 
+
+  /* TICKER */
+  .ticker-bar{width:100%;background:#1a0e00;border-bottom:2px solid var(--gold);overflow:hidden;white-space:nowrap;padding:7px 0;position:relative;z-index:200;}
+  .ticker-track{display:inline-block;animation:ticker-scroll 20s linear infinite;}
+  .ticker-track:hover{animation-play-state:paused;}
+  @keyframes ticker-scroll{0%{transform:translateX(100vw);}100%{transform:translateX(-100%);}}
+  .ticker-item{display:inline-block;margin:0 48px;font-size:14px;font-weight:700;letter-spacing:1px;font-family:'Share Tech Mono',monospace;}
+  .ticker-label{color:var(--gold);margin-right:8px;}
+  .ticker-price{color:#fff;}
+  .ticker-change.up{color:#4caf50;}
+  .ticker-change.down{color:#f44336;}
+  .ticker-dot{color:var(--gold);margin:0 8px;}
+
   /* TEAM */
   .team-section{background:#2b1a0e;padding:80px 0;}
   .team-grid{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin-top:40px;}
@@ -369,6 +382,18 @@
 <body>
 
 <!-- NAV -->
+<div class="ticker-bar">
+  <div class="ticker-track" id="tickerTrack">
+    <span class="ticker-item"><span class="ticker-label">⬛ GOLD (XAU/oz)</span><span class="ticker-price" id="t-gold">Loading...</span></span>
+    <span class="ticker-dot">★</span>
+    <span class="ticker-item"><span class="ticker-label">⬛ SILVER (XAG/oz)</span><span class="ticker-price" id="t-silver">Loading...</span></span>
+    <span class="ticker-dot">★</span>
+    <span class="ticker-item"><span class="ticker-label">⬛ GOLD (XAU/oz)</span><span class="ticker-price" id="t-gold2">Loading...</span></span>
+    <span class="ticker-dot">★</span>
+    <span class="ticker-item"><span class="ticker-label">⬛ SILVER (XAG/oz)</span><span class="ticker-price" id="t-silver2">Loading...</span></span>
+    <span class="ticker-dot">★</span>
+  </div>
+</div>
 <nav id="main-nav">
   <div class="nav-inner">
     <a class="nav-logo" href="#home">Bunyards <span>Coin & Stamps</span></a>
@@ -848,6 +873,23 @@ function updateNav(){
 window.addEventListener('scroll',updateNav);
 
 renderShop();
+</script>
+
+<script>
+async function loadTicker() {
+  try {
+    const [gold, silver] = await Promise.all([
+      fetch('/api/metals/XAU').then(r => r.json()),
+      fetch('/api/metals/XAG').then(r => r.json())
+    ]);
+    const gp = gold.price ? '$' + gold.price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : 'N/A';
+    const sp = silver.price ? '$' + silver.price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : 'N/A';
+    ['t-gold','t-gold2'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = gp + ' /oz'; });
+    ['t-silver','t-silver2'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = sp + ' /oz'; });
+  } catch(e) { console.log('Ticker error:', e); }
+}
+loadTicker();
+setInterval(loadTicker, 5 * 60 * 1000);
 </script>
 </body>
 </html>
