@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Bunyards Coin & Stamps</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#9B1C1C;--gold:#C8972A;--lightgold:#e8b84b;--dark:#1a1a1a;--bg:#f5f5f5;--white:#fff;--border:#ddd;--gray:#555;--green:#155724;--green-bg:#d4edda}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark)}
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--dark)}
+.login-box{background:#fff;border-radius:12px;padding:40px;width:340px;text-align:center}
+.login-logo{font-family:'Cinzel',serif;color:var(--gold);font-size:22px;margin-bottom:6px}
+.login-sub{color:#888;font-size:13px;margin-bottom:24px}
+.login-input{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;margin-bottom:12px}
+.btn{padding:10px 24px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;transition:all .2s}
+.btn-gold{background:var(--gold);color:#fff;width:100%;padding:13px}
+.btn-gold:hover{background:var(--lightgold)}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:#7a1515}
+.btn-outline{background:#fff;color:var(--gray);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--red);color:var(--red)}
+.btn-sm{padding:6px 14px;font-size:12px}
+/* ADMIN LAYOUT */
+#admin-app{display:none}
+.admin-nav{background:var(--dark);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px}
+.admin-logo{font-family:'Cinzel',serif;color:var(--gold);font-size:16px}
+.admin-tabs{display:flex;gap:4px}
+.tab-btn{background:none;border:none;color:#aaa;padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:2px solid transparent;transition:all .2s}
+.tab-btn.active,.tab-btn:hover{color:var(--lightgold);border-bottom-color:var(--gold)}
+.admin-body{max-width:1100px;margin:0 auto;padding:28px 20px}
+/* CARDS */
+.card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:24px;margin-bottom:20px}
+.card-title{font-family:'Cinzel',serif;font-size:18px;color:var(--red);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px}
+.form-group{margin-bottom:14px}
+label{display:block;font-size:12px;font-weight:700;color:var(--gray);margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
+input[type=text],input[type=number],textarea,select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Lato',sans-serif}
+textarea{min-height:90px;resize:vertical}
+input[type=file]{padding:8px}
+.checkbox-row{display:flex;align-items:center;gap:8px;font-size:14px}
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--gray);border-bottom:2px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;vertical-align:middle}
+tr:hover td{background:#fafafa}
+.badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700}
+.badge-green{background:#d4edda;color:#155724}
+.badge-gray{background:#e9ecef;color:#555}
+.badge-gold{background:#fff3cd;color:#856404}
+.badge-red{background:#f8d7da;color:#721c24}
+.product-thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;background:#eee;display:inline-flex;align-items:center;justify-content:center;font-size:20px}
+.alert{padding:12px 16px;border-radius:8px;margin-bottom:14px;font-size:14px}
+.alert-success{background:var(--green-bg);color:var(--green);border:1px solid #c3e6cb}
+.alert-error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.actions-cell{display:flex;gap:6px;white-space:nowrap}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Bunyards Admin</div>
+    <div class="login-sub">Coin & Stamps Store Manager</div>
+    <input type="password" class="login-input" id="login-pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-gold" onclick="doLogin()">Sign In</button>
+    <div id="login-err" style="color:#721c24;font-size:13px;margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="admin-app">
+  <nav class="admin-nav">
+    <div class="admin-logo">⚙ Bunyards Admin</div>
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="showTab('products')">Products</button>
+      <button class="tab-btn" onclick="showTab('orders')">Orders</button>
+      <button class="tab-btn" onclick="showTab('add')">+ Add Item</button>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="logout()" style="color:#aaa;border-color:#555">Sign Out</button>
+  </nav>
+
+  <div class="admin-body">
+    <div id="admin-alert"></div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="tab-products">
+      <div class="card">
+        <div class="card-title">📦 All Listings</div>
+        <div style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" placeholder="Search products..." id="prod-search" oninput="filterProducts()" style="flex:1;min-width:200px">
+          <select id="prod-cat-filter" onchange="filterProducts()" style="width:160px">
+            <option value="">All Categories</option>
+            <option>Coins</option><option>Stamps</option><option>Currency</option><option>Tokens</option><option>Supplies</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Photo</th><th>Title</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tab-orders" style="display:none">
+      <div class="card">
+        <div class="card-title">🛒 Orders</div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Fulfillment</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD/EDIT TAB -->
+    <div id="tab-add" style="display:none">
+      <div class="card">
+        <div class="card-title" id="form-title">➕ Add New Item</div>
+        <input type="hidden" id="edit-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" id="f-title" placeholder="e.g. 1921 Morgan Dollar MS-63">
+          </div>
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="f-category">
+              <option value="">— Select —</option>
+              <option>Coins</option><option>Stamps</option><option>Currency</option><option>Tokens</option><option>Supplies</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Subcategory / Type</label>
+            <input type="text" id="f-subcategory" placeholder="e.g. Morgan Dollar, Forever Stamp, Coin Flip...">
+          </div>
+          <div class="form-group">
+            <label>Price ($) *</label>
+            <input type="number" id="f-price" min="0" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Stock Quantity</label>
+            <input type="number" id="f-stock" min="0" value="1">
+          </div>
+          <div class="form-group">
+            <label>Fulfillment</label>
+            <select id="f-shipping">
+              <option value="both">Ship & Pickup</option>
+              <option value="ship-only">Ship Only</option>
+              <option value="pickup-only">Pickup Only</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Shipping Cost ($)</label>
+            <input type="number" id="f-shippingCost" min="0" step="0.01" value="5.00">
+          </div>
+          <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="checkbox-row" style="margin-bottom:8px">
+              <input type="checkbox" id="f-featured"> <label for="f-featured" style="text-transform:none;font-size:14px;margin:0">⭐ Featured item (shown first)</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="f-active" checked> <label for="f-active" style="text-transform:none;font-size:14px;margin:0">✅ Active (visible in shop)</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="f-description" placeholder="Describe the item — grade, condition, year, mint mark, provenance..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Photos (up to 5)</label>
+          <input type="file" id="f-images" accept="image/*" multiple>
+          <div id="existing-images" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn btn-gold" onclick="saveProduct()">💾 Save Item</button>
+          <button class="btn btn-outline" onclick="clearForm()">✕ Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allProducts = [], allOrders = [];
+
+// ── Auth ─────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const pw = document.getElementById('login-pw').value;
+  const res = await fetch('/api/admin/login', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ password: pw })
+  });
+  if (res.ok) { showAdmin(); }
+  else { document.getElementById('login-err').textContent = 'Incorrect password.'; }
+}
+
+async function checkAuth() {
+  const res = await fetch('/api/admin/check');
+  const data = await res.json();
+  if (data.admin) showAdmin();
+}
+
+function showAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-app').style.display = 'block';
+  loadProducts();
+}
+
+async function logout() {
+  await fetch('/api/admin/logout', { method: 'POST' });
+  location.reload();
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function showTab(name) {
+  ['products','orders','add'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === name ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach((b,i) => {
+      const tabs = ['products','orders','add'];
+      b.classList.toggle('active', tabs[i] === name);
+    });
+  });
+  if (name === 'orders') loadOrders();
+}
+
+// ── Products ──────────────────────────────────────────────────────────────
+async function loadProducts() {
+  const res = await fetch('/api/admin/products');
+  allProducts = await res.json();
+  renderProducts();
+}
+
+function filterProducts() {
+  const q = document.getElementById('prod-search').value.toLowerCase();
+  const cat = document.getElementById('prod-cat-filter').value;
+  renderProducts(allProducts.filter(p =>
+    (!cat || p.category === cat) &&
+    (!q || p.title.toLowerCase().includes(q) || (p.subcategory||'').toLowerCase().includes(q))
+  ));
+}
+
+function renderProducts(products) {
+  const list = products || allProducts;
+  const tbody = document.getElementById('products-tbody');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#aaa">No products yet.</td></tr>'; return; }
+  tbody.innerHTML = list.map(p => `
+    <tr>
+      <td>${p.images?.[0] ? `<img class="product-thumb" src="${p.images[0]}" alt="">` : '<div class="product-thumb">🪙</div>'}</td>
+      <td><strong>${p.title}</strong></td>
+      <td><span class="badge badge-gold">${p.category}</span></td>
+      <td><strong>$${parseFloat(p.price).toFixed(2)}</strong></td>
+      <td>${p.stock}</td>
+      <td>${p.active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Inactive</span>'}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-outline btn-sm" onclick="editProduct('${p._id}')">✏ Edit</button>
+        <button class="btn btn-sm" style="background:#f8d7da;color:#721c24;border:1px solid #f5c6cb" onclick="deleteProduct('${p._id}')">🗑</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function editProduct(id) {
+  const p = allProducts.find(x => x._id === id);
+  if (!p) return;
+  document.getElementById('edit-id').value = id;
+  document.getElementById('f-title').value = p.title || '';
+  document.getElementById('f-category').value = p.category || '';
+  document.getElementById('f-subcategory').value = p.subcategory || '';
+  document.getElementById('f-price').value = p.price || '';
+  document.getElementById('f-stock').value = p.stock || 1;
+  document.getElementById('f-shipping').value = p.shipping || 'both';
+  document.getElementById('f-shippingCost').value = p.shippingCost || 5;
+  document.getElementById('f-featured').checked = !!p.featured;
+  document.getElementById('f-active').checked = p.active !== false;
+  document.getElementById('f-description').value = p.description || '';
+  document.getElementById('form-title').textContent = '✏ Edit Item';
+  // Show existing images with remove buttons
+  const wrap = document.getElementById('existing-images');
+  wrap.innerHTML = (p.images || []).map(img => `
+    <div style="position:relative">
+      <img src="${img}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid #ddd">
+      <button onclick="removeExistingImage(this,'${img}')" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+      <input type="hidden" class="keep-image" value="${img}">
+    </div>`).join('');
+  showTab('add');
+}
+
+function removeExistingImage(btn, img) { btn.parentElement.remove(); }
+
+async function saveProduct() {
+  const id = document.getElementById('edit-id').value;
+  const formData = new FormData();
+  formData.append('title', document.getElementById('f-title').value);
+  formData.append('category', document.getElementById('f-category').value);
+  formData.append('subcategory', document.getElementById('f-subcategory').value);
+  formData.append('price', document.getElementById('f-price').value);
+  formData.append('stock', document.getElementById('f-stock').value);
+  formData.append('shipping', document.getElementById('f-shipping').value);
+  formData.append('shippingCost', document.getElementById('f-shippingCost').value);
+  formData.append('featured', document.getElementById('f-featured').checked);
+  formData.append('active', document.getElementById('f-active').checked);
+  formData.append('description', document.getElementById('f-description').value);
+  // New images
+  const files = document.getElementById('f-images').files;
+  for (const f of files) formData.append('images', f);
+  // Images to remove (those NOT in existing-images now)
+  if (id) {
+    const orig = allProducts.find(x => x._id === id);
+    const kept = [...document.querySelectorAll('.keep-image')].map(i => i.value);
+    const removed = (orig?.images || []).filter(i => !kept.includes(i));
+    removed.forEach(i => formData.append('removeImages', i));
+  }
+
+  const url = id ? `/api/admin/products/${id}` : '/api/admin/products';
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, { method, body: formData });
+  if (res.ok) {
+    showAlert(id ? 'Item updated!' : 'Item added!', 'success');
+    clearForm();
+    await loadProducts();
+    showTab('products');
+  } else {
+    const err = await res.json();
+    showAlert('Error: ' + (err.error || 'Unknown error'), 'error');
+  }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this item? This cannot be undone.')) return;
+  await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+  showAlert('Item deleted.', 'success');
+  loadProducts();
+}
+
+function clearForm() {
+  ['edit-id','f-title','f-subcategory','f-price','f-description'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-shipping').value = 'both';
+  document.getElementById('f-shippingCost').value = '5.00';
+  document.getElementById('f-stock').value = '1';
+  document.getElementById('f-featured').checked = false;
+  document.getElementById('f-active').checked = true;
+  document.getElementById('f-images').value = '';
+  document.getElementById('existing-images').innerHTML = '';
+  document.getElementById('form-title').textContent = '➕ Add New Item';
+}
+
+// ── Orders ────────────────────────────────────────────────────────────────
+async function loadOrders() {
+  const res = await fetch('/api/admin/orders');
+  allOrders = await res.json();
+  renderOrders();
+}
+
+function renderOrders() {
+  const tbody = document.getElementById('orders-tbody');
+  if (!allOrders.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#aaa">No orders yet.</td></tr>'; return; }
+  tbody.innerHTML = allOrders.map(o => {
+    const date = new Date(o.createdAt).toLocaleDateString();
+    const items = (o.items || []).map(i => `${i.title} ×${i.qty}`).join(', ');
+    const statusColors = { paid:'badge-green', shipped:'badge-gold', 'ready-pickup':'badge-gold', completed:'badge-gray', refunded:'badge-red' };
+    return `<tr>
+      <td>${date}</td>
+      <td><strong>${o.customer?.name || '—'}</strong><br><small>${o.customer?.email || ''}</small></td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${items}</td>
+      <td><strong>$${parseFloat(o.total).toFixed(2)}</strong></td>
+      <td>${o.shipping === 'ship' ? '📦 Ship' : '🏪 Pickup'}</td>
+      <td><span class="badge ${statusColors[o.status] || 'badge-gray'}">${o.status}</span></td>
+      <td>
+        <select onchange="updateOrderStatus('${o._id}',this.value)" style="padding:5px 8px;border-radius:6px;border:1px solid #ddd;font-size:12px">
+          ${['paid','shipped','ready-pickup','completed','refunded'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function updateOrderStatus(id, status) {
+  await fetch(`/api/admin/orders/${id}`, {
+    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status })
+  });
+  showAlert('Order status updated.', 'success');
+}
+
+function showAlert(msg, type) {
+  const a = document.getElementById('admin-alert');
+  a.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => a.innerHTML = '', 4000);
+}
+
+checkAuth();
+</script>
+</body>
+</html>

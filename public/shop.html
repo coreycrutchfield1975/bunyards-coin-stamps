@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop — Bunyards Coin & Stamps</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#9B1C1C;--darkred:#7a1515;--gold:#C8972A;--lightgold:#e8b84b;--cream:#FAF6F0;--parchment:#F2EAD8;--dark:#1a1a1a;--gray:#555;--lightgray:#888;--border:#ddd;--white:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--dark)}
+/* NAV */
+nav{background:var(--dark);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+.nav-logo{font-family:'Cinzel',serif;color:var(--gold);font-size:18px;text-decoration:none}
+.nav-links a{color:#ccc;text-decoration:none;margin-left:20px;font-size:14px;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--gold)}
+/* HEADER */
+.shop-header{background:var(--red);color:#fff;padding:40px 24px;text-align:center}
+.shop-header h1{font-family:'Cinzel',serif;font-size:36px;color:var(--lightgold);margin-bottom:8px}
+.shop-header p{color:#ffcccc;font-size:15px}
+/* CART BAR */
+#cart-bar{background:var(--dark);color:#fff;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:60px;z-index:99;transition:all .3s}
+.cart-bar-info{font-size:14px;color:#ccc}
+.cart-bar-info span{color:var(--lightgold);font-weight:700}
+.cart-btns{display:flex;gap:10px}
+.btn{padding:8px 20px;border:none;border-radius:6px;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;font-size:14px;transition:all .2s}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:var(--lightgold);color:var(--dark)}
+.btn-outline{background:transparent;color:#ccc;border:1px solid #555}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:var(--darkred)}
+/* FILTERS */
+.filters{background:var(--parchment);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:7px 18px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--gray);cursor:pointer;font-size:13px;transition:all .2s}
+.filter-btn.active,.filter-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.search-box{flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--border);border-radius:20px;font-size:14px;background:#fff}
+/* PRODUCTS */
+.products-wrap{max-width:1200px;margin:0 auto;padding:32px 24px}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
+.product-card{background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s;cursor:pointer}
+.product-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.product-img{width:100%;height:200px;object-fit:cover;background:var(--parchment);display:flex;align-items:center;justify-content:center;color:var(--lightgray);font-size:40px}
+.product-img img{width:100%;height:200px;object-fit:cover}
+.product-info{padding:14px}
+.product-cat{font-size:11px;color:var(--red);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.product-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:6px;line-height:1.3}
+.product-sub{font-size:12px;color:var(--lightgray);margin-bottom:8px}
+.product-price{font-size:20px;font-weight:700;color:var(--red);margin-bottom:10px}
+.product-actions{display:flex;gap:8px}
+.featured-badge{background:var(--gold);color:#fff;font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:10px;position:absolute;top:10px;right:10px}
+.product-card-wrap{position:relative}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-img{width:100%;height:300px;object-fit:cover;background:var(--parchment);display:flex;align-items:center;justify-content:center;font-size:60px;color:var(--lightgray)}
+.modal-img img{width:100%;height:300px;object-fit:cover;border-radius:12px 12px 0 0}
+.modal-body{padding:24px}
+.modal-cat{font-size:12px;color:var(--red);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.modal-title{font-family:'Playfair Display',serif;font-size:24px;margin:6px 0}
+.modal-price{font-size:28px;font-weight:700;color:var(--red);margin-bottom:12px}
+.modal-desc{color:var(--gray);font-size:15px;line-height:1.7;margin-bottom:16px}
+.modal-shipping{background:var(--parchment);border-radius:8px;padding:12px;font-size:13px;color:var(--gray);margin-bottom:16px}
+.ship-options{display:flex;gap:10px;margin-top:10px}
+.ship-opt{flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;font-size:13px;transition:all .2s}
+.ship-opt.selected{border-color:var(--red);background:#fff0f0}
+.modal-actions{display:flex;gap:10px}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* CART DRAWER */
+.cart-drawer{position:fixed;right:-400px;top:0;width:380px;height:100%;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.15);z-index:600;transition:right .3s;overflow-y:auto;display:flex;flex-direction:column}
+.cart-drawer.open{right:0}
+.cart-header{background:var(--dark);color:#fff;padding:20px;display:flex;align-items:center;justify-content:space-between}
+.cart-header h3{font-family:'Cinzel',serif;color:var(--gold)}
+.cart-body{flex:1;padding:20px;overflow-y:auto}
+.cart-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.cart-item-img{width:60px;height:60px;object-fit:cover;border-radius:6px;background:var(--parchment);flex-shrink:0}
+.cart-item-info{flex:1}
+.cart-item-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.cart-item-price{font-size:13px;color:var(--red)}
+.cart-item-remove{color:var(--lightgray);cursor:pointer;font-size:18px;align-self:flex-start}
+.cart-footer{padding:20px;border-top:1px solid var(--border)}
+.cart-total{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between}
+/* Alerts */
+.alert{padding:14px 20px;border-radius:8px;margin-bottom:16px;font-size:14px}
+.alert-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.alert-error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.empty-msg{text-align:center;padding:60px 20px;color:var(--lightgray)}
+.empty-msg .icon{font-size:48px;margin-bottom:12px}
+footer{background:var(--dark);color:#aaa;text-align:center;padding:30px;font-size:13px;margin-top:60px}
+footer a{color:var(--gold);text-decoration:none}
+@media(max-width:600px){.products-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}.cart-drawer{width:100%}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Bunyards Coin & Stamps</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/shop" class="active">Shop</a>
+    <a href="/#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="shop-header">
+  <h1>Our Shop</h1>
+  <p>Coins • Stamps • Currency • Tokens • Supplies — Poplar Bluff, MO</p>
+</div>
+
+<!-- CART BAR -->
+<div id="cart-bar">
+  <div class="cart-bar-info">🛒 Cart: <span id="cart-count">0</span> items — <span id="cart-subtotal">$0.00</span></div>
+  <div class="cart-btns">
+    <button class="btn btn-outline" onclick="toggleCart()">View Cart</button>
+    <button class="btn btn-gold" onclick="toggleCart()">Checkout</button>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <input type="text" class="search-box" placeholder="Search items..." id="search-input" oninput="debounceSearch()">
+  <button class="filter-btn active" onclick="setCategory('All',this)">All</button>
+  <button class="filter-btn" onclick="setCategory('Coins',this)">Coins</button>
+  <button class="filter-btn" onclick="setCategory('Stamps',this)">Stamps</button>
+  <button class="filter-btn" onclick="setCategory('Currency',this)">Currency</button>
+  <button class="filter-btn" onclick="setCategory('Tokens',this)">Tokens</button>
+  <button class="filter-btn" onclick="setCategory('Supplies',this)">Supplies</button>
+</div>
+
+<!-- PRODUCTS -->
+<div class="products-wrap">
+  <div id="alert-area"></div>
+  <div id="products-grid" class="products-grid"></div>
+  <div id="loading" style="text-align:center;padding:40px;color:var(--lightgray)">Loading items…</div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-img-wrap"></div>
+    <div class="modal-body">
+      <div class="modal-cat" id="modal-cat"></div>
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-price" id="modal-price"></div>
+      <div class="modal-desc" id="modal-desc"></div>
+      <div class="modal-shipping" id="modal-shipping"></div>
+      <div class="modal-actions">
+        <button class="btn btn-gold" onclick="addToCartFromModal()" style="flex:1">🛒 Add to Cart</button>
+        <button class="btn btn-outline" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-header">
+    <h3>🛒 Your Cart</h3>
+    <button onclick="toggleCart()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">✕</button>
+  </div>
+  <div class="cart-body" id="cart-body"></div>
+  <div class="cart-footer" id="cart-footer" style="display:none">
+    <div class="cart-total"><span>Total</span><span id="cart-total-amt">$0.00</span></div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--gray)">Fulfillment Method</div>
+      <div class="ship-options">
+        <div class="ship-opt selected" id="opt-ship" onclick="selectShipping('ship')">📦 Ship to Me</div>
+        <div class="ship-opt" id="opt-pickup" onclick="selectShipping('pickup')">🏪 Local Pickup</div>
+      </div>
+      <div id="ship-note" style="font-size:12px;color:var(--lightgray);margin-top:8px">Shipping cost added at checkout based on items.</div>
+    </div>
+    <button class="btn btn-gold" onclick="checkout()" style="width:100%;padding:14px;font-size:16px">Proceed to Checkout →</button>
+    <button class="btn btn-outline" onclick="toggleCart()" style="width:100%;margin-top:8px">Continue Shopping</button>
+  </div>
+</div>
+
+<footer>
+  <div>© 2024 Bunyards Coin & Stamps — 1912 N. Westwood Blvd, Poplar Bluff, MO</div>
+  <div style="margin-top:6px"><a href="/">Home</a> · <a href="/#contact">Contact</a></div>
+</footer>
+
+<script>
+let allProducts = [], currentCategory = 'All', searchTimer = null;
+let cart = JSON.parse(localStorage.getItem('bunyards-cart') || '[]');
+let currentProduct = null, shippingMethod = 'ship';
+
+// ── Load Products ─────────────────────────────────────────────────────────
+async function loadProducts() {
+  const params = new URLSearchParams();
+  if (currentCategory !== 'All') params.set('category', currentCategory);
+  const q = document.getElementById('search-input').value.trim();
+  if (q) params.set('search', q);
+  const res = await fetch('/api/products?' + params);
+  allProducts = await res.json();
+  renderProducts();
+}
+
+function renderProducts() {
+  document.getElementById('loading').style.display = 'none';
+  const grid = document.getElementById('products-grid');
+  if (!allProducts.length) {
+    grid.innerHTML = '<div class="empty-msg"><div class="icon">🪙</div><div>No items found.</div></div>';
+    return;
+  }
+  grid.innerHTML = allProducts.map(p => `
+    <div class="product-card-wrap">
+      ${p.featured ? '<div class="featured-badge">⭐ FEATURED</div>' : ''}
+      <div class="product-card" onclick="openModal('${p._id}')">
+        <div class="product-img">${p.images?.[0] ? `<img src="${p.images[0]}" alt="${p.title}" loading="lazy">` : '🪙'}</div>
+        <div class="product-info">
+          <div class="product-cat">${p.category}</div>
+          <div class="product-title">${p.title}</div>
+          ${p.subcategory ? `<div class="product-sub">${p.subcategory}</div>` : ''}
+          <div class="product-price">$${parseFloat(p.price).toFixed(2)}</div>
+          <div class="product-actions">
+            <button class="btn btn-gold" style="flex:1;padding:8px" onclick="event.stopPropagation();quickAdd('${p._id}')">🛒 Add</button>
+            <button class="btn btn-outline" style="padding:8px 12px" onclick="event.stopPropagation();openModal('${p._id}')">Details</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function setCategory(cat, btn) {
+  currentCategory = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadProducts();
+}
+
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadProducts, 400);
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────
+function openModal(id) {
+  currentProduct = allProducts.find(p => p._id === id);
+  if (!currentProduct) return;
+  const p = currentProduct;
+  document.getElementById('modal-img-wrap').innerHTML = p.images?.[0]
+    ? `<img src="${p.images[0]}" alt="${p.title}" style="width:100%;height:300px;object-fit:cover;border-radius:12px 12px 0 0">`
+    : `<div class="modal-img">🪙</div>`;
+  document.getElementById('modal-cat').textContent = p.category + (p.subcategory ? ' · ' + p.subcategory : '');
+  document.getElementById('modal-title').textContent = p.title;
+  document.getElementById('modal-price').textContent = '$' + parseFloat(p.price).toFixed(2);
+  document.getElementById('modal-desc').textContent = p.description || '';
+  const shipMap = { both: '📦 Ships nationwide or 🏪 local pickup available', 'ship-only': '📦 Ships nationwide only', 'pickup-only': '🏪 Local pickup only (Poplar Bluff, MO)' };
+  document.getElementById('modal-shipping').innerHTML = `<strong>Fulfillment:</strong> ${shipMap[p.shipping] || ''}${p.shipping !== 'pickup-only' ? `<br><small style="color:var(--lightgray)">Shipping: $${parseFloat(p.shippingCost).toFixed(2)}</small>` : ''}`;
+  document.getElementById('product-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('product-modal').classList.remove('open'); currentProduct = null; }
+
+function addToCartFromModal() {
+  if (!currentProduct) return;
+  addToCart(currentProduct._id);
+  closeModal();
+  toggleCart();
+}
+
+// ── Cart ──────────────────────────────────────────────────────────────────
+function quickAdd(id) {
+  addToCart(id);
+  showAlert('Item added to cart! 🛒', 'success');
+}
+
+function addToCart(id) {
+  const p = allProducts.find(x => x._id === id);
+  if (!p) return;
+  const existing = cart.find(x => x.id === id);
+  if (existing) { existing.qty = (existing.qty || 1) + 1; }
+  else { cart.push({ id, title: p.title, price: p.price, image: p.images?.[0] || '', qty: 1, shipping: p.shipping, shippingCost: p.shippingCost }); }
+  saveCart();
+  updateCartUI();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  saveCart();
+  updateCartUI();
+  renderCartDrawer();
+}
+
+function saveCart() { localStorage.setItem('bunyards-cart', JSON.stringify(cart)); }
+
+function updateCartUI() {
+  const count = cart.reduce((s, x) => s + (x.qty || 1), 0);
+  const subtotal = cart.reduce((s, x) => s + x.price * (x.qty || 1), 0);
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('cart-subtotal').textContent = '$' + subtotal.toFixed(2);
+}
+
+function toggleCart() {
+  document.getElementById('cart-drawer').classList.toggle('open');
+  renderCartDrawer();
+}
+
+function renderCartDrawer() {
+  const body = document.getElementById('cart-body');
+  const footer = document.getElementById('cart-footer');
+  if (!cart.length) {
+    body.innerHTML = '<div class="empty-msg"><div class="icon">🛒</div><div>Your cart is empty.</div></div>';
+    footer.style.display = 'none';
+    return;
+  }
+  footer.style.display = 'block';
+  const total = cart.reduce((s, x) => s + x.price * (x.qty || 1), 0);
+  document.getElementById('cart-total-amt').textContent = '$' + total.toFixed(2);
+  body.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      ${item.image ? `<img class="cart-item-img" src="${item.image}" alt="${item.title}">` : '<div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;font-size:24px">🪙</div>'}
+      <div class="cart-item-info">
+        <div class="cart-item-title">${item.title}</div>
+        <div class="cart-item-price">$${parseFloat(item.price).toFixed(2)} × ${item.qty || 1}</div>
+      </div>
+      <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</span>
+    </div>`).join('');
+  // Check if any pickup-only items
+  const hasPickupOnly = cart.some(x => x.shipping === 'pickup-only');
+  const hasShipOnly = cart.some(x => x.shipping === 'ship-only');
+  document.getElementById('opt-ship').style.display = hasPickupOnly ? 'none' : 'flex';
+  document.getElementById('opt-pickup').style.display = hasShipOnly ? 'none' : 'flex';
+}
+
+function selectShipping(method) {
+  shippingMethod = method;
+  document.getElementById('opt-ship').classList.toggle('selected', method === 'ship');
+  document.getElementById('opt-pickup').classList.toggle('selected', method === 'pickup');
+  document.getElementById('ship-note').textContent = method === 'ship'
+    ? 'Shipping cost will be added based on items in your cart.'
+    : '🏪 Pick up at 1912 N. Westwood Blvd, Poplar Bluff, MO — we\'ll contact you to arrange.';
+}
+
+async function checkout() {
+  if (!cart.length) return;
+  const items = cart.map(x => ({ id: x.id, qty: x.qty || 1 }));
+  try {
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items, shippingMethod })
+    });
+    const data = await res.json();
+    if (data.url) {
+      localStorage.removeItem('bunyards-cart');
+      window.location.href = data.url;
+    } else {
+      showAlert(data.error || 'Checkout error. Please try again.', 'error');
+    }
+  } catch(e) {
+    showAlert('Network error. Please try again.', 'error');
+  }
+}
+
+function showAlert(msg, type) {
+  const a = document.getElementById('alert-area');
+  a.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => a.innerHTML = '', 4000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+if (params.get('success') === '1') {
+  cart = [];
+  saveCart();
+  showAlert('✅ Order placed successfully! Dale will be in touch soon.', 'success');
+}
+if (params.get('cancelled') === '1') showAlert('Checkout cancelled. Your cart is saved.', 'error');
+
+updateCartUI();
+loadProducts();
+</script>
+</body>
+</html>
