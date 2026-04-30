@@ -28,7 +28,7 @@
 
   /* NAV */
   nav{
-    position:fixed;top:0;left:0;right:0;z-index:1000;
+    position:fixed;top:34px;left:0;right:0;z-index:1000;
     background:rgba(255,255,255,0.97);
     border-bottom:3px solid var(--red);
     box-shadow:0 2px 12px rgba(0,0,0,0.1);
@@ -57,7 +57,7 @@
   .nav-links a.active{background:var(--red);color:#fff;}
   .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;}
   .hamburger span{width:24px;height:2px;background:var(--dark);display:block;transition:.3s;}
-  .mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#fff;border-bottom:2px solid var(--red);z-index:999;padding:12px 0;}
+  .mobile-menu{display:none;position:fixed;top:98px;left:0;right:0;background:#fff;border-bottom:2px solid var(--red);z-index:999;padding:12px 0;}
   .mobile-menu a{display:block;padding:12px 24px;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:14px;color:var(--dark);text-decoration:none;border-bottom:1px solid #eee;}
   .mobile-menu a:hover{background:var(--cream);color:var(--red);}
   .mobile-menu.open{display:block;}
@@ -220,7 +220,7 @@
 
 
   /* TICKER */
-  .ticker-bar{width:100%;background:#1a0e00;border-bottom:2px solid var(--gold);overflow:hidden;white-space:nowrap;padding:7px 0;position:relative;z-index:200;}
+  .ticker-bar{width:100%;background:#1a0e00;border-bottom:2px solid var(--gold);overflow:hidden;white-space:nowrap;padding:7px 0;position:fixed;top:0;left:0;right:0;z-index:1100;height:34px;}
   .ticker-track{display:inline-block;animation:ticker-scroll 20s linear infinite;}
   .ticker-track:hover{animation-play-state:paused;}
   @keyframes ticker-scroll{0%{transform:translateX(100vw);}100%{transform:translateX(-100%);}}
@@ -430,7 +430,7 @@
 </div>
 
 <!-- HERO -->
-<section id="home" class="hero" style="margin-top:0;padding-top:80px;">
+<section id="home" class="hero" style="margin-top:0;padding-top:114px;">
   <img class="hero-logo-img" src="/logo.png" alt="Bunyards Coin & Stamps logo">
   <p class="hero-sub">Poplar Bluff, Missouri &nbsp;·&nbsp; Gateway to the Ozarks</p>
   <p class="hero-tagline">"Where Every Coin Tells a Story"</p>
