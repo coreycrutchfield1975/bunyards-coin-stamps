@@ -215,6 +215,10 @@
   .whatnot-text h3{font-family:'Playfair Display',serif;font-size:32px;color:#fff;margin-bottom:12px;}
   .whatnot-text p{font-size:16px;color:#aaa;line-height:1.7;max-width:500px;}
   .whatnot-badge{font-size:13px;color:var(--lightgold);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+
+  .pay-btn.pay-paypal{background:linear-gradient(135deg,#003087,#009cde);color:#fff;}
+  .pay-btn.pay-paypal:hover{background:linear-gradient(135deg,#002060,#0077b6);}
+
   .btn-whatnot{background:linear-gradient(135deg,#ff6b35,#e64e1a);color:#fff;margin-top:20px;display:inline-block;}
   .btn-whatnot:hover{opacity:.9;transform:translateY(-2px);}
 
@@ -845,6 +849,8 @@ function openModal(title, price){
   document.getElementById('modal-item-name').textContent = title;
   document.getElementById('modal-item-price').textContent = price;
   document.getElementById('modal-email-link').href = `mailto:dalebunyard@hotmail.com?subject=Purchase Inquiry: ${encodeURIComponent(title)}&body=Hi Dale,%0A%0AI'm interested in purchasing: ${encodeURIComponent(title)} (${encodeURIComponent(price)}).%0A%0APlease let me know availability and payment options.%0A%0AThanks!`;
+  const rawPrice = price.replace(/[^0-9.]/g,'');
+  document.getElementById('modal-paypal-link').href = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=dalebunyard%40hotmail.com&item_name=${encodeURIComponent(title)}&amount=${rawPrice}&currency_code=USD&no_shipping=0`;
   document.getElementById('buy-modal').classList.add('open');
 }
 function closeModal(){document.getElementById('buy-modal').classList.remove('open');}
