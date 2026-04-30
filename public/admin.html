@@ -167,10 +167,6 @@ tr:hover td{background:#fafafa}
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Shipping Cost ($)</label>
-            <input type="number" id="f-shippingCost" min="0" step="0.01" value="5.00">
-          </div>
           <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end">
             <div class="checkbox-row" style="margin-bottom:8px">
               <input type="checkbox" id="f-featured"> <label for="f-featured" style="text-transform:none;font-size:14px;margin:0">⭐ Featured item (shown first)</label>
@@ -285,7 +281,6 @@ function editProduct(id) {
   document.getElementById('f-price').value = p.price || '';
   document.getElementById('f-stock').value = p.stock || 1;
   document.getElementById('f-shipping').value = p.shipping || 'both';
-  document.getElementById('f-shippingCost').value = p.shippingCost || 5;
   document.getElementById('f-featured').checked = !!p.featured;
   document.getElementById('f-active').checked = p.active !== false;
   document.getElementById('f-description').value = p.description || '';
@@ -312,7 +307,6 @@ async function saveProduct() {
   formData.append('price', document.getElementById('f-price').value);
   formData.append('stock', document.getElementById('f-stock').value);
   formData.append('shipping', document.getElementById('f-shipping').value);
-  formData.append('shippingCost', document.getElementById('f-shippingCost').value);
   formData.append('featured', document.getElementById('f-featured').checked);
   formData.append('active', document.getElementById('f-active').checked);
   formData.append('description', document.getElementById('f-description').value);
@@ -352,7 +346,6 @@ function clearForm() {
   ['edit-id','f-title','f-subcategory','f-price','f-description'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-category').value = '';
   document.getElementById('f-shipping').value = 'both';
-  document.getElementById('f-shippingCost').value = '5.00';
   document.getElementById('f-stock').value = '1';
   document.getElementById('f-featured').checked = false;
   document.getElementById('f-active').checked = true;

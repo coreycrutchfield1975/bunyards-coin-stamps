@@ -350,9 +350,7 @@ function checkout() {
     url += `&item_name_${i}=${encodeURIComponent(item.title)}`;
     url += `&amount_${i}=${parseFloat(item.price).toFixed(2)}`;
     url += `&quantity_${i}=${qty}`;
-    if (shippingMethod === 'ship' && item.shippingCost) {
-      url += `&shipping_${i}=${parseFloat(item.shippingCost).toFixed(2)}`;
-    }
+
     i++;
   });
 
