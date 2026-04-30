@@ -337,25 +337,29 @@ function selectShipping(method) {
     : '🏪 Pick up at 1912 N. Westwood Blvd, Poplar Bluff, MO — we\'ll contact you to arrange.';
 }
 
-async function checkout() {
+function checkout() {
   if (!cart.length) return;
-  const items = cart.map(x => ({ id: x.id, qty: x.qty || 1 }));
-  try {
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, shippingMethod })
-    });
-    const data = await res.json();
-    if (data.url) {
-      localStorage.removeItem('bunyards-cart');
-      window.location.href = data.url;
-    } else {
-      showAlert(data.error || 'Checkout error. Please try again.', 'error');
+
+  // Build PayPal cart checkout URL
+  const business = 'dalebunyard@hotmail.com';
+  let url = `https://www.paypal.com/cgi-bin/webscr?cmd=_cart&business=${encodeURIComponent(business)}&upload=1&currency_code=USD`;
+
+  let i = 1;
+  cart.forEach(item => {
+    const qty = item.qty || 1;
+    url += `&item_name_${i}=${encodeURIComponent(item.title)}`;
+    url += `&amount_${i}=${parseFloat(item.price).toFixed(2)}`;
+    url += `&quantity_${i}=${qty}`;
+    if (shippingMethod === 'ship' && item.shippingCost) {
+      url += `&shipping_${i}=${parseFloat(item.shippingCost).toFixed(2)}`;
     }
-  } catch(e) {
-    showAlert('Network error. Please try again.', 'error');
-  }
+    i++;
+  });
+
+  if (shippingMethod === 'pickup') url += '&no_shipping=1';
+
+  localStorage.removeItem('bunyards-cart');
+  window.location.href = url;
 }
 
 function showAlert(msg, type) {
