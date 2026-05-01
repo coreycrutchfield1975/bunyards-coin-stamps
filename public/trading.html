@@ -53,7 +53,7 @@
   .info-bar-gold .info-label{color:var(--lightgold);}
   .info-bar-silver .info-label{color:var(--silver);}
   .info-bar-center .info-label{color:#666;font-size:11px;}
-  .info-spot{font-family:'Share Tech Mono',monospace;font-size:42px;font-weight:700;line-height:1;}
+  .info-spot{font-family:'Share Tech Mono',monospace;font-size:56px;font-weight:700;line-height:1;}
   .info-bar-gold .info-spot{color:var(--lightgold);text-shadow:0 0 24px rgba(232,201,126,.5);animation:pulse-gold 3s ease-in-out infinite;}
   .info-bar-silver .info-spot{color:var(--silver);text-shadow:0 0 20px rgba(176,184,193,.4);animation:pulse-silver 3s ease-in-out infinite;}
   .info-unit{font-size:12px;color:#555;letter-spacing:1px;font-family:'Rajdhani',sans-serif;margin-top:3px;}
@@ -212,20 +212,6 @@
     </div>
   </div>
 
-  <!-- BIG SPOT CARDS -->
-  <div class="spot-grid">
-    <div class="spot-card">
-      <div class="spot-metal">Gold (Au)</div>
-      <div class="spot-price" id="gold-price-big">—</div>
-      <div class="spot-unit">USD / Troy Ounce</div>
-    </div>
-    <div class="spot-card silver-card">
-      <div class="spot-metal">Silver (Ag)</div>
-      <div class="spot-price" id="silver-price-big">—</div>
-      <div class="spot-unit">USD / Troy Ounce</div>
-    </div>
-  </div>
-
   <div class="market-disclaimer" id="market-disclaimer">
     ⚠️ When the market is closed, our buy and sell prices may differ from the prices shown.
   </div>
@@ -244,14 +230,13 @@
         <th>Metal</th>
         <th>Product Name</th>
         <th>Weight (oz)</th>
-        <th>Melt Value</th>
         <th>Bunyards Buy</th>
         <th>Bunyards Sell</th>
         <th></th>
       </tr>
     </thead>
     <tbody id="table-body">
-      <tr class="empty-row"><td colspan="8">No items yet — click "+ Add Item" to get started.</td></tr>
+      <tr class="empty-row"><td colspan="7">No items yet — click "+ Add Item" to get started.</td></tr>
     </tbody>
   </table>
 </div>
@@ -307,13 +292,10 @@ async function fetchPrices() {
     const gf = fmt(goldPrice), sf = fmt(silverPrice);
     document.getElementById('gold-price').textContent = gf;
     document.getElementById('silver-price').textContent = sf;
-    document.getElementById('gold-price-big').textContent = gf;
-    document.getElementById('silver-price-big').textContent = sf;
     const open = isMarketOpen();
     const el = document.getElementById('market-status');
     el.textContent = open ? '🟢 Market Open' : '🔴 Market Closed';
     el.className = 'market-status ' + (open ? 'market-open' : 'market-closed');
-    updateTableMelts();
   } catch(e) { console.error('Price fetch error', e); }
 }
 
@@ -337,11 +319,10 @@ function saveRows() { localStorage.setItem('bunyards-trading-rows', JSON.stringi
 function renderTable() {
   const tbody = document.getElementById('table-body');
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No items yet — click "+ Add Item" to get started.</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No items yet — click "+ Add Item" to get started.</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map((r, i) => {
-    const melt = getMelt(r.metal, r.weight);
     return `<tr>
       <td style="color:#555;font-size:13px;">${i+1}</td>
       <td>
@@ -363,7 +344,6 @@ function renderTable() {
 function addRow() { rows.push({metal:'gold',name:'',weight:'',buy:'',sell:''}); saveRows(); renderTable(); }
 function updateRow(i,field,val) { rows[i][field]=val; saveRows(); renderTable(); }
 function deleteRow(i) { rows.splice(i,1); saveRows(); renderTable(); }
-function updateTableMelts() { if (rows.length) renderTable(); }
 
 // ─── TV MODE ──────────────────────────────────────────────────────────────────
 let tvMode = false;
