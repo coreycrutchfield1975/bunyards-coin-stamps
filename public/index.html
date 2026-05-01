@@ -126,9 +126,11 @@
   /* HOURS BANNER */
   .hours-banner{
     background:var(--red);color:#fff;
-    padding:18px 24px;text-align:center;
-    font-family:'Cinzel',serif;font-size:15px;letter-spacing:2px;
+    padding:10px 16px;text-align:center;
+    font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
+  @media(max-width:600px){.hours-banner{font-size:11px;letter-spacing:0.5px;white-space:normal;}}
   .hours-banner strong{color:var(--lightgold);}
 
   /* ABOUT */
@@ -433,7 +435,7 @@
 
 <!-- WELCOME BAR -->
 <div class="hours-banner" style="margin-top:64px;">
-  Welcome to <strong>Bunyards Coin &amp; Stamps</strong> &nbsp;·&nbsp; Poplar Bluff&apos;s Home for Rare Coins, Currency &amp; Stamps
+  Welcome to <strong>Bunyards Coin &amp; Stamps</strong> — Poplar Bluff&apos;s Home for Rare Coins &amp; Stamps
 </div>
 
 <!-- HERO -->
