@@ -349,6 +349,8 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/trading', (req, res) => res.sendFile(path.join(__dirname, 'public', 'trading.html')));
 app.get('/trading.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'trading.html')));
+app.get('/trading-tv', (req, res) => res.sendFile(path.join(__dirname, 'public', 'trading-tv.html')));
+app.get('/trading-tv.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'trading-tv.html')));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 

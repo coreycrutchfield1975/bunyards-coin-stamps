@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bunyards — Live Trading Display</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --lightgold: #e8c97e;
+    --dark: #0a0a08;
+    --panel: #111108;
+    --border: #2a2a1a;
+    --silver: #b0b8c1;
+    --buy: #4ddb7a;
+    --sell: #e07070;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--dark);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* ── LAYOUT ── */
+  #app {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    height: 100vh;
+    gap: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(180deg, #080806 0%, #0f0f08 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 14px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: relative;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--lightgold), transparent);
+    opacity: 0.4;
+  }
+  .logo-area { display: flex; align-items: center; gap: 20px; }
+  .logo-area img { height: 64px; object-fit: contain; }
+  .logo-title {
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    color: var(--gold);
+    line-height: 1.2;
+  }
+  .logo-title span {
+    display: block;
+    font-size: 11px;
+    color: #666;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .market-status {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 6px 18px;
+    border-radius: 24px;
+    font-weight: 700;
+  }
+  .market-open  { background: #0d2a18; color: var(--buy);  border: 1px solid #1a5a30; }
+  .market-closed{ background: #2a0d0d; color: var(--sell); border: 1px solid #5a1a1a; }
+  .clock-block { text-align: right; }
+  .clock-date {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    color: #888;
+    letter-spacing: 1px;
+  }
+  .clock-time {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    color: #fff;
+    letter-spacing: 3px;
+    line-height: 1.1;
+  }
+
+  /* ── SPOT BOARD ── */
+  .spot-board {
+    background: linear-gradient(180deg, #0d0d08 0%, #111108 100%);
+    border-bottom: 2px solid #1a1a10;
+    padding: 20px 48px;
+    display: grid;
+    grid-template-columns: 1fr 8px 1fr;
+    gap: 0 32px;
+    align-items: center;
+    position: relative;
+  }
+  .spot-divider {
+    width: 1px;
+    height: 80px;
+    background: linear-gradient(180deg, transparent, var(--gold), transparent);
+    margin: 0 auto;
+    opacity: 0.4;
+  }
+  .spot-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 24px;
+  }
+  .spot-item.silver { direction: rtl; }
+  .spot-item.silver > * { direction: ltr; }
+  .spot-icon {
+    font-size: 40px;
+    line-height: 1;
+  }
+  .spot-info {}
+  .spot-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .spot-item.gold .spot-label   { color: var(--lightgold); }
+  .spot-item.silver .spot-label { color: var(--silver); }
+  .spot-price {
+    font-family: 'Orbitron', monospace;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .spot-item.gold   .spot-price { color: var(--lightgold); text-shadow: 0 0 30px rgba(232,201,126,0.5); animation: pulseGold 3s ease-in-out infinite; }
+  .spot-item.silver .spot-price { color: var(--silver);    text-shadow: 0 0 25px rgba(176,184,193,0.4);  animation: pulseSilver 3s ease-in-out infinite; }
+  .spot-unit { font-size: 12px; color: #444; letter-spacing: 2px; margin-top: 3px; font-family: 'Rajdhani'; }
+
+  /* ── TABLE ── */
+  .table-section {
+    padding: 16px 48px 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .table-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #444;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .table-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #2a2a1a, transparent);
+  }
+  .table-wrap {
+    flex: 1;
+    overflow: hidden;
+    border: 1px solid #1e1e12;
+    border-radius: 12px;
+    background: #0c0c08;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  col.col-num    { width: 4%; }
+  col.col-metal  { width: 10%; }
+  col.col-name   { width: 44%; }
+  col.col-weight { width: 12%; }
+  col.col-buy    { width: 15%; }
+  col.col-sell   { width: 15%; }
+
+  thead tr {
+    background: linear-gradient(135deg, #141408, #0e0e08);
+    border-bottom: 2px solid #2a2a14;
+  }
+  thead th {
+    padding: 14px 20px;
+    text-align: left;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #5a5a30;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+  thead th.right { text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid #181810;
+    animation: rowIn 0.4s ease both;
+    transition: background 0.2s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+  tbody tr:hover { background: rgba(201,168,76,0.04); }
+
+  tbody td {
+    padding: 16px 20px;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .td-num   { font-size: 13px; color: #333; font-family: 'Share Tech Mono'; }
+  .td-metal-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .badge-gold   { background: rgba(201,168,76,0.12); color: var(--lightgold); border: 1px solid rgba(201,168,76,0.3); }
+  .badge-silver { background: rgba(176,184,193,0.10); color: var(--silver);    border: 1px solid rgba(176,184,193,0.25); }
+  .badge-other  { background: rgba(255,255,255,0.06); color: #888;             border: 1px solid #333; }
+  .td-name {
+    font-size: 22px;
+    color: #e8e8d8;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .td-weight {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    color: #555;
+  }
+  .td-price {
+    font-family: 'Orbitron', monospace;
+    font-size: 26px;
+    font-weight: 700;
+    text-align: right;
+    letter-spacing: 0;
+  }
+  .td-price.buy  { color: var(--buy);  }
+  .td-price.sell { color: var(--sell); }
+
+  .empty-row td {
+    text-align: center;
+    padding: 60px;
+    color: #333;
+    font-style: italic;
+    font-size: 16px;
+  }
+
+  /* ── DISCLAIMER TICKER ── */
+  .disclaimer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(10,10,8,0.95);
+    border-top: 1px solid #1a1a10;
+    padding: 8px 0;
+    overflow: hidden;
+    z-index: 100;
+    height: 36px;
+  }
+  .ticker-track {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker 30s linear infinite;
+  }
+  .ticker-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    color: #c0874a;
+    letter-spacing: 1px;
+    padding: 0 80px;
+  }
+
+  /* ── CORNER DECORATION ── */
+  .corner-tl, .corner-tr, .corner-bl, .corner-br {
+    position: fixed;
+    width: 40px; height: 40px;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .corner-tl { top: 0; left: 0;   border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+  .corner-tr { top: 0; right: 0;  border-top: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+  .corner-bl { bottom: 0; left: 0;  border-bottom: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+  .corner-br { bottom: 0; right: 0; border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+
+  /* ── STATUS INDICATOR ── */
+  .live-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--buy);
+    margin-right: 8px;
+    animation: blink 2s ease-in-out infinite;
+    vertical-align: middle;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes pulseGold {
+    0%,100% { text-shadow: 0 0 20px rgba(232,201,126,0.3); }
+    50%      { text-shadow: 0 0 60px rgba(232,201,126,0.7); }
+  }
+  @keyframes pulseSilver {
+    0%,100% { text-shadow: 0 0 20px rgba(176,184,193,0.2); }
+    50%      { text-shadow: 0 0 45px rgba(176,184,193,0.5); }
+  }
+  @keyframes ticker {
+    0%   { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+  }
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── LOADING ── */
+  #loading {
+    position: fixed; inset: 0; background: var(--dark);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 20px; z-index: 9999;
+    animation: fadeIn 0.3s ease;
+  }
+  #loading.hide { display: none; }
+  .loading-logo {
+    font-family: 'Cinzel', serif;
+    font-size: 32px;
+    color: var(--gold);
+    letter-spacing: 4px;
+  }
+  .loading-sub {
+    font-size: 13px;
+    color: #444;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .loading-bar {
+    width: 200px; height: 2px;
+    background: #1a1a10;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .loading-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--lightgold));
+    animation: loadFill 1.5s ease-in-out infinite;
+  }
+  @keyframes loadFill {
+    0%   { width: 0%; margin-left: 0; }
+    50%  { width: 100%; margin-left: 0; }
+    100% { width: 0%; margin-left: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Corner decorations -->
+<div class="corner-tl"></div>
+<div class="corner-tr"></div>
+<div class="corner-bl"></div>
+<div class="corner-br"></div>
+
+<!-- Loading screen -->
+<div id="loading">
+  <div class="loading-logo">BUNYARDS</div>
+  <div class="loading-sub">Loading live prices…</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+</div>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-area">
+      <img src="/images/bunyards-banner.png" onerror="this.style.display='none'" alt="Bunyards">
+      <div class="logo-title">
+        Bunyards Coin &amp; Stamps
+        <span>Live Trading Prices</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="market-status" id="market-status">⏳ Loading…</span>
+      <div class="clock-block">
+        <div class="clock-date" id="clock-date">—</div>
+        <div class="clock-time" id="clock-time">—</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SPOT PRICES -->
+  <div class="spot-board">
+    <div class="spot-item gold">
+      <div class="spot-icon">🥇</div>
+      <div class="spot-info">
+        <div class="spot-label">Gold Spot Price</div>
+        <div class="spot-price" id="gold-price">—</div>
+        <div class="spot-unit">USD / TROY OZ</div>
+      </div>
+    </div>
+
+    <div class="spot-divider"></div>
+
+    <div class="spot-item silver">
+      <div class="spot-icon">🥈</div>
+      <div class="spot-info">
+        <div class="spot-label">Silver Spot Price</div>
+        <div class="spot-price" id="silver-price">—</div>
+        <div class="spot-unit">USD / TROY OZ</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-section">
+    <div class="table-section-title">
+      <span class="live-dot"></span>
+      Today's Buy / Sell Prices
+    </div>
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col class="col-num">
+          <col class="col-metal">
+          <col class="col-name">
+          <col class="col-weight">
+          <col class="col-buy">
+          <col class="col-sell">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Metal</th>
+            <th>Product</th>
+            <th>Weight (oz)</th>
+            <th class="right">Bunyards Buy</th>
+            <th class="right">Bunyards Sell</th>
+          </tr>
+        </thead>
+        <tbody id="tv-body">
+          <tr class="empty-row"><td colspan="6">Waiting for data…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- DISCLAIMER TICKER -->
+<div class="disclaimer">
+  <div class="ticker-track">
+    <span class="ticker-text">⚠️ When the market is closed, our buy and sell prices may differ from the prices shown. &nbsp;•&nbsp; All prices in USD. &nbsp;•&nbsp; Prices updated in real time. &nbsp;•&nbsp; Bunyards Coin &amp; Stamps — Live Trading Display</span>
+    <span class="ticker-text">⚠️ When the market is closed, our buy and sell prices may differ from the prices shown. &nbsp;•&nbsp; All prices in USD. &nbsp;•&nbsp; Prices updated in real time. &nbsp;•&nbsp; Bunyards Coin &amp; Stamps — Live Trading Display</span>
+  </div>
+</div>
+
+<script>
+// ── UTILS ──────────────────────────────────────────────────────────────────────
+function fmt(n) {
+  if (!n && n !== 0) return '—';
+  return '$' + parseFloat(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function isMarketOpen() {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+  if (day === 6) return false;
+  if (day === 0 && mins < 22 * 60) return false;
+  if (day === 5 && mins >= 21 * 60) return false;
+  return true;
+}
+
+// ── CLOCK ──────────────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock-date').textContent =
+    now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  document.getElementById('clock-time').textContent =
+    now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── SPOT PRICES ────────────────────────────────────────────────────────────────
+async function fetchPrices() {
+  try {
+    const [gRes, sRes] = await Promise.all([
+      fetch('/api/metals/XAU'),
+      fetch('/api/metals/XAG')
+    ]);
+    const gd = await gRes.json();
+    const sd = await sRes.json();
+    if (gd.price) document.getElementById('gold-price').textContent   = fmt(gd.price);
+    if (sd.price) document.getElementById('silver-price').textContent = fmt(sd.price);
+
+    const open = isMarketOpen();
+    const el = document.getElementById('market-status');
+    el.textContent = open ? '🟢 Market Open' : '🔴 Market Closed';
+    el.className = 'market-status ' + (open ? 'market-open' : 'market-closed');
+  } catch (e) {
+    console.warn('Price fetch failed', e);
+  }
+}
+
+// ── TABLE ──────────────────────────────────────────────────────────────────────
+let lastRowsHash = '';
+
+function metalBadge(metal) {
+  const map = { gold: ['badge-gold','Gold'], silver: ['badge-silver','Silver'], other: ['badge-other','Other'] };
+  const [cls, label] = map[metal] || map.other;
+  return `<span class="td-metal-badge ${cls}">${label}</span>`;
+}
+
+function renderRows(rows) {
+  const tbody = document.getElementById('tv-body');
+  if (!rows || !rows.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No items yet — check back soon.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr style="animation-delay:${i * 0.04}s">
+      <td class="td-num">${i + 1}</td>
+      <td>${metalBadge(r.metal)}</td>
+      <td class="td-name">${(r.name || '').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '<span style="color:#333">—</span>'}</td>
+      <td class="td-weight">${r.weight ? parseFloat(r.weight).toFixed(3) + ' oz' : '—'}</td>
+      <td class="td-price buy">${r.buy  ? fmt(r.buy)  : '—'}</td>
+      <td class="td-price sell">${r.sell ? fmt(r.sell) : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+async function fetchRows() {
+  try {
+    const res = await fetch('/api/trading/rows');
+    const data = await res.json();
+    const rows = data.rows || [];
+    const hash = JSON.stringify(rows);
+    if (hash !== lastRowsHash) {
+      lastRowsHash = hash;
+      renderRows(rows);
+    }
+  } catch (e) {
+    console.warn('Row fetch failed', e);
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([fetchPrices(), fetchRows()]);
+  document.getElementById('loading').classList.add('hide');
+
+  // Request fullscreen on load (works when opened via window.open)
+  try {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } catch(e) {}
+
+  // Refresh rows every 5 seconds, prices every 5 minutes
+  setInterval(fetchRows, 5000);
+  setInterval(fetchPrices, 5 * 60 * 1000);
+}
+
+init();
+</script>
+</body>
+</html>

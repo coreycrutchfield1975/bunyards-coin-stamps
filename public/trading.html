@@ -40,6 +40,7 @@
   .market-closed{background:#3a1a1a;color:#e05555;border:1px solid #5a2a2a;}
   .hdr-btn{background:transparent;border:1px solid #444;color:#888;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-family:'Rajdhani',sans-serif;white-space:nowrap;}
   .hdr-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .hdr-btn.tv-active{background:linear-gradient(135deg,#2a4a2a,#1a3a1a);color:#4ddb7a;border-color:#2a6a3a;}
 
   /* ── SPOT BOARD ── */
   .spot-board{background:linear-gradient(135deg,#0e0e0e 0%,#151510 50%,#0e0e0e 100%);border-bottom:3px solid var(--gold);padding:24px 32px 20px;}
@@ -107,8 +108,6 @@
   @keyframes pulse-gold{0%,100%{text-shadow:0 0 20px rgba(232,201,126,.3);}50%{text-shadow:0 0 50px rgba(232,201,126,.7);}}
   @keyframes pulse-silver{0%,100%{text-shadow:0 0 20px rgba(176,184,193,.2);}50%{text-shadow:0 0 40px rgba(176,184,193,.5);}}
 
-  /* ── TV MODE ── */
-
   /* ── PRINT ── */
   @media print {
     body{background:#fff !important;color:#000 !important;}
@@ -168,9 +167,10 @@
   </div>
   <div class="header-right" id="admin-toolbar">
     <span class="market-status" id="market-status">⏳ Loading...</span>
-    
+    <button class="hdr-btn" id="tv-btn" onclick="openTV()">📺 TV Mode</button>
     <button class="hdr-btn" onclick="exportCSV()">⬇ Export CSV</button>
     <button class="hdr-btn" onclick="window.print()">🖨 Print</button>
+    <button class="hdr-btn" onclick="window.open('/trading-tv','_blank')">📺 TV Display</button>
     <button class="hdr-btn" onclick="logout()">Logout</button>
   </div>
 </header>
@@ -368,8 +368,29 @@ document.getElementById('table-body').addEventListener('click', function(e) {
   if (btn) { rows.splice(parseInt(btn.dataset.del),1); saveRows(); renderTable(); }
 });
 
+// ─── TV MODE — opens a new tab ────────────────────────────────────────────────
+let tvWindow = null;
+function openTV() {
+  // If already open, just focus it
+  if (tvWindow && !tvWindow.closed) {
+    tvWindow.focus();
+    return;
+  }
+  tvWindow = window.open('/trading-tv', '_blank', 'noopener');
+  const btn = document.getElementById('tv-btn');
+  btn.textContent = '📺 TV Open ↗';
+  btn.classList.add('tv-active');
 
-
+  // Poll to detect when the TV window is closed
+  const checker = setInterval(() => {
+    if (!tvWindow || tvWindow.closed) {
+      clearInterval(checker);
+      tvWindow = null;
+      btn.textContent = '📺 TV Mode';
+      btn.classList.remove('tv-active');
+    }
+  }, 1000);
+}
 
 // ─── EXPORT CSV ───────────────────────────────────────────────────────────────
 function exportCSV() {
