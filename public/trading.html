@@ -223,6 +223,7 @@
 <!-- SPOT PRICE BOARD -->
 <div class="spot-board">
   <div class="spot-board-title">⬇ Live Spot Prices ⬇</div>
+  <div id="live-date" style="text-align:center;font-family:'Share Tech Mono',monospace;font-size:15px;color:var(--lightgold);letter-spacing:2px;margin-bottom:16px;"></div>
   <div class="spot-grid">
     <!-- GOLD -->
     <div class="spot-card">
@@ -540,6 +541,14 @@ function init() {
   renderTable();
   fetchPrices();
   setInterval(fetchPrices, 5 * 60 * 1000); // refresh every 5 min
+  updateDate();
+  setInterval(updateDate, 60 * 1000); // update date/time every minute
+}
+
+function updateDate() {
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' };
+  document.getElementById('live-date').textContent = now.toLocaleString('en-US', opts);
 }
 </script>
 </body>
