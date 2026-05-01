@@ -113,10 +113,20 @@
   body.tv-mode .logo-title{font-size:30px;}
   body.tv-mode .market-status{font-size:16px !important;padding:8px 20px;}
   body.tv-mode #admin-toolbar{display:none;}
-  body.tv-mode .sheet-area{display:block;padding:28px 48px;}
-  body.tv-mode table{font-size:22px;}
-  body.tv-mode tbody td{padding:14px 16px;}
-  body.tv-mode thead th{font-size:15px;padding:14px 16px;}
+  body.tv-mode{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+  body.tv-mode header{flex-shrink:0;}
+  body.tv-mode .spot-board{flex-shrink:0;padding:20px 48px 16px;}
+  body.tv-mode .info-bar{margin-bottom:16px;}
+  body.tv-mode .spot-grid{gap:16px;}
+  body.tv-mode .spot-card{padding:20px 32px;}
+  body.tv-mode .spot-price{font-size:72px !important;}
+  body.tv-mode .sheet-area{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:16px 48px 24px;}
+  body.tv-mode .sheet-area > *:not(table):not(.sheet-header){display:none;}
+  body.tv-mode .sheet-header{flex-shrink:0;margin-bottom:12px;}
+  body.tv-mode table{font-size:22px;width:100%;}
+  body.tv-mode .table-wrap{flex:1;overflow:hidden;}
+  body.tv-mode tbody td{padding:16px 16px;}
+  body.tv-mode thead th{font-size:14px;padding:12px 16px;}
   body.tv-mode .editable-cell input{font-size:22px;}
   body.tv-mode .price-wrap .dollar{font-size:22px;}
   body.tv-mode select{font-size:18px !important;}
@@ -234,6 +244,7 @@
     <h2>📋 Today's Buy / Sell Prices</h2>
     <button class="add-btn" onclick="addRow()">+ Add Item</button>
   </div>
+  <div class="table-wrap">
   <table id="trading-table">
     <thead>
       <tr>
@@ -250,6 +261,7 @@
       <tr class="empty-row"><td colspan="7">No items yet — click "+ Add Item" to get started.</td></tr>
     </tbody>
   </table>
+  </div>
 </div>
 
 <script>
