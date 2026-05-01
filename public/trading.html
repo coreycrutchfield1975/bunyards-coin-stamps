@@ -108,42 +108,6 @@
   @keyframes pulse-silver{0%,100%{text-shadow:0 0 20px rgba(176,184,193,.2);}50%{text-shadow:0 0 40px rgba(176,184,193,.5);}}
 
   /* ── TV MODE ── */
-  body.tv-mode header{padding:20px 48px;}
-  body.tv-mode .logo-area img{height:80px;}
-  body.tv-mode .logo-title{font-size:30px;}
-  body.tv-mode .market-status{font-size:16px !important;padding:8px 20px;}
-  body.tv-mode #admin-toolbar{display:none;}
-  body.tv-mode{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
-  body.tv-mode header{flex-shrink:0;}
-  body.tv-mode .spot-board{flex-shrink:0;padding:20px 48px 16px;}
-  body.tv-mode .info-bar{margin-bottom:16px;}
-  body.tv-mode .spot-grid{gap:16px;}
-  body.tv-mode .spot-card{padding:20px 32px;}
-  body.tv-mode .spot-price{font-size:72px !important;}
-  body.tv-mode .sheet-area{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:16px 48px 24px;}
-  body.tv-mode .sheet-area > *:not(table):not(.sheet-header){display:none;}
-  body.tv-mode .sheet-header{flex-shrink:0;margin-bottom:12px;}
-  body.tv-mode table{font-size:22px;width:100%;}
-  body.tv-mode .table-wrap{flex:1;overflow:hidden;}
-  body.tv-mode tbody td{padding:16px 16px;}
-  body.tv-mode thead th{font-size:14px;padding:12px 16px;}
-  body.tv-mode .editable-cell input{font-size:22px;}
-  body.tv-mode .price-wrap .dollar{font-size:22px;}
-  body.tv-mode select{font-size:18px !important;}
-  body.tv-mode .spot-board{padding:40px 56px 32px;}
-  body.tv-mode .info-bar{margin-bottom:32px;}
-  body.tv-mode .info-spot{font-size:72px !important;}
-  body.tv-mode .info-label{font-size:16px !important;}
-  body.tv-mode .info-unit{font-size:15px !important;}
-  body.tv-mode .live-date{font-size:44px !important;}
-  body.tv-mode .live-time{font-size:28px !important;}
-  body.tv-mode .spot-grid{gap:32px;}
-  body.tv-mode .spot-card{padding:36px 48px;}
-  body.tv-mode .spot-price{font-size:96px !important;}
-  body.tv-mode .spot-metal{font-size:20px !important;}
-  body.tv-mode .spot-unit{font-size:16px !important;}
-  body.tv-mode .market-disclaimer{font-size:17px !important;}
-  body.tv-mode #tv-btn{background:linear-gradient(135deg,#2a4a2a,#1a3a1a);color:#4ddb7a;border-color:#2a6a3a;}
 
   /* ── PRINT ── */
   @media print {
@@ -204,7 +168,7 @@
   </div>
   <div class="header-right" id="admin-toolbar">
     <span class="market-status" id="market-status">⏳ Loading...</span>
-    <button class="hdr-btn" id="tv-btn" onclick="toggleTV()">📺 TV Mode</button>
+    
     <button class="hdr-btn" onclick="exportCSV()">⬇ Export CSV</button>
     <button class="hdr-btn" onclick="window.print()">🖨 Print</button>
     <button class="hdr-btn" onclick="logout()">Logout</button>
@@ -404,41 +368,8 @@ document.getElementById('table-body').addEventListener('click', function(e) {
   if (btn) { rows.splice(parseInt(btn.dataset.del),1); saveRows(); renderTable(); }
 });
 
-// ─── TV MODE ──────────────────────────────────────────────────────────────────
-let tvMode = false;
-let tvPollInterval = null;
-function toggleTV() {
-  tvMode = !tvMode;
-  document.body.classList.toggle('tv-mode', tvMode);
-  document.getElementById('tv-btn').textContent = tvMode ? '🖥 Exit TV Mode' : '📺 TV Mode';
-  if (tvMode) {
-    const el = document.documentElement;
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    // Auto-refresh rows every 5 seconds while in TV mode
-    tvPollInterval = setInterval(async () => {
-      try {
-        const r = await fetch('/api/trading/rows');
-        const d = await r.json();
-        if (JSON.stringify(d.rows) !== JSON.stringify(rows)) {
-          rows = d.rows || [];
-          renderTable();
-        }
-      } catch(e) {}
-    }, 5000);
-  } else {
-    if (document.exitFullscreen) document.exitFullscreen();
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-    if (tvPollInterval) { clearInterval(tvPollInterval); tvPollInterval = null; }
-  }
-}
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement && tvMode) {
-    tvMode = false;
-    document.body.classList.remove('tv-mode');
-    document.getElementById('tv-btn').textContent = '📺 TV Mode';
-  }
-});
+
+
 
 // ─── EXPORT CSV ───────────────────────────────────────────────────────────────
 function exportCSV() {
