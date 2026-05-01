@@ -93,9 +93,9 @@
   tbody td.price-col{font-family:'Orbitron',sans-serif;font-weight:700;font-size:19px;}
   tbody td.buy-col{color:#4ddb7a;}
   tbody td.sell-col{color:#e07070;}
-  .editable-cell input{background:transparent;border:none;border-bottom:1px solid #333;color:#fff;font-family:'Rajdhani',sans-serif;font-size:19px;width:100%;padding:2px 4px;outline:none;}
+  .editable-cell input{background:transparent;border:none;border-bottom:1px solid #333;color:inherit;font-family:'Orbitron',sans-serif;font-weight:700;font-size:19px;width:100%;padding:2px 4px;outline:none;letter-spacing:1px;}
   .editable-cell input:focus{border-bottom-color:var(--gold);}
-  .editable-cell input.price-input{font-family:'Orbitron',sans-serif;font-weight:700;font-size:19px;letter-spacing:1px;}
+  .editable-cell input.price-input{font-family:'Orbitron',sans-serif;font-weight:700;font-size:19px;letter-spacing:1px;color:inherit;}
   .price-wrap{display:flex;align-items:center;gap:2px;}
   .price-wrap .dollar{color:#ff8c00;font-family:'Orbitron',sans-serif;font-size:19px;font-weight:700;line-height:1;user-select:none;letter-spacing:0;}
   .price-wrap input.price-input{width:90px;}
@@ -146,7 +146,9 @@
     tbody td{color:#111 !important;}
     .melt-col{color:#7a5c1a !important;}
     .buy-col{color:#1a6a3a !important;}
+    .buy-col input{color:#1a6a3a !important;}
     .sell-col{color:#8b1a1a !important;}
+    .sell-col input{color:#8b1a1a !important;}
     .sheet-area{padding:16px !important;}
     .market-disclaimer{color:#8b5a1a !important;}
     @page{margin:0.6in;size:landscape;}
