@@ -253,7 +253,7 @@ async function doLogin() {
       body: JSON.stringify({ password: pw })
     });
     const d = await r.json();
-    if (d.success) { document.getElementById('login-overlay').style.display = 'none'; init(); }
+    if (d.ok) { document.getElementById('login-overlay').style.display = 'none'; init(); }
     else { err.textContent = 'Incorrect password.'; }
   } catch(e) { err.textContent = 'Connection error.'; }
 }
