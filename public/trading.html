@@ -346,13 +346,14 @@ async function addRow() {
   rows.push({metal:'gold',name:'',weight:'',buy:'',sell:''});
   renderTable();
   await saveRows();
+  pushTVUpdate();
   setTimeout(() => {
     const inputs = document.querySelectorAll('#table-body input[data-field="name"]');
     if (inputs.length) inputs[inputs.length-1].focus();
   }, 30);
 }
-function updateRow(i,field,val) { rows[i][field]=val; saveRows(); }
-async function deleteRow(i) { rows.splice(i,1); renderTable(); await saveRows(); }
+function updateRow(i,field,val) { rows[i][field]=val; saveRows(); pushTVUpdate(); }
+async function deleteRow(i) { rows.splice(i,1); renderTable(); await saveRows(); pushTVUpdate(); }
 
 // Delegated listeners — attached once, work for all rows
 document.getElementById('table-body').addEventListener('change', function(e) {
@@ -360,27 +361,227 @@ document.getElementById('table-body').addEventListener('change', function(e) {
   if (el.dataset.i !== undefined && el.dataset.field) {
     rows[el.dataset.i][el.dataset.field] = el.value;
     saveRows();
+    pushTVUpdate();
   }
 });
 document.getElementById('table-body').addEventListener('click', function(e) {
   const btn = e.target.closest('[data-del]');
-  if (btn) { rows.splice(parseInt(btn.dataset.del),1); saveRows(); renderTable(); }
+  if (btn) { rows.splice(parseInt(btn.dataset.del),1); saveRows(); renderTable(); pushTVUpdate(); }
 });
 
-// ─── TV MODE — opens a new tab ────────────────────────────────────────────────
+// ─── TV MODE ─────────────────────────────────────────────────────────────────
 let tvWindow = null;
-function openTV() {
-  // If already open, just focus it
-  if (tvWindow && !tvWindow.closed) {
-    tvWindow.focus();
-    return;
+
+function buildTVHTML() {
+  const gold = goldPrice > 0 ? '$' + goldPrice.toFixed(2) : '—';
+  const silver = silverPrice > 0 ? '$' + silverPrice.toFixed(2) : '—';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  const isOpen = (() => {
+    const h = now.getHours(), d = now.getDay();
+    return d >= 2 && d <= 6 && h >= 10 && h < 17;
+  })();
+
+  const rowsHTML = rows.length === 0
+    ? '<tr><td colspan="6" style="text-align:center;color:#333;padding:60px;font-style:italic;font-size:18px;">No items on sheet yet</td></tr>'
+    : rows.map((r, i) => {
+        const melt = getMelt(r.metal, r.weight);
+        const badge = r.metal === 'gold'
+          ? '<span class="badge badge-gold">Gold</span>'
+          : r.metal === 'silver'
+          ? '<span class="badge badge-silver">Silver</span>'
+          : '<span class="badge badge-other">Other</span>';
+        return `<tr>
+          <td class="td-num">${i+1}</td>
+          <td>${badge}</td>
+          <td class="td-name">${(r.name||'—').replace(/</g,'&lt;')}</td>
+          <td class="td-weight">${r.weight ? r.weight + ' oz' : '—'}</td>
+          <td class="td-price buy">${r.buy ? '$'+parseFloat(r.buy).toFixed(2) : '—'}</td>
+          <td class="td-price sell">${r.sell ? '$'+parseFloat(r.sell).toFixed(2) : '—'}</td>
+        </tr>`;
+      }).join('');
+
+  return `<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<title>Bunyards — Live Trading Display</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c9a84c;--lightgold:#e8c97e;--dark:#0a0a08;--panel:#111108;--silver:#b0b8c1;--buy:#4ddb7a;--sell:#e07070;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--dark);color:#fff;font-family:'Rajdhani',sans-serif;overflow:hidden;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9998;}
+#app{display:grid;grid-template-rows:auto auto 1fr;height:100vh;}
+header{background:linear-gradient(180deg,#080806,#0f0f08);border-bottom:2px solid var(--gold);padding:14px 48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo-title{font-family:'Cinzel',serif;font-size:26px;color:var(--gold);}
+.logo-title span{display:block;font-size:11px;color:#666;font-family:'Rajdhani',sans-serif;letter-spacing:4px;text-transform:uppercase;margin-top:2px;}
+.header-right{display:flex;align-items:center;gap:20px;}
+.market-status{font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;padding:6px 18px;border-radius:24px;font-weight:700;}
+.market-open{background:#0d2a18;color:var(--buy);border:1px solid #1a5a30;}
+.market-closed{background:#2a0d0d;color:var(--sell);border:1px solid #5a1a1a;}
+.clock-date{font-family:'Share Tech Mono',monospace;font-size:15px;color:#888;letter-spacing:1px;text-align:right;}
+.clock-time{font-family:'Orbitron',monospace;font-size:28px;color:#fff;letter-spacing:3px;line-height:1.1;}
+.spot-board{background:linear-gradient(180deg,#0d0d08,#111108);border-bottom:2px solid #1a1a10;padding:20px 48px;display:grid;grid-template-columns:1fr 8px 1fr;gap:0 32px;align-items:center;}
+.spot-divider{width:1px;height:80px;background:linear-gradient(180deg,transparent,var(--gold),transparent);margin:0 auto;opacity:.4;}
+.spot-item{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:24px;}
+.spot-item.silver{direction:rtl;}.spot-item.silver>*{direction:ltr;}
+.spot-icon{font-size:40px;line-height:1;}
+.spot-label{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin-bottom:2px;}
+.spot-item.gold .spot-label{color:var(--lightgold);}
+.spot-item.silver .spot-label{color:var(--silver);}
+.spot-price{font-family:'Orbitron',monospace;font-size:52px;font-weight:900;line-height:1;letter-spacing:-1px;}
+.spot-item.gold .spot-price{color:var(--lightgold);text-shadow:0 0 30px rgba(232,201,126,.5);animation:pulseGold 3s ease-in-out infinite;}
+.spot-item.silver .spot-price{color:var(--silver);text-shadow:0 0 25px rgba(176,184,193,.4);animation:pulseSilver 3s ease-in-out infinite;}
+.spot-unit{font-size:12px;color:#444;letter-spacing:2px;margin-top:3px;font-family:'Rajdhani';}
+.table-section{padding:16px 48px 52px;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.table-section-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:4px;color:#444;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+.table-section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#2a2a1a,transparent);}
+.table-wrap{flex:1;overflow:hidden;border:1px solid #1e1e12;border-radius:12px;background:#0c0c08;}
+table{width:100%;border-collapse:collapse;table-layout:fixed;}
+col.col-num{width:4%;}col.col-metal{width:10%;}col.col-name{width:44%;}col.col-weight{width:12%;}col.col-buy{width:15%;}col.col-sell{width:15%;}
+thead tr{background:linear-gradient(135deg,#141408,#0e0e08);border-bottom:2px solid #2a2a14;}
+thead th{padding:14px 20px;text-align:left;font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;color:#5a5a30;white-space:nowrap;text-transform:uppercase;}
+thead th.right{text-align:right;}
+tbody tr{border-bottom:1px solid #181810;transition:background .2s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:nth-child(even){background:rgba(255,255,255,.015);}
+tbody td{padding:16px 20px;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.td-num{font-size:13px;color:#333;font-family:'Share Tech Mono';}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;font-weight:700;}
+.badge-gold{background:rgba(201,168,76,.12);color:var(--lightgold);border:1px solid rgba(201,168,76,.3);}
+.badge-silver{background:rgba(176,184,193,.10);color:var(--silver);border:1px solid rgba(176,184,193,.25);}
+.badge-other{background:rgba(255,255,255,.06);color:#888;border:1px solid #333;}
+.td-name{font-size:22px;color:#e8e8d8;font-weight:600;letter-spacing:.5px;}
+.td-weight{font-family:'Share Tech Mono',monospace;font-size:16px;color:#555;}
+.td-price{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;text-align:right;letter-spacing:0;}
+.td-price.buy{color:var(--buy);}.td-price.sell{color:var(--sell);}
+.disclaimer{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,8,.95);border-top:1px solid #1a1a10;padding:8px 0;overflow:hidden;z-index:100;height:36px;}
+.ticker-track{display:flex;white-space:nowrap;animation:ticker 30s linear infinite;}
+.ticker-text{font-family:'Rajdhani',sans-serif;font-size:13px;color:#c0874a;letter-spacing:1px;padding:0 80px;}
+.corner-tl,.corner-tr,.corner-bl,.corner-br{position:fixed;width:40px;height:40px;z-index:200;pointer-events:none;}
+.corner-tl{top:0;left:0;border-top:2px solid var(--gold);border-left:2px solid var(--gold);}
+.corner-tr{top:0;right:0;border-top:2px solid var(--gold);border-right:2px solid var(--gold);}
+.corner-bl{bottom:0;left:0;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold);}
+.corner-br{bottom:0;right:0;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold);}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--buy);margin-right:8px;animation:blink 2s ease-in-out infinite;vertical-align:middle;}
+@keyframes pulseGold{0%,100%{text-shadow:0 0 20px rgba(232,201,126,.3);}50%{text-shadow:0 0 60px rgba(232,201,126,.7);}}
+@keyframes pulseSilver{0%,100%{text-shadow:0 0 20px rgba(176,184,193,.2);}50%{text-shadow:0 0 45px rgba(176,184,193,.5);}}
+@keyframes ticker{0%{transform:translateX(100vw);}100%{transform:translateX(-100%);}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+</style>
+</head>
+<body>
+<div class="corner-tl"></div><div class="corner-tr"></div><div class="corner-bl"></div><div class="corner-br"></div>
+<div id="app">
+  <header>
+    <div class="logo-title">BUNYARDS COIN &amp; STAMPS<span>Live Trading Display</span></div>
+    <div class="header-right">
+      <div class="${isOpen ? 'market-status market-open' : 'market-status market-closed'}">${isOpen ? '● OPEN' : '● CLOSED'}</div>
+      <div class="clock-block">
+        <div class="clock-date">${dateStr}</div>
+        <div class="clock-time" id="clock">${timeStr}</div>
+      </div>
+    </div>
+  </header>
+  <div class="spot-board">
+    <div class="spot-item gold">
+      <div class="spot-icon">🥇</div>
+      <div class="spot-info">
+        <div class="spot-label">Gold Spot</div>
+        <div class="spot-price" id="tv-gold">${gold}</div>
+        <div class="spot-unit">USD / TROY OZ</div>
+      </div>
+    </div>
+    <div class="spot-divider"></div>
+    <div class="spot-item silver">
+      <div class="spot-info">
+        <div class="spot-label">Silver Spot</div>
+        <div class="spot-price" id="tv-silver">${silver}</div>
+        <div class="spot-unit">USD / TROY OZ</div>
+      </div>
+      <div class="spot-icon">🥈</div>
+    </div>
+  </div>
+  <div class="table-section">
+    <div class="table-section-title"><span class="live-dot"></span>Today's Buy &amp; Sell Prices</div>
+    <div class="table-wrap">
+      <table>
+        <colgroup><col class="col-num"><col class="col-metal"><col class="col-name"><col class="col-weight"><col class="col-buy"><col class="col-sell"></colgroup>
+        <thead><tr>
+          <th>#</th><th>Metal</th><th>Item</th><th>Weight</th>
+          <th class="right">We Buy</th><th class="right">We Sell</th>
+        </tr></thead>
+        <tbody id="tv-tbody">${rowsHTML}</tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="disclaimer">
+  <div class="ticker-track">
+    <div class="ticker-text">Prices shown are for informational purposes only and subject to change without notice. All transactions subject to final verification. Bunyards Coin &amp; Stamps — 1912 N. Westwood Blvd., Poplar Bluff, MO &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp; Prices shown are for informational purposes only and subject to change without notice.</div>
+  </div>
+</div>
+<script>
+// Live clock
+function tick(){
+  const n=new Date();
+  const el=document.getElementById('clock');
+  if(el) el.textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+setInterval(tick,1000);
+
+// Listen for live updates pushed from admin window
+window.addEventListener('message', function(e) {
+  const d = e.data;
+  if (!d || d.type !== 'bunyards-tv-update') return;
+  if (d.gold) document.getElementById('tv-gold').textContent = '$' + parseFloat(d.gold).toFixed(2);
+  if (d.silver) document.getElementById('tv-silver').textContent = '$' + parseFloat(d.silver).toFixed(2);
+  if (d.rows !== undefined) {
+    const tbody = document.getElementById('tv-tbody');
+    if (!d.rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#333;padding:60px;font-style:italic;font-size:18px;">No items on sheet yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.rows.map((r,i) => {
+      const badge = r.metal === 'gold'
+        ? '<span class="badge badge-gold">Gold</span>'
+        : r.metal === 'silver'
+        ? '<span class="badge badge-silver">Silver</span>'
+        : '<span class="badge badge-other">Other</span>';
+      return '<tr><td class="td-num">'+(i+1)+'</td><td>'+badge+'</td><td class="td-name">'+(r.name||'—')+'</td><td class="td-weight">'+(r.weight?r.weight+' oz':'—')+'</td><td class="td-price buy">'+(r.buy?'$'+parseFloat(r.buy).toFixed(2):'—')+'</td><td class="td-price sell">'+(r.sell?'$'+parseFloat(r.sell).toFixed(2):'—')+'</td></tr>';
+    }).join('');
   }
-  tvWindow = window.open('/trading-tv', '_blank', 'noopener');
+});
+<\/script>
+</body></html>`;
+}
+
+function pushTVUpdate() {
+  if (!tvWindow || tvWindow.closed) return;
+  try {
+    tvWindow.postMessage({
+      type: 'bunyards-tv-update',
+      rows: rows,
+      gold: goldPrice,
+      silver: silverPrice
+    }, '*');
+  } catch(e) {}
+}
+
+function openTV() {
+  if (tvWindow && !tvWindow.closed) { tvWindow.focus(); pushTVUpdate(); return; }
+
+  const html = buildTVHTML();
+  tvWindow = window.open('', '_blank', 'noopener,noreferrer');
+  tvWindow.document.open();
+  tvWindow.document.write(html);
+  tvWindow.document.close();
+
   const btn = document.getElementById('tv-btn');
   btn.textContent = '📺 TV Open ↗';
   btn.classList.add('tv-active');
 
-  // Poll to detect when the TV window is closed
   const checker = setInterval(() => {
     if (!tvWindow || tvWindow.closed) {
       clearInterval(checker);
