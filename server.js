@@ -86,13 +86,18 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.set('trust proxy', 1);
 app.use(session({
   secret: process.env.SESSION_SECRET || 'bunyards-secret-2024',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 }
+  cookie: {
+    maxAge: 8 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
 }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 function requireAdmin(req, res, next) {
