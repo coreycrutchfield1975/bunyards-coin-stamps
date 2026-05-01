@@ -120,7 +120,28 @@ app.post('/api/admin/login', async (req, res) => {
 
 app.post('/api/admin/logout', (req, res) => {
   req.session.destroy();
-  res.json({ ok: true });
+  res.json({ ok: true, redirect: '/' });
+});
+
+// ── Trading Rows API ─────────────────────────────────────────────────────────
+app.get('/api/trading/rows', requireAdmin, async (req, res) => {
+  try {
+    const db = client.db('bunyards');
+    const doc = await db.collection('trading_rows').findOne({ _id: 'rows' });
+    res.json({ rows: doc ? doc.rows : [] });
+  } catch(e) { res.json({ rows: [] }); }
+});
+
+app.post('/api/trading/rows', requireAdmin, async (req, res) => {
+  try {
+    const db = client.db('bunyards');
+    await db.collection('trading_rows').updateOne(
+      { _id: 'rows' },
+      { $set: { rows: req.body.rows, updated: new Date() } },
+      { upsert: true }
+    );
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/admin/check', (req, res) => {

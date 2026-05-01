@@ -282,12 +282,12 @@ async function doLogin() {
 }
 async function logout() {
   await fetch('/api/admin/logout', { method:'POST' });
-  location.reload();
+  window.location.href = '/';
 }
 async function checkAuth() {
   const r = await fetch('/api/admin/check');
   const d = await r.json();
-  if (d.admin) { document.getElementById('login-overlay').style.display = 'none'; init(); }
+  if (d.admin) { document.getElementById('login-overlay').style.display = 'none'; loadRows(); init(); }
 }
 checkAuth();
 
@@ -330,7 +330,7 @@ function updateDate() {
 }
 
 // ─── TRADING TABLE ────────────────────────────────────────────────────────────
-let rows = JSON.parse(localStorage.getItem('bunyards-trading-rows') || '[]');
+let rows = [];
 function getMelt(metal, weight) {
   if (!weight || isNaN(weight)) return 0;
   const w = parseFloat(weight);
@@ -338,7 +338,21 @@ function getMelt(metal, weight) {
   if (metal === 'silver') return silverPrice * w;
   return 0;
 }
-function saveRows() { localStorage.setItem('bunyards-trading-rows', JSON.stringify(rows)); }
+function saveRows() {
+  fetch('/api/trading/rows', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rows })
+  });
+}
+async function loadRows() {
+  try {
+    const r = await fetch('/api/trading/rows');
+    const d = await r.json();
+    rows = d.rows || [];
+  } catch(e) { rows = []; }
+  renderTable();
+}
 function renderTable() {
   const tbody = document.getElementById('table-body');
   if (!rows.length) {
@@ -433,7 +447,6 @@ function exportCSV() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 function init() {
-  renderTable();
   fetchPrices();
   updateDate();
   setInterval(fetchPrices, 5 * 60 * 1000);
