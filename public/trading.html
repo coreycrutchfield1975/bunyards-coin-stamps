@@ -573,7 +573,7 @@ function openTV() {
   if (tvWindow && !tvWindow.closed) { tvWindow.focus(); pushTVUpdate(); return; }
 
   const html = buildTVHTML();
-  tvWindow = window.open('', '_blank', 'noopener,noreferrer');
+  tvWindow = window.open('', '_blank');
   tvWindow.document.open();
   tvWindow.document.write(html);
   tvWindow.document.close();
