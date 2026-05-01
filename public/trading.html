@@ -406,6 +406,7 @@ document.getElementById('table-body').addEventListener('click', function(e) {
 
 // ─── TV MODE ──────────────────────────────────────────────────────────────────
 let tvMode = false;
+let tvPollInterval = null;
 function toggleTV() {
   tvMode = !tvMode;
   document.body.classList.toggle('tv-mode', tvMode);
@@ -414,9 +415,21 @@ function toggleTV() {
     const el = document.documentElement;
     if (el.requestFullscreen) el.requestFullscreen();
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    // Auto-refresh rows every 5 seconds while in TV mode
+    tvPollInterval = setInterval(async () => {
+      try {
+        const r = await fetch('/api/trading/rows');
+        const d = await r.json();
+        if (JSON.stringify(d.rows) !== JSON.stringify(rows)) {
+          rows = d.rows || [];
+          renderTable();
+        }
+      } catch(e) {}
+    }, 5000);
   } else {
     if (document.exitFullscreen) document.exitFullscreen();
     else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    if (tvPollInterval) { clearInterval(tvPollInterval); tvPollInterval = null; }
   }
 }
 document.addEventListener('fullscreenchange', () => {
