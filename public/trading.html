@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Sheet — Bunyards Coin & Stamps</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#c9a84c;
+    --lightgold:#e8c97e;
+    --dark:#0d0d0d;
+    --dark2:#161616;
+    --panel:#1a1a1a;
+    --border:#2e2e2e;
+    --red:#8b1a1a;
+    --green:#1a7a3c;
+    --silver:#b0b8c1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--dark);color:#fff;font-family:'Rajdhani',sans-serif;min-height:100vh;}
+
+  /* ── LOGIN OVERLAY ── */
+  #login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;}
+  .login-box{background:var(--panel);border:1px solid var(--gold);border-radius:16px;padding:48px 40px;max-width:380px;width:100%;text-align:center;}
+  .login-box h2{font-family:'Cinzel',serif;color:var(--gold);font-size:24px;margin-bottom:8px;}
+  .login-box p{color:#888;font-size:14px;margin-bottom:28px;}
+  .login-box input{width:100%;padding:14px 16px;background:#111;border:1px solid var(--border);border-radius:8px;color:#fff;font-size:16px;margin-bottom:16px;outline:none;}
+  .login-box input:focus{border-color:var(--gold);}
+  .login-box button{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),#a07830);color:#000;font-family:'Cinzel',serif;font-weight:700;font-size:16px;border:none;border-radius:8px;cursor:pointer;letter-spacing:1px;}
+  .login-box button:hover{opacity:.9;}
+  #login-error{color:#e05555;font-size:13px;margin-top:12px;min-height:18px;}
+
+  /* ── HEADER / LOGO ── */
+  header{background:linear-gradient(180deg,#0a0a0a 0%,#111 100%);border-bottom:2px solid var(--gold);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
+  .logo-area{display:flex;align-items:center;gap:16px;}
+  .logo-area img{height:56px;object-fit:contain;}
+  .logo-title{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);line-height:1.2;}
+  .logo-title span{display:block;font-size:13px;color:#888;font-family:'Rajdhani',sans-serif;letter-spacing:2px;text-transform:uppercase;}
+  .header-right{display:flex;align-items:center;gap:16px;}
+  .market-status{font-size:12px;letter-spacing:1px;padding:4px 12px;border-radius:20px;font-weight:700;}
+  .market-open{background:#1a4a2a;color:#4ddb7a;border:1px solid #2a6a3a;}
+  .market-closed{background:#3a1a1a;color:#e05555;border:1px solid #5a2a2a;}
+  .logout-btn{background:transparent;border:1px solid #444;color:#888;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-family:'Rajdhani',sans-serif;}
+  .logout-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+  /* ── SPOT PRICE BOARD ── */
+  .spot-board{background:linear-gradient(135deg,#0e0e0e 0%,#151510 50%,#0e0e0e 100%);border-bottom:3px solid var(--gold);padding:28px 32px 20px;}
+  .spot-board-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:4px;color:#888;text-transform:uppercase;text-align:center;margin-bottom:20px;}
+
+  .spot-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;margin:0 auto 18px;}
+  .spot-card{background:linear-gradient(135deg,#1a1a12,#111);border:2px solid var(--gold);border-radius:16px;padding:22px 28px;text-align:center;position:relative;overflow:hidden;}
+  .spot-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(201,168,76,.08),transparent 70%);pointer-events:none;}
+  .spot-card.silver-card{border-color:var(--silver);}
+  .spot-card.silver-card::before{background:radial-gradient(ellipse at top,rgba(176,184,193,.08),transparent 70%);}
+
+  .spot-metal{font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;}
+  .spot-card .spot-metal{color:var(--lightgold);}
+  .spot-card.silver-card .spot-metal{color:var(--silver);}
+
+  .spot-price{font-family:'Share Tech Mono',monospace;font-size:64px;font-weight:700;line-height:1;letter-spacing:-1px;}
+  .spot-card .spot-price{color:var(--lightgold);text-shadow:0 0 30px rgba(232,201,126,.4);}
+  .spot-card.silver-card .spot-price{color:var(--silver);text-shadow:0 0 30px rgba(176,184,193,.3);}
+
+  .spot-unit{font-size:13px;color:#666;margin-top:6px;font-family:'Rajdhani',sans-serif;letter-spacing:1px;}
+  .spot-change{font-size:14px;font-weight:700;margin-top:8px;font-family:'Share Tech Mono',monospace;}
+  .spot-change.up{color:#4ddb7a;}
+  .spot-change.down{color:#e05555;}
+
+  .melt-values{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:900px;margin:0 auto;}
+  .melt-pill{background:#111;border:1px solid var(--border);border-radius:10px;padding:10px 14px;text-align:center;}
+  .melt-pill-label{font-size:11px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .melt-pill-value{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--lightgold);font-weight:700;}
+  .melt-pill.ag .melt-pill-value{color:var(--silver);}
+
+  .market-disclaimer{text-align:center;margin-top:18px;font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:#c0874a;letter-spacing:.3px;}
+
+  /* ── TRADING SHEET ── */
+  .sheet-area{padding:28px 32px;}
+  .sheet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .sheet-header h2{font-family:'Cinzel',serif;font-size:20px;color:var(--gold);}
+  .add-btn{background:linear-gradient(135deg,var(--gold),#a07830);color:#000;border:none;padding:10px 20px;border-radius:8px;font-family:'Cinzel',serif;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:1px;}
+  .add-btn:hover{opacity:.85;}
+
+  table{width:100%;border-collapse:collapse;font-size:15px;}
+  thead tr{background:linear-gradient(135deg,#1a1508,#111);}
+  thead th{padding:13px 16px;text-align:left;font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--gold);border-bottom:2px solid var(--gold);white-space:nowrap;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background .2s;}
+  tbody tr:hover{background:#1a1a1a;}
+  tbody td{padding:12px 16px;color:#ddd;vertical-align:middle;}
+  tbody td.melt-col{font-family:'Share Tech Mono',monospace;color:var(--lightgold);font-size:13px;}
+  tbody td.price-col{font-family:'Share Tech Mono',monospace;font-size:15px;}
+  tbody td.buy-col{color:#4ddb7a;}
+  tbody td.sell-col{color:#e07070;}
+
+  .editable-cell input{background:transparent;border:none;border-bottom:1px solid #333;color:#fff;font-family:'Rajdhani',sans-serif;font-size:15px;width:100%;padding:2px 4px;outline:none;}
+  .editable-cell input:focus{border-bottom-color:var(--gold);}
+  .editable-cell input.price-input{font-family:'Share Tech Mono',monospace;font-size:15px;}
+
+  .del-btn{background:transparent;border:1px solid #333;color:#666;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:13px;}
+  .del-btn:hover{border-color:#e05555;color:#e05555;}
+
+  .empty-row td{text-align:center;color:#444;padding:40px;font-style:italic;}
+
+  /* ── METAL TYPE BADGE ── */
+  .metal-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .metal-gold{background:#2a2010;color:var(--lightgold);border:1px solid #4a3820;}
+  .metal-silver{background:#1a1e22;color:var(--silver);border:1px solid #2e3a44;}
+  .metal-other{background:#1a1a2a;color:#8888cc;border:1px solid #2a2a4a;}
+
+  /* ── PULSE ANIMATION ── */
+  @keyframes pulse-gold{0%,100%{text-shadow:0 0 20px rgba(232,201,126,.3);}50%{text-shadow:0 0 50px rgba(232,201,126,.7);}}
+  @keyframes pulse-silver{0%,100%{text-shadow:0 0 20px rgba(176,184,193,.2);}50%{text-shadow:0 0 40px rgba(176,184,193,.5);}}
+  .spot-card .spot-price{animation:pulse-gold 3s ease-in-out infinite;}
+  .spot-card.silver-card .spot-price{animation:pulse-silver 3s ease-in-out infinite;}
+
+  @keyframes ticker-scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+  .ticker-bar{background:#111;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:6px 0;overflow:hidden;white-space:nowrap;}
+  .ticker-inner{display:inline-block;animation:ticker-scroll 30s linear infinite;font-family:'Share Tech Mono',monospace;font-size:13px;color:#888;}
+  .ticker-inner span{margin:0 40px;}
+  .ticker-inner .t-gold{color:var(--lightgold);}
+  .ticker-inner .t-silver{color:var(--silver);}
+  .ticker-inner .t-up{color:#4ddb7a;}
+  .ticker-inner .t-down{color:#e05555;}
+
+  @media(max-width:768px){
+    .spot-price{font-size:40px !important;}
+    .melt-values{grid-template-columns:repeat(2,1fr);}
+    .sheet-area{padding:16px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2>🔐 Admin Access</h2>
+    <p>Trading Sheet — Staff Only</p>
+    <input type="password" id="admin-pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Unlock Trading Sheet</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <img src="/images/bunyards-banner.png" onerror="this.style.display='none'" alt="Bunyards">
+    <div class="logo-title">
+      Bunyards Coin & Stamps
+      <span>Live Trading Sheet</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="market-status" id="market-status">⏳ Loading...</span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<!-- TICKER BAR -->
+<div class="ticker-bar">
+  <div class="ticker-inner" id="ticker-inner">
+    <span>Loading live market data...</span>
+  </div>
+</div>
+
+<!-- SPOT PRICE BOARD -->
+<div class="spot-board">
+  <div class="spot-board-title">⬇ Live Spot Prices ⬇</div>
+  <div class="spot-grid">
+    <!-- GOLD -->
+    <div class="spot-card">
+      <div class="spot-metal">Gold (Au)</div>
+      <div class="spot-price" id="gold-price">—</div>
+      <div class="spot-unit">USD / Troy Ounce</div>
+      <div class="spot-change" id="gold-change">Loading...</div>
+    </div>
+    <!-- SILVER -->
+    <div class="spot-card silver-card">
+      <div class="spot-metal">Silver (Ag)</div>
+      <div class="spot-price" id="silver-price">—</div>
+      <div class="spot-unit">USD / Troy Ounce</div>
+      <div class="spot-change" id="silver-change">Loading...</div>
+    </div>
+  </div>
+
+  <!-- MELT VALUE PILLS -->
+  <div class="melt-values">
+    <div class="melt-pill">
+      <div class="melt-pill-label">🦅 Gold Eagle (1 oz)</div>
+      <div class="melt-pill-value" id="melt-eagle">—</div>
+    </div>
+    <div class="melt-pill">
+      <div class="melt-pill-label">🦅 Gold Eagle (½ oz)</div>
+      <div class="melt-pill-value" id="melt-eagle-half">—</div>
+    </div>
+    <div class="melt-pill ag">
+      <div class="melt-pill-label">🥈 Morgan/Peace Dollar</div>
+      <div class="melt-pill-value" id="melt-morgan">—</div>
+    </div>
+    <div class="melt-pill ag">
+      <div class="melt-pill-label">🥈 Silver Eagle (1 oz)</div>
+      <div class="melt-pill-value" id="melt-silver-eagle">—</div>
+    </div>
+    <div class="melt-pill ag">
+      <div class="melt-pill-label">🥈 90% Quarter</div>
+      <div class="melt-pill-value" id="melt-quarter">—</div>
+    </div>
+    <div class="melt-pill ag">
+      <div class="melt-pill-label">🥈 90% Dime</div>
+      <div class="melt-pill-value" id="melt-dime">—</div>
+    </div>
+    <div class="melt-pill ag">
+      <div class="melt-pill-label">🥈 40% Half Dollar</div>
+      <div class="melt-pill-value" id="melt-40half">—</div>
+    </div>
+    <div class="melt-pill ag">
+      <div class="melt-pill-label">🥈 Junk Silver (1 FV)</div>
+      <div class="melt-pill-value" id="melt-junk">—</div>
+    </div>
+  </div>
+
+  <div class="market-disclaimer" id="market-disclaimer">
+    ⚠️ When the market is closed, our buy and sell prices may differ from the prices shown.
+  </div>
+</div>
+
+<!-- TRADING SHEET -->
+<div class="sheet-area">
+  <div class="sheet-header">
+    <h2>📋 Today's Buy / Sell Prices</h2>
+    <button class="add-btn" onclick="addRow()">+ Add Item</button>
+  </div>
+  <table id="trading-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Metal</th>
+        <th>Product Name</th>
+        <th>Weight (oz)</th>
+        <th>Melt Value</th>
+        <th>Bunyards Buy</th>
+        <th>Bunyards Sell</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <tr class="empty-row"><td colspan="8">No items yet — click "+ Add Item" to get started.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+// ─── AUTH ───────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  try {
+    const r = await fetch('/api/admin/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password: pw })
+    });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('login-overlay').style.display = 'none';
+      init();
+    } else {
+      err.textContent = 'Incorrect password.';
+    }
+  } catch(e) { err.textContent = 'Connection error.'; }
+}
+async function logout() {
+  await fetch('/api/admin/logout', { method:'POST' });
+  location.reload();
+}
+async function checkAuth() {
+  const r = await fetch('/api/admin/check');
+  const d = await r.json();
+  if (d.admin) { document.getElementById('login-overlay').style.display = 'none'; init(); }
+}
+checkAuth();
+
+// ─── SPOT PRICES ─────────────────────────────────────────────────────────────
+let goldPrice = 0, silverPrice = 0;
+
+function fmt(n) { return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function isMarketOpen() {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Sun, 6=Sat
+  const hour = now.getUTCHours();
+  const min = now.getUTCMinutes();
+  const mins = hour * 60 + min;
+  // Futures roughly open Sun 6pm ET (22:00 UTC) through Fri 5pm ET (21:00 UTC)
+  if (day === 6) return false; // Saturday always closed
+  if (day === 0 && mins < 22*60) return false; // Sunday before 6pm ET
+  if (day === 5 && mins >= 21*60) return false; // Friday after 5pm ET
+  return true;
+}
+
+async function fetchPrices() {
+  try {
+    const [gRes, sRes] = await Promise.all([
+      fetch('/api/metals/XAU'),
+      fetch('/api/metals/XAG')
+    ]);
+    const gd = await gRes.json();
+    const sd = await sRes.json();
+    if (gd.price) goldPrice = gd.price;
+    if (sd.price) silverPrice = sd.price;
+    updatePriceDisplay();
+    updateMeltPills();
+    updateTicker();
+    updateTableMelts();
+  } catch(e) { console.error('Price fetch error', e); }
+}
+
+function updatePriceDisplay() {
+  document.getElementById('gold-price').textContent = fmt(goldPrice);
+  document.getElementById('silver-price').textContent = fmt(silverPrice);
+
+  const open = isMarketOpen();
+  const statusEl = document.getElementById('market-status');
+  statusEl.textContent = open ? '🟢 Market Open' : '🔴 Market Closed';
+  statusEl.className = 'market-status ' + (open ? 'market-open' : 'market-closed');
+
+  // Simulated change display (no historical needed — just show live)
+  document.getElementById('gold-change').textContent = '● Live Price';
+  document.getElementById('gold-change').className = 'spot-change up';
+  document.getElementById('silver-change').textContent = '● Live Price';
+  document.getElementById('silver-change').className = 'spot-change up';
+}
+
+function updateMeltPills() {
+  const ag = silverPrice;
+  const au = goldPrice;
+  document.getElementById('melt-eagle').textContent = fmt(au * 1.0);
+  document.getElementById('melt-eagle-half').textContent = fmt(au * 0.5);
+  document.getElementById('melt-morgan').textContent = fmt(ag * 0.77344);
+  document.getElementById('melt-silver-eagle').textContent = fmt(ag * 1.0);
+  document.getElementById('melt-quarter').textContent = fmt(ag * 0.18084);
+  document.getElementById('melt-dime').textContent = fmt(ag * 0.07234);
+  document.getElementById('melt-40half').textContent = fmt(ag * 0.1479);
+  document.getElementById('melt-junk').textContent = fmt(ag * 0.715);
+}
+
+function updateTicker() {
+  const t = document.getElementById('ticker-inner');
+  t.innerHTML = `
+    <span>🥇 <span class="t-gold">GOLD</span> ${fmt(goldPrice)} / oz</span>
+    <span>🥈 <span class="t-silver">SILVER</span> ${fmt(silverPrice)} / oz</span>
+    <span>🦅 Gold Eagle Melt: <span class="t-gold">${fmt(goldPrice)}</span></span>
+    <span>💿 Silver Eagle Melt: <span class="t-silver">${fmt(silverPrice)}</span></span>
+    <span>🪙 Morgan/Peace Dollar Melt: <span class="t-silver">${fmt(silverPrice * 0.77344)}</span></span>
+    <span>🪙 90% Quarter Melt: <span class="t-silver">${fmt(silverPrice * 0.18084)}</span></span>
+    <span>🥇 <span class="t-gold">GOLD</span> ${fmt(goldPrice)} / oz</span>
+    <span>🥈 <span class="t-silver">SILVER</span> ${fmt(silverPrice)} / oz</span>
+  `;
+}
+
+// ─── TRADING TABLE ────────────────────────────────────────────────────────────
+let rows = JSON.parse(localStorage.getItem('bunyards-trading-rows') || '[]');
+
+function getMelt(metal, weight) {
+  if (!weight || isNaN(weight)) return 0;
+  const w = parseFloat(weight);
+  if (metal === 'gold') return goldPrice * w;
+  if (metal === 'silver') return silverPrice * w;
+  return 0;
+}
+
+function saveRows() {
+  localStorage.setItem('bunyards-trading-rows', JSON.stringify(rows));
+}
+
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No items yet — click "+ Add Item" to get started.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((r, i) => {
+    const melt = getMelt(r.metal, r.weight);
+    const meltStr = melt > 0 ? fmt(melt) : '—';
+    const metalBadge = r.metal === 'gold'
+      ? '<span class="metal-badge metal-gold">Gold</span>'
+      : r.metal === 'silver'
+      ? '<span class="metal-badge metal-silver">Silver</span>'
+      : '<span class="metal-badge metal-other">Other</span>';
+    return `<tr>
+      <td style="color:#555;font-size:13px;">${i+1}</td>
+      <td>
+        <select onchange="updateRow(${i},'metal',this.value)" style="background:#111;border:1px solid #333;color:#fff;padding:4px 8px;border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:14px;">
+          <option value="gold" ${r.metal==='gold'?'selected':''}>Gold</option>
+          <option value="silver" ${r.metal==='silver'?'selected':''}>Silver</option>
+          <option value="other" ${r.metal==='other'?'selected':''}>Other</option>
+        </select>
+      </td>
+      <td class="editable-cell"><input type="text" value="${r.name||''}" placeholder="Product name..." onchange="updateRow(${i},'name',this.value)"></td>
+      <td class="editable-cell"><input type="number" class="price-input" value="${r.weight||''}" placeholder="0.000" step="0.001" min="0" onchange="updateRow(${i},'weight',this.value)" style="width:90px;"></td>
+      <td class="melt-col">${meltStr}</td>
+      <td class="editable-cell price-col buy-col"><input type="number" class="price-input" value="${r.buy||''}" placeholder="0.00" step="0.01" min="0" onchange="updateRow(${i},'buy',this.value)" style="width:100px;"></td>
+      <td class="editable-cell price-col sell-col"><input type="number" class="price-input" value="${r.sell||''}" placeholder="0.00" step="0.01" min="0" onchange="updateRow(${i},'sell',this.value)" style="width:100px;"></td>
+      <td><button class="del-btn" onclick="deleteRow(${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function addRow() {
+  rows.push({ metal:'gold', name:'', weight:'', buy:'', sell:'' });
+  saveRows();
+  renderTable();
+}
+function updateRow(i, field, val) {
+  rows[i][field] = val;
+  saveRows();
+  // Re-render only melt column live
+  renderTable();
+}
+function deleteRow(i) {
+  rows.splice(i, 1);
+  saveRows();
+  renderTable();
+}
+function updateTableMelts() {
+  // Re-render table so melt values update with new prices
+  if (rows.length) renderTable();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  renderTable();
+  fetchPrices();
+  setInterval(fetchPrices, 5 * 60 * 1000); // refresh every 5 min
+}
+</script>
+</body>
+</html>
