@@ -338,8 +338,8 @@ function getMelt(metal, weight) {
   if (metal === 'silver') return silverPrice * w;
   return 0;
 }
-function saveRows() {
-  fetch('/api/trading/rows', {
+async function saveRows() {
+  await fetch('/api/trading/rows', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ rows })
@@ -379,17 +379,17 @@ function renderTable() {
   }).join('');
 }
 
-function addRow() {
+async function addRow() {
   rows.push({metal:'gold',name:'',weight:'',buy:'',sell:''});
-  saveRows();
   renderTable();
+  await saveRows();
   setTimeout(() => {
     const inputs = document.querySelectorAll('#table-body input[data-field="name"]');
     if (inputs.length) inputs[inputs.length-1].focus();
   }, 30);
 }
 function updateRow(i,field,val) { rows[i][field]=val; saveRows(); }
-function deleteRow(i) { rows.splice(i,1); saveRows(); renderTable(); }
+async function deleteRow(i) { rows.splice(i,1); renderTable(); await saveRows(); }
 
 // Delegated listeners — attached once, work for all rows
 document.getElementById('table-body').addEventListener('change', function(e) {

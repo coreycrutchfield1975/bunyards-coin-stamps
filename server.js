@@ -124,7 +124,7 @@ app.post('/api/admin/logout', (req, res) => {
 });
 
 // ── Trading Rows API ─────────────────────────────────────────────────────────
-app.get('/api/trading/rows', requireAdmin, async (req, res) => {
+app.get('/api/trading/rows', async (req, res) => {
   try {
     const db = client.db('bunyards');
     const doc = await db.collection('trading_rows').findOne({ _id: 'rows' });
