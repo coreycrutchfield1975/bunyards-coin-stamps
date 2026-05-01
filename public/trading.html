@@ -128,6 +128,58 @@
     .melt-values{grid-template-columns:repeat(2,1fr);}
     .sheet-area{padding:16px;}
   }
+
+  /* ── FULLSCREEN TV MODE ── */
+  body.tv-mode header .logo-area img{height:80px;}
+  body.tv-mode .spot-price{font-size:96px !important;}
+  body.tv-mode .melt-pill-value{font-size:26px !important;}
+  body.tv-mode .melt-pill-label{font-size:14px !important;}
+  body.tv-mode .spot-metal{font-size:20px !important;}
+  body.tv-mode .spot-unit{font-size:16px !important;}
+  body.tv-mode .spot-board-title{font-size:18px !important;}
+  body.tv-mode .market-disclaimer{font-size:17px !important;}
+  body.tv-mode .sheet-area{display:none;}
+  body.tv-mode .ticker-inner{font-size:18px !important;}
+  body.tv-mode header{padding:20px 48px;}
+  body.tv-mode .logo-title{font-size:30px;}
+  body.tv-mode .spot-board{padding:40px 48px 32px;}
+  body.tv-mode .spot-grid{gap:32px;}
+  body.tv-mode .spot-card{padding:36px 48px;}
+  body.tv-mode .melt-pill{padding:16px 20px;}
+  body.tv-mode .melt-values{gap:18px;}
+  body.tv-mode .market-status{font-size:16px !important;padding:8px 20px;}
+  body.tv-mode #tv-btn{background:linear-gradient(135deg,#2a4a2a,#1a3a1a);color:#4ddb7a;border-color:#2a6a3a;}
+  body.tv-mode #admin-toolbar{display:none;}
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body{background:#fff !important;color:#000 !important;}
+    #login-overlay,header,.ticker-bar,.sheet-header .add-btn,#admin-toolbar,.del-btn,select{display:none !important;}
+    .spot-board{background:#f9f6ee !important;border:2px solid #c9a84c;page-break-inside:avoid;}
+    .spot-card{background:#fff !important;border:2px solid #c9a84c;}
+    .spot-price{color:#7a5c1a !important;text-shadow:none !important;animation:none !important;font-size:48px !important;}
+    .spot-card.silver-card .spot-price{color:#444 !important;}
+    .melt-pill{background:#f5f5f5 !important;border:1px solid #ccc;}
+    .melt-pill-value{color:#7a5c1a !important;}
+    .melt-pill.ag .melt-pill-value{color:#444 !important;}
+    .melt-pill-label{color:#666 !important;}
+    .spot-metal{color:#7a5c1a !important;}
+    .silver-card .spot-metal{color:#444 !important;}
+    .spot-unit{color:#888 !important;}
+    table{border:1px solid #ccc;}
+    thead th{color:#7a5c1a !important;border-bottom:2px solid #c9a84c;}
+    tbody tr{border-bottom:1px solid #eee;}
+    tbody td{color:#111 !important;}
+    .melt-col{color:#7a5c1a !important;}
+    .buy-col{color:#1a6a3a !important;}
+    .sell-col{color:#8b1a1a !important;}
+    .sheet-area{padding:16px !important;}
+    .market-disclaimer{color:#8b5a1a !important;}
+    .spot-board-title{color:#666 !important;}
+    .logo-title{color:#7a5c1a !important;}
+    .logo-title span{color:#888 !important;}
+    @page{margin:0.6in;size:landscape;}
+  }
 </style>
 </head>
 <body>
@@ -152,8 +204,11 @@
       <span>Live Trading Sheet</span>
     </div>
   </div>
-  <div class="header-right">
+  <div class="header-right" id="admin-toolbar">
     <span class="market-status" id="market-status">⏳ Loading...</span>
+    <button class="logout-btn" id="tv-btn" onclick="toggleTV()" title="TV / Fullscreen Mode">📺 TV Mode</button>
+    <button class="logout-btn" onclick="exportCSV()" title="Export to CSV">⬇ Export CSV</button>
+    <button class="logout-btn" onclick="window.print()" title="Print Trading Sheet">🖨 Print</button>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 </header>
@@ -427,6 +482,57 @@ function deleteRow(i) {
 function updateTableMelts() {
   // Re-render table so melt values update with new prices
   if (rows.length) renderTable();
+}
+
+// ─── TV / FULLSCREEN MODE ────────────────────────────────────────────────────
+let tvMode = false;
+function toggleTV() {
+  tvMode = !tvMode;
+  document.body.classList.toggle('tv-mode', tvMode);
+  const btn = document.getElementById('tv-btn');
+  btn.textContent = tvMode ? '🖥 Exit TV Mode' : '📺 TV Mode';
+  if (tvMode) {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+}
+// Exit TV mode when user presses Escape
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && tvMode) {
+    tvMode = false;
+    document.body.classList.remove('tv-mode');
+    document.getElementById('tv-btn').textContent = '📺 TV Mode';
+  }
+});
+
+// ─── EXPORT CSV ──────────────────────────────────────────────────────────────
+function exportCSV() {
+  const now = new Date().toLocaleString('en-US');
+  let csv = `Bunyards Coin & Stamps — Trading Sheet\nExported: ${now}\nGold Spot: ${fmt(goldPrice)} / oz\nSilver Spot: ${fmt(silverPrice)} / oz\n\n`;
+  csv += 'Metal,Product Name,Weight (oz),Melt Value,Bunyards Buy,Bunyards Sell\n';
+  rows.forEach(r => {
+    const melt = getMelt(r.metal, r.weight);
+    csv += [
+      r.metal || '',
+      '"' + (r.name || '').replace(/"/g,'""') + '"',
+      r.weight || '',
+      melt > 0 ? melt.toFixed(2) : '',
+      r.buy || '',
+      r.sell || ''
+    ].join(',') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.download = `bunyards-trading-${dateStr}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
