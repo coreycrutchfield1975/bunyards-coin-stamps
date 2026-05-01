@@ -323,27 +323,49 @@ function renderTable() {
     return;
   }
   tbody.innerHTML = rows.map((r, i) => {
+    const name = (r.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     return `<tr>
       <td style="color:#555;font-size:13px;">${i+1}</td>
       <td>
-        <select onchange="updateRow(${i},'metal',this.value)" style="background:#111;border:1px solid #333;color:#fff;padding:4px 8px;border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:14px;">
+        <select data-i="${i}" data-field="metal" style="background:#111;border:1px solid #333;color:#fff;padding:4px 8px;border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:14px;">
           <option value="gold" ${r.metal==='gold'?'selected':''}>Gold</option>
           <option value="silver" ${r.metal==='silver'?'selected':''}>Silver</option>
           <option value="other" ${r.metal==='other'?'selected':''}>Other</option>
         </select>
       </td>
-      <td class="editable-cell"><input type="text" value="${r.name||''}" placeholder="Product name..." onchange="updateRow(${i},'name',this.value)"></td>
-      <td class="editable-cell"><input type="number" class="price-input" value="${r.weight||''}" placeholder="0.000" step="0.001" min="0" onchange="updateRow(${i},'weight',this.value)" style="width:90px;"></td>
-      <td class="melt-col">${melt > 0 ? fmt(melt) : '—'}</td>
-      <td class="editable-cell price-col buy-col"><input type="number" class="price-input" value="${r.buy||''}" placeholder="0.00" step="0.01" min="0" onchange="updateRow(${i},'buy',this.value)" style="width:100px;"></td>
-      <td class="editable-cell price-col sell-col"><input type="number" class="price-input" value="${r.sell||''}" placeholder="0.00" step="0.01" min="0" onchange="updateRow(${i},'sell',this.value)" style="width:100px;"></td>
-      <td><button class="del-btn" onclick="deleteRow(${i})">✕</button></td>
+      <td class="editable-cell"><input type="text" data-i="${i}" data-field="name" value="${name}" placeholder="Product name..."></td>
+      <td class="editable-cell"><input type="number" class="price-input" data-i="${i}" data-field="weight" value="${r.weight||''}" placeholder="0.000" step="0.001" min="0" style="width:90px;"></td>
+      <td class="editable-cell price-col buy-col"><input type="number" class="price-input" data-i="${i}" data-field="buy" value="${r.buy||''}" placeholder="0.00" step="0.01" min="0" style="width:100px;"></td>
+      <td class="editable-cell price-col sell-col"><input type="number" class="price-input" data-i="${i}" data-field="sell" value="${r.sell||''}" placeholder="0.00" step="0.01" min="0" style="width:100px;"></td>
+      <td><button class="del-btn" data-del="${i}">✕</button></td>
     </tr>`;
   }).join('');
 }
-function addRow() { rows.push({metal:'gold',name:'',weight:'',buy:'',sell:''}); saveRows(); renderTable(); }
-function updateRow(i,field,val) { rows[i][field]=val; saveRows(); renderTable(); }
+
+function addRow() {
+  rows.push({metal:'gold',name:'',weight:'',buy:'',sell:''});
+  saveRows();
+  renderTable();
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#table-body input[data-field="name"]');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  }, 30);
+}
+function updateRow(i,field,val) { rows[i][field]=val; saveRows(); }
 function deleteRow(i) { rows.splice(i,1); saveRows(); renderTable(); }
+
+// Delegated listeners — attached once, work for all rows
+document.getElementById('table-body').addEventListener('change', function(e) {
+  const el = e.target;
+  if (el.dataset.i !== undefined && el.dataset.field) {
+    rows[el.dataset.i][el.dataset.field] = el.value;
+    saveRows();
+  }
+});
+document.getElementById('table-body').addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-del]');
+  if (btn) { rows.splice(parseInt(btn.dataset.del),1); saveRows(); renderTable(); }
+});
 
 // ─── TV MODE ──────────────────────────────────────────────────────────────────
 let tvMode = false;
