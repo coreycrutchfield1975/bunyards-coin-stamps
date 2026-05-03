@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bunyards Coin & Stamps — Poplar Bluff, MO</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Admin Dashboard · Bunyards Coin & Stamps</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
+
   :root{
     --red:#9B1C1C;
     --darkred:#7a1515;
@@ -474,432 +475,22 @@
     .print-frame{box-shadow:none;border:none;padding:0}
     #admin-section{background:#fff}
   }
+
+/* Standalone admin page overrides */
+body { margin: 0; padding: 0; }
+#admin-section { display: block !important; position: static !important; min-height: 100vh; }
+#admin-login-overlay { display: none; }
+.no-access { display: none; }
 </style>
 </head>
 <body>
-
-<!-- NAV -->
-<nav id="main-nav">
-  <div class="nav-inner">
-    <a class="nav-logo" href="#home">Bunyards <span>Coin & Stamps</span></a>
-    <div class="nav-links" id="nav-links">
-      <a href="#home">Home</a>
-      <a href="#about">About</a>
-      <a href="#services">Services</a>
-      <a href="#shop">Shop</a>
-      <a href="#whatnot">WhatNot</a>
-      <a href="#dale">Meet Dale</a>
-      <a href="#contact">Contact</a>
-    </div>
-    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
-      <span></span><span></span><span></span>
-    </div>
-  </div>
-</nav>
-<div class="mobile-menu" id="mobile-menu">
-  <a href="#home" onclick="closeMenu()">Home</a>
-  <a href="#about" onclick="closeMenu()">About</a>
-  <a href="#services" onclick="closeMenu()">Services</a>
-  <a href="#shop" onclick="closeMenu()">Shop</a>
-  <a href="#whatnot" onclick="closeMenu()">WhatNot</a>
-  <a href="#dale" onclick="closeMenu()">Meet Dale</a>
-  <a href="#contact" onclick="closeMenu()">Contact</a>
-</div>
-
-<!-- HOURS BANNER -->
-<div class="hours-banner" style="margin-top:64px;">
-  Open <strong>Tuesday – Thursday, 10 AM – 5 PM</strong> &nbsp;·&nbsp; Call to schedule outside regular hours: <strong>(573) 772-0889</strong>
-</div>
-
-<!-- HERO -->
-<section id="home" class="hero" style="margin-top:0;padding-top:80px;">
-  <img class="hero-logo-img" src="/logo.png" alt="Bunyards Coin & Stamps logo">
-  <p class="hero-sub">Poplar Bluff, Missouri &nbsp;·&nbsp; Gateway to the Ozarks</p>
-  <p class="hero-tagline">"Where Every Coin Tells a Story"</p>
-  <div class="hero-badges">
-    <span class="badge">ANA Member</span>
-    <span class="badge">MNS Member</span>
-    <span class="badge">OCC Member</span>
-    <span class="badge">Poplar Bluff Coin Club</span>
-    <span class="badge">Ancient Coin Specialist</span>
-  </div>
-  <div class="hero-btns">
-    <a href="#shop" class="btn btn-primary">Browse Shop</a>
-    <a href="#contact" class="btn btn-outline">Schedule a Visit</a>
-  </div>
-  <div class="hero-scroll">Scroll to explore</div>
-</section>
-
-<!-- ABOUT -->
-<section id="about">
-  <div class="section-inner">
-    <div class="about-grid">
-      <div class="about-text">
-        <h2 class="section-title">A Local Treasure</h2>
-        <div class="section-line"></div>
-        <p>Bunyards Coin & Stamps is Poplar Bluff's hometown coin and stamp dealer, proudly serving Butler County and the surrounding Ozark region. Whether you're a seasoned collector, a curious newcomer, or someone who just found grandpa's old coin jar — you've come to the right place.</p>
-        <p>Located at <strong>1912 N. Westwood Blvd</strong>, we offer a welcoming, no-pressure environment where your questions are always encouraged. Bring in what you have and let us help you understand what you're holding.</p>
-        <p>We specialize in <strong>gold and silver bullion</strong>, US coins and currency, stamps, ancient coins, and foreign coins. We buy, sell, and trade — and soon we'll be expanding into jewelry evaluation as well.</p>
-        <p>We also attend coin shows across the region on weekends — buying, selling, and connecting with dealers and collectors from all over the country.</p>
-        <div class="memberships">
-          <span class="mem-badge">🏛 ANA</span>
-          <span class="mem-badge">🪙 MNS</span>
-          <span class="mem-badge">📜 OCC</span>
-          <span class="mem-badge">🌟 Poplar Bluff Coin Club</span>
-          <span class="mem-badge">⚓ EACS</span>
-        </div>
-      </div>
-      <div class="about-img">
-        <img src="https://media.base44.com/images/public/69eae2a3c39807325aed8509/598d9557e_generated_image.png" alt="Coin collection">
-        <div class="about-img-caption">🏛 Ancient Roman, Greek & US Coins — Poplar Bluff, MO</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- GALLERY STRIP -->
-<div class="gallery-strip">
-  <img src="https://media.base44.com/images/public/69eae2a3c39807325aed8509/0ca35cb1f_generated_image.png" alt="Poplar Bluff">
-  <img src="https://media.base44.com/images/public/69eae2a3c39807325aed8509/598d9557e_generated_image.png" alt="Coins">
-  <img src="https://media.base44.com/images/public/69eae2a3c39807325aed8509/5145e2b75_generated_image.png" alt="Currency">
-</div>
-
-<!-- SERVICES -->
-<section id="services" class="services-bg">
-  <div class="section-inner">
-    <h2 class="section-title">What We Do</h2>
-    <div class="section-line"></div>
-    <p class="section-sub">From everyday US coins to rare ancient treasures — we're here to help you buy, sell, learn, and collect with confidence.</p>
-    <div class="services-grid">
-      <div class="service-card">
-        <div class="service-icon">🥇</div>
-        <h3>Gold & Silver Bullion</h3>
-        <p>Buy and sell gold and silver bullion at competitive prices. We carry Eagles, Maples, rounds, bars, and constitutional silver. Fair pricing based on live spot.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">🪙</div>
-        <h3>Coin Identification</h3>
-        <p>Not sure what you have? Bring it in! Dale will help you identify, grade, and understand the history and value of your coins and currency — no appointment needed during business hours.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">📜</div>
-        <h3>US Currency & Stamps</h3>
-        <p>We deal in old US paper currency including large-size notes, silver certificates, and gold certificates. Stamp collections bought and sold as well.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">🏛</div>
-        <h3>Ancient & Foreign Coins</h3>
-        <p>Dale is a passionate specialist in ancient Roman and Greek coinage, as well as foreign coins and currency from around the world. He's given presentations on Roman Imperial coinage and Bactrian coinage.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">💍</div>
-        <h3>Jewelry (Coming Soon)</h3>
-        <p>We'll soon be offering gold and silver jewelry evaluation and purchasing. Call ahead to ask about availability.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">📚</div>
-        <h3>Education & History</h3>
-        <p>Dale is passionate about the history behind coins and currency. Whether you're a beginner or a seasoned collector, you'll leave knowing more than when you walked in.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SHOP -->
-<section id="shop">
-  <div class="section-inner">
-    <h2 class="section-title">Shop Online</h2>
-    <div class="section-line"></div>
-    <p class="section-sub">Browse available items below. Contact us to purchase — we'll arrange payment and shipping or local pickup.</p>
-    <div class="shop-filter">
-      <button class="filter-btn active" onclick="filterShop('all',this)">All Items</button>
-      <button class="filter-btn" onclick="filterShop('gold',this)">Gold</button>
-      <button class="filter-btn" onclick="filterShop('silver',this)">Silver</button>
-      <button class="filter-btn" onclick="filterShop('ancient',this)">Ancient</button>
-      <button class="filter-btn" onclick="filterShop('currency',this)">Currency</button>
-      <button class="filter-btn" onclick="filterShop('stamps',this)">Stamps</button>
-    </div>
-    <div class="shop-grid" id="shop-grid">
-      <div class="shop-empty">🪙 New inventory coming soon! Check back regularly or follow us on WhatNot for live auctions.</div>
-    </div>
-  </div>
-</section>
-
-<!-- WHATNOT -->
-<section id="whatnot" style="background:var(--parchment);">
-  <div class="section-inner">
-    <h2 class="section-title">Live on WhatNot</h2>
-    <div class="section-line"></div>
-    <div class="whatnot-banner">
-      <div class="whatnot-text">
-        <div class="whatnot-badge">🔴 Live Auctions</div>
-        <h3>Buy Silver & Gold Live</h3>
-        <p>Dale hosts live auctions on WhatNot selling gold and silver bullion — Eagles, constitutional silver, bars, rounds and more. Competitive prices, real-time bidding, and a great community of collectors.</p>
-        <a href="https://www.whatnot.com/search?query=bunyards" target="_blank" class="btn btn-whatnot">Find Us on WhatNot →</a>
-      </div>
-      <div style="font-size:80px;">🔴</div>
-    </div>
-  </div>
-</section>
-
-<!-- MEET DALE -->
-<section id="dale" class="bio-bg">
-  <div class="section-inner">
-    <h2 class="section-title">Meet Dale Bunyard</h2>
-    <div class="section-line"></div>
-    <div class="bio-grid">
-      <div class="bio-sidebar">
-        <div class="bio-portrait">
-          <div class="bio-portrait-icon">🏛</div>
-          <div class="bio-name">William Dale Bunyard</div>
-          <div class="bio-title-text">Numismatist · Dealer · Educator</div>
-          <div class="bio-stats">
-            <div class="bio-stat"><strong>📍</strong><span>Williamsville, MO<br>(serves Poplar Bluff area)</span></div>
-            <div class="bio-stat"><strong>🏛</strong><span>ANA Member</span></div>
-            <div class="bio-stat"><strong>🪙</strong><span>MNS Member &amp; Speaker</span></div>
-            <div class="bio-stat"><strong>📜</strong><span>OCC Member</span></div>
-            <div class="bio-stat"><strong>⚓</strong><span>EACS Member</span></div>
-            <div class="bio-stat"><strong>🌟</strong><span>Poplar Bluff Coin Club</span></div>
-            <div class="bio-stat"><strong>📰</strong><span>Published Numismatist</span></div>
-            <div class="bio-stat"><strong>🎙</strong><span>Speaker on Roman &amp; Bactrian Coinage</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="bio-text">
-        <p>Dale Bunyard is more than a coin dealer — he's a true student of history. A lifelong numismatist, Dale has spent decades building expertise that spans everything from pre-1965 US constitutional silver to ancient Roman Imperial coinage minted over two millennia ago.</p>
-
-        <blockquote>"Coins are windows into history. Every piece you hold was touched by someone who lived a completely different world."</blockquote>
-
-        <p>Dale is a recognized member of the <strong>American Numismatic Association (ANA)</strong>, the <strong>Missouri Numismatic Society (MNS)</strong>, the <strong>Ozark Coin Club (OCC)</strong>, and the <strong>Early American Coppers Society (EACS)</strong>. He is also an active member of the local <strong>Poplar Bluff Coin Club</strong>, where he has shared his passion for coins with fellow enthusiasts in the community.</p>
-
-        <p>His expertise in ancient coinage is especially well recognized. Dale has been published discussing ancient coins and has given formal presentations to numismatic societies, including a notable talk on <em>"Collecting a Type Set of Roman Emperors"</em> to the Ancient Coin Study Group in St. Charles, MO, and presentations on <em>Roman Imperial Coinage</em> and <em>Bactrian Coinage</em>. He has also presented to the Missouri Numismatic Society on topics such as <em>"What it Takes to Start a Coin Club."</em></p>
-
-        <p>Beyond ancient coins, Dale has a deep appreciation for foreign coins and currency from around the world, US coins and paper money, stamps, and precious metals bullion. He and his wife Theresa operate Bunyards Coin & Stamps out of Poplar Bluff — the Gateway to the Ozarks — where Dale grew roots after years of living across the Midwest.</p>
-
-        <p>On weekends you'll often find Dale at coin shows across the region — buying, selling, and networking with dealers and collectors who share his passion. He genuinely loves the community that numismatics brings together.</p>
-
-        <p>If you have coins, currency, or stamps and don't know what you're looking at — Dale is exactly the person you want to talk to. He loves the teaching aspect of the hobby as much as the collecting itself.</p>
-
-        <div class="bio-pub">
-          <div class="bio-pub-label">📰 Published & Presented</div>
-          <p>Presentations include: <em>Collecting a Type Set of Roman Emperors · Roman Imperial Coinage · Bactrian Coinage · What it Takes to Start a Coin Club</em> — delivered to the ACSG, MNS, and regional coin societies.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CURRENCY BG IMAGE STRIP -->
-<div class="gallery-strip">
-  <img src="https://media.base44.com/images/public/69eae2a3c39807325aed8509/5145e2b75_generated_image.png" alt="Old Currency">
-  <img src="https://media.base44.com/images/public/69eae2a3c39807325aed8509/598d9557e_generated_image.png" alt="Coins">
-  <img src="https://media.base44.com/images/public/69eae2a3c39807325aed8509/0ca35cb1f_generated_image.png" alt="Poplar Bluff">
-</div>
-
-<!-- CONTACT -->
-<section id="contact">
-  <div class="section-inner">
-    <h2 class="section-title">Visit Us</h2>
-    <div class="section-line"></div>
-    <div class="contact-grid">
-      <div class="contact-info">
-        <h3>Store Information</h3>
-        <div class="contact-item">
-          <div class="contact-icon">📍</div>
-          <div class="contact-detail">
-            <strong>Address</strong>
-            <span>1912 N. Westwood Blvd<br>Poplar Bluff, MO 63901</span>
-          </div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-icon">📞</div>
-          <div class="contact-detail">
-            <strong>Phone</strong>
-            <a href="tel:5737720889">(573) 772-0889</a>
-          </div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-icon">✉️</div>
-          <div class="contact-detail">
-            <strong>Email</strong>
-            <a href="mailto:dalebunyard@hotmail.com">dalebunyard@hotmail.com</a>
-          </div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-icon">🕐</div>
-          <div class="contact-detail">
-            <strong>Store Hours</strong>
-            <table class="hours-table">
-              <tr><td>Monday</td><td>Closed</td></tr>
-              <tr><td>Tuesday</td><td class="hours-open">10:00 AM – 5:00 PM</td></tr>
-              <tr><td>Wednesday</td><td class="hours-open">10:00 AM – 5:00 PM</td></tr>
-              <tr><td>Thursday</td><td class="hours-open">10:00 AM – 5:00 PM</td></tr>
-              <tr><td>Friday</td><td>Closed</td></tr>
-              <tr><td>Saturday</td><td>Closed (often at coin shows)</td></tr>
-              <tr><td>Sunday</td><td>Closed</td></tr>
-            </table>
-            <p style="margin-top:12px;font-size:14px;color:var(--red);font-style:italic;">📞 Call to schedule outside regular hours!</p>
-          </div>
-        </div>
-      </div>
-      <div class="contact-form-side">
-        <h3>Send a Message</h3>
-        <form id="contact-form" onsubmit="submitForm(event)">
-          <div class="form-group">
-            <label>Your Name</label>
-            <input type="text" placeholder="John Smith" required>
-          </div>
-          <div class="form-group">
-            <label>Phone or Email</label>
-            <input type="text" placeholder="(573) 555-0000 or email@example.com" required>
-          </div>
-          <div class="form-group">
-            <label>What can we help with?</label>
-            <select>
-              <option>I want to buy something</option>
-              <option>I want to sell something</option>
-              <option>I'd like an appraisal / identification</option>
-              <option>WhatNot / online purchase question</option>
-              <option>Schedule a visit outside regular hours</option>
-              <option>General question</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Message</label>
-            <textarea placeholder="Tell us what you're looking for or what you have..."></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary" style="width:100%">Send Message</button>
-          <div class="form-success" id="form-success">✅ Message sent! Dale will get back to you soon.</div>
-        </form>
-      </div>
-    </div>
-    <div class="map-wrap">
-      <iframe
-        src="https://maps.google.com/maps?q=1912+N+Westwood+Blvd+Poplar+Bluff+MO+63901&output=embed"
-        title="Bunyards Coin & Stamps location">
-      </iframe>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-logo">Bunyards <span>Coin & Stamps</span></div>
-    <div class="footer-tagline">Gateway to the Ozarks · Poplar Bluff, Missouri</div>
-    <div class="footer-links">
-      <a href="#home">Home</a>
-      <a href="#about">About</a>
-      <a href="#services">Services</a>
-      <a href="#shop">Shop</a>
-      <a href="#dale">Meet Dale</a>
-      <a href="#contact">Contact</a>
-    </div>
-    <div class="footer-disclaimer">
-      Prices shown are for reference only and subject to change based on live spot prices. All sales final unless otherwise agreed. Bunyards Coin & Stamps is not responsible for typographical errors in pricing or descriptions. Always verify value independently before making large purchases.
-    </div>
-    <div class="footer-copy">© 2025 Bunyards Coin & Stamps · 1912 N. Westwood Blvd, Poplar Bluff, MO 63901 · (573) 772-0889</div>
-    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #333;">
-      <a href="/admin" style="font-size:11px;color:#888;text-decoration:none;font-family:monospace;letter-spacing:1px;">🔐 admin access</a>
-    </div>
-  </div>
-</footer>
-
-<!-- BUY MODAL -->
-<div class="modal-overlay" id="buy-modal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <h3>Purchase This Item</h3>
-    <div class="modal-item-title" id="modal-item-name"></div>
-    <div class="modal-price" id="modal-item-price"></div>
-    <div class="modal-note">To purchase, contact Dale directly by phone or email. He'll confirm availability, arrange payment, and set up local pickup or shipping.</div>
-    <div class="payment-options">
-      <a href="tel:5737720889" class="pay-btn pay-phone">📞 Call (573) 772-0889</a>
-      <a href="mailto:dalebunyard@hotmail.com" class="pay-btn pay-email" id="modal-email-link">✉️ Email About This Item</a>
-    </div>
-  </div>
-</div>
-
 <script>
-// Mobile menu
-function toggleMenu(){document.getElementById('mobile-menu').classList.toggle('open');}
-function closeMenu(){document.getElementById('mobile-menu').classList.remove('open');}
-
-// Shop data — Dale can add items here
-const SHOP_ITEMS = [
-  // Example (commented out — Dale adds real items):
-  // {id:1,category:'silver',title:'1921 Morgan Dollar MS-63',desc:'Beautifully struck 1921 Morgan Dollar, graded MS-63. Original luster, minimal marks.',price:65,img:'',sold:false},
-];
-
-function filterShop(cat, btn){
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderShop(cat);
+// Auth check - redirect if not logged in
+if(sessionStorage.getItem('bunyards_admin') !== '1'){
+  window.location.href = '/admin';
 }
-
-function renderShop(cat='all'){
-  const grid = document.getElementById('shop-grid');
-  const filtered = cat==='all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i=>i.category===cat);
-  if(!filtered.length){
-    grid.innerHTML='<div class="shop-empty">🪙 No items in this category right now. Check back soon or browse WhatNot for live listings!</div>';
-    return;
-  }
-  grid.innerHTML = filtered.map(item=>`
-    <div class="shop-item">
-      <div class="shop-img">${item.img?`<img src="${item.img}" alt="${item.title}">`:'🪙'}</div>
-      <div class="shop-body">
-        <div class="shop-category">${item.category.toUpperCase()}</div>
-        <div class="shop-title">${item.title}</div>
-        <div class="shop-desc">${item.desc}</div>
-        <div class="shop-footer">
-          <div class="shop-price">$${item.price.toFixed(2)}</div>
-          ${item.sold
-            ? '<div class="shop-sold">SOLD</div>'
-            : `<button class="shop-buy" onclick="openModal('${item.title}','$${item.price.toFixed(2)}')">Buy</button>`
-          }
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function openModal(title, price){
-  document.getElementById('modal-item-name').textContent = title;
-  document.getElementById('modal-item-price').textContent = price;
-  document.getElementById('modal-email-link').href = `mailto:dalebunyard@hotmail.com?subject=Purchase Inquiry: ${encodeURIComponent(title)}&body=Hi Dale,%0A%0AI'm interested in purchasing: ${encodeURIComponent(title)} (${encodeURIComponent(price)}).%0A%0APlease let me know availability and payment options.%0A%0AThanks!`;
-  document.getElementById('buy-modal').classList.add('open');
-}
-function closeModal(){document.getElementById('buy-modal').classList.remove('open');}
-document.getElementById('buy-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
-
-// Contact form
-function submitForm(e){
-  e.preventDefault();
-  document.getElementById('form-success').style.display='block';
-  e.target.reset();
-  setTimeout(()=>document.getElementById('form-success').style.display='none',6000);
-}
-
-// Active nav on scroll
-const sections=['home','about','services','shop','whatnot','dale','contact'];
-function updateNav(){
-  let current='home';
-  sections.forEach(id=>{
-    const el=document.getElementById(id);
-    if(el&&window.scrollY>=el.offsetTop-100)current=id;
-  });
-  document.querySelectorAll('.nav-links a').forEach(a=>{
-    a.classList.toggle('active',a.getAttribute('href')==='#'+current);
-  });
-}
-window.addEventListener('scroll',updateNav);
-
-renderShop();
 </script>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!-- ADMIN LOGIN OVERLAY                              -->
-<!-- ═══════════════════════════════════════════════ -->
 <div id="admin-login-overlay">
   <div class="login-box">
     <div style="font-size:36px;margin-bottom:8px">🔐</div>
@@ -1109,79 +700,6 @@ renderShop();
     </div>
   </div>
 </div><!-- end admin-section -->
-
-<!-- ═══════════════════════════════════════════════ -->
-<!-- NEW ENTRY MODAL                                  -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="entry-modal-overlay" id="entry-modal">
-  <div class="entry-modal">
-    <div class="em-title" id="em-title">＋ New Transaction Entry</div>
-    <div class="em-row" style="grid-template-columns:1fr 1fr 1fr">
-      <div class="em-group"><label>File # (Auto)</label><input type="text" id="em-fileno" placeholder="2026-05-001"></div>
-      <div class="em-group"><label>Dale's Ref # <span style="font-size:9px;color:#94a3b8">(optional)</span></label><input type="text" id="em-refno" placeholder="e.g. D-001, #42..."></div>
-      <div class="em-group"><label>Transaction Type *</label>
-        <select id="em-type"><option value="">Select...</option><option>Buy</option><option>Sell</option><option>Trade</option><option>Consignment</option></select></div>
-    </div>
-    <div class="em-row">
-      <div class="em-group"><label>Date *</label><input type="date" id="em-date"></div>
-      <div class="em-group"><label>Time *</label><input type="time" id="em-time"></div>
-    </div>
-    <div class="mo-notice">⚖️ <strong>RSMo §407.300 Required Fields</strong></div>
-    <div class="em-row">
-      <div class="em-group"><label>Customer Full Name *</label><input type="text" id="em-name" placeholder="As shown on ID"></div>
-      <div class="em-group"><label>Date of Birth *</label><input type="date" id="em-dob"></div>
-    </div>
-    <div class="em-row">
-      <div class="em-group"><label>Current Address *</label><input type="text" id="em-addr" placeholder="Street address"></div>
-      <div class="em-group"><label>Gender *</label>
-        <select id="em-gender"><option value="">Select...</option><option>Male</option><option>Female</option><option>Other/Not specified</option></select></div>
-    </div>
-    <div class="em-row">
-      <div class="em-group"><label>Phone</label><input type="tel" id="em-phone" placeholder="573-555-0000"></div>
-      <div class="em-group"><label>Vehicle License Plate *</label><input type="text" id="em-plate" placeholder="MO · ABC 1234"><div class="req-note">Required — RSMo §407.300</div></div>
-    </div>
-    <div class="em-row full">
-      <div class="em-group"><label>Item Description *</label><textarea id="em-desc" placeholder="Full description: type, date, mint, grade, condition, any identifying marks..."></textarea></div>
-    </div>
-    <div class="em-row">
-      <div class="em-group"><label>Weight (grams)</label><input type="number" id="em-weight" placeholder="0.00" step="0.01"></div>
-      <div class="em-group"><label>Amount ($) *</label><input type="number" id="em-amount" placeholder="0.00" step="0.01"></div>
-    </div>
-    <div class="em-row">
-      <div class="em-group"><label>Payment Method *</label>
-        <select id="em-payment"><option value="">Select...</option><option>Cash</option><option>Check</option><option>Credit Card</option><option>N/A (Trade)</option><option>N/A (Consignment)</option></select></div>
-      <div class="em-group"><label>Staff Member</label>
-        <select id="em-staff"><option>Dale</option><option>Trevor</option><option>Billy</option><option>Corey</option></select></div>
-    </div>
-    <div class="em-row full">
-      <div class="em-group"><label>Notes</label><textarea id="em-notes" placeholder="Trade details, consignment terms, special conditions..." style="min-height:44px"></textarea></div>
-    </div>
-    <div class="em-group" style="margin-bottom:14px">
-      <label>Driver's License / Gov. ID Photo * <span style="font-size:10px;color:#64748b">(Stored privately · Admin only)</span></label>
-      <div class="id-zone" id="id-zone" onclick="document.getElementById('em-id-file').click()">
-        <div style="font-size:24px;margin-bottom:4px">📷</div>
-        <div style="font-weight:700;font-size:12px" id="id-zone-text">Click to upload ID photo</div>
-        <div style="font-size:10px;color:#94a3b8;margin-top:2px">JPG or PNG · Required by RSMo §407.300</div>
-      </div>
-      <input type="file" id="em-id-file" accept="image/*" style="display:none" onchange="previewIDUpload(this)">
-      <div class="req-note">Required by RSMo §407.300</div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:10px;border-top:1px solid #e2e8f0">
-      <button class="adm-btn adm-btn-outline" onclick="closeEntryModal()">Cancel</button>
-      <button class="adm-btn adm-btn-dark" onclick="saveEntry()">💾 Save Entry</button>
-    </div>
-  </div>
-</div>
-
-<!-- ID VIEWER MODAL -->
-<div class="entry-modal-overlay" id="id-viewer-modal">
-  <div class="entry-modal" style="max-width:480px;text-align:center">
-    <div class="em-title">🪪 ID Photo — <span id="id-viewer-name"></span></div>
-    <img id="id-viewer-img" src="" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:12px">
-    <div style="font-size:11px;color:#64748b;margin-bottom:12px">Private · Admin access only · RSMo §407.300</div>
-    <button class="adm-btn adm-btn-outline" onclick="document.getElementById('id-viewer-modal').classList.remove('open')">Close</button>
-  </div>
-</div>
 
 
 <script>
@@ -1516,24 +1034,21 @@ function exportLedgerCSV(){
 document.getElementById('entry-modal').addEventListener('click',function(e){if(e.target===this)closeEntryModal();});
 document.getElementById('id-viewer-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 document.getElementById('admin-login-overlay').addEventListener('click',function(e){if(e.target===this)closeAdminLogin();});
+
 </script>
 
 <script>
-// Auto-open admin if navigated to /#admin
-if(window.location.hash === '#admin'){
-  function tryOpenAdmin(){
-    if(typeof openAdminLogin === 'function'){
-      openAdminLogin();
-    }
-  }
-  if(document.readyState === 'complete' || document.readyState === 'interactive'){
-    setTimeout(tryOpenAdmin, 300);
-  } else {
-    window.addEventListener('load', function(){ setTimeout(tryOpenAdmin, 300); });
-  }
+// Override openAdmin for standalone mode - already on admin page
+function openAdmin(){ /* already open */ }
+function closeAdmin(){
+  sessionStorage.removeItem('bunyards_admin');
+  window.location.href = '/';
 }
+// Show admin section immediately
+document.getElementById('admin-section').style.display = 'block';
+document.getElementById('admin-section').style.position = 'static';
+adminAuthed = true;
+renderLedger();
 </script>
-
-
 </body>
 </html>
