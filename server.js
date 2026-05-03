@@ -5,6 +5,25 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
+
+// ── Cloudinary config ────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+function uploadToCloudinary(buffer, folder='bunyards') {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: 'image', transformation: [{ quality: 'auto', fetch_format: 'auto' }] },
+      (err, result) => err ? reject(err) : resolve(result.secure_url)
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+}
 const nodemailer = require('nodemailer');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
 
@@ -44,12 +63,8 @@ const orderSchema = new mongoose.Schema({
 const Product = mongoose.model('Product', productSchema);
 const Order = mongoose.model('Order', orderSchema);
 
-// ── Multer (image uploads) ───────────────────────────────────────────────────
-const storage = multer.diskStorage({
-  destination: 'public/uploads/',
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s/g,'_'))
-});
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+// ── Multer (image uploads — memory only, Cloudinary handles storage) ──────────
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadMem = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 // ── Middleware ───────────────────────────────────────────────────────────────
@@ -183,7 +198,7 @@ app.get('/api/admin/products', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/products', requireAdmin, upload.array('images', 5), async (req, res) => {
   const { title, description, category, subcategory, price, stock, shipping, shippingCost, featured } = req.body;
-  const images = (req.files || []).map(f => '/uploads/' + f.filename);
+  const images = await Promise.all((req.files || []).map(f => uploadToCloudinary(f.buffer)));
   const product = new Product({
     title, description, category, subcategory,
     price: parseFloat(price),
@@ -202,7 +217,7 @@ app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 5), asyn
   const { title, description, category, subcategory, price, stock, shipping, shippingCost, featured, active, removeImages } = req.body;
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ error: 'Not found' });
-  const newImages = (req.files || []).map(f => '/uploads/' + f.filename);
+  const newImages = await Promise.all((req.files || []).map(f => uploadToCloudinary(f.buffer)));
   let images = product.images;
   if (removeImages) {
     const toRemove = Array.isArray(removeImages) ? removeImages : [removeImages];
@@ -254,7 +269,7 @@ app.post('/api/checkout', async (req, res) => {
     lineItems.push({
       price_data: {
         currency: 'usd',
-        product_data: { name: p.title, images: p.images?.[0] ? [`${process.env.APP_URL || 'https://bunyardscoins.com'}${p.images[0]}`] : [] },
+        product_data: { name: p.title, images: p.images?.[0] ? [p.images[0]] : [] },
         unit_amount: Math.round(p.price * 100)
       },
       quantity: qty || 1
