@@ -613,11 +613,11 @@
     <p class="section-sub">Browse available items below. Contact us to purchase — we'll arrange payment and shipping or local pickup.</p>
     <div class="shop-filter">
       <button class="filter-btn active" onclick="filterShop('all',this)">All Items</button>
-      <button class="filter-btn" onclick="filterShop('gold',this)">Gold</button>
-      <button class="filter-btn" onclick="filterShop('silver',this)">Silver</button>
-      <button class="filter-btn" onclick="filterShop('ancient',this)">Ancient</button>
-      <button class="filter-btn" onclick="filterShop('currency',this)">Currency</button>
-      <button class="filter-btn" onclick="filterShop('stamps',this)">Stamps</button>
+      <button class="filter-btn" onclick="filterShop('Coins',this)">Coins</button>
+      <button class="filter-btn" onclick="filterShop('Stamps',this)">Stamps</button>
+      <button class="filter-btn" onclick="filterShop('Currency',this)">Currency</button>
+      <button class="filter-btn" onclick="filterShop('Tokens',this)">Tokens</button>
+      <button class="filter-btn" onclick="filterShop('Supplies',this)">Supplies</button>
     </div>
     <div class="shop-grid" id="shop-grid">
       <div class="shop-empty">🪙 New inventory coming soon! Check back regularly or follow us on WhatNot for live auctions.</div>
@@ -850,13 +850,13 @@ function filterShop(cat, btn){
 
 function renderShop(cat='all'){
   const grid = document.getElementById('shop-grid');
-  const filtered = cat==='all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i=>(i.category||'').toLowerCase()===cat.toLowerCase());
+  const filtered = cat==='all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i=>(i.category||'')===cat);
   if(!filtered.length){
     grid.innerHTML='<div class="shop-empty">🪙 No items in this category right now. Check back soon or browse WhatNot for live listings!</div>';
     return;
   }
   grid.innerHTML = filtered.map(item=>{
-    const img = item.images && item.images[0] ? `<img src="${item.images[0]}" alt="${item.name}">` : '🪙';
+    const img = item.images && item.images[0] ? `<img src="${item.images[0]}" alt="${item.title||item.name}">` : '🪙';
     const price = (parseFloat(item.price)||0).toFixed(2);
     const outOfStock = item.stock !== undefined && item.stock < 1;
     return `
@@ -864,7 +864,7 @@ function renderShop(cat='all'){
       <div class="shop-img">${img}</div>
       <div class="shop-body">
         <div class="shop-category">${(item.category||'Item').toUpperCase()}</div>
-        <div class="shop-title">${item.name}</div>
+        <div class="shop-title">${item.title||item.name}</div>
         <div class="shop-desc">${item.description||''}</div>
         <div class="shop-footer">
           <div class="shop-price">$${price}</div>
