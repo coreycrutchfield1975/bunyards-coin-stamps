@@ -799,6 +799,9 @@
       Prices shown are for reference only and subject to change based on live spot prices. All sales final unless otherwise agreed. Bunyards Coin & Stamps is not responsible for typographical errors in pricing or descriptions. Always verify value independently before making large purchases.
     </div>
     <div class="footer-copy">© 2025 Bunyards Coin & Stamps · 1912 N. Westwood Blvd, Poplar Bluff, MO 63901 · (573) 772-0889</div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #333;">
+      <a href="javascript:void(0)" onclick="openAdminLogin(event)" style="font-size:11px;color:#888;text-decoration:none;font-family:monospace;letter-spacing:1px;">🔐 admin access</a>
+    </div>
   </div>
 </footer>
 
@@ -1518,15 +1521,19 @@ document.getElementById('admin-login-overlay').addEventListener('click',function
 <script>
 // Auto-open admin if navigated to /#admin
 if(window.location.hash === '#admin'){
-  window.addEventListener('load', function(){
-    setTimeout(function(){ openAdminLogin(); }, 300);
-  });
+  function tryOpenAdmin(){
+    if(typeof openAdminLogin === 'function'){
+      openAdminLogin();
+    }
+  }
+  if(document.readyState === 'complete' || document.readyState === 'interactive'){
+    setTimeout(tryOpenAdmin, 300);
+  } else {
+    window.addEventListener('load', function(){ setTimeout(tryOpenAdmin, 300); });
+  }
 }
 </script>
 
-<!-- Admin Access (after all scripts so function is defined) -->
-<div style="text-align:center;padding:14px 0 20px;background:#f8f5f0;border-top:1px solid #e2d9cd;">
-  <a href="javascript:void(0)" onclick="openAdminLogin(event)" style="font-size:12px;color:#94a3b8;text-decoration:none;font-family:monospace;letter-spacing:1px">🔐 admin access</a>
-</div>
+
 </body>
 </html>
