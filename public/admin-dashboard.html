@@ -149,7 +149,7 @@ body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #f1f5
 
 /* ── PRINT ── */
 @media print{
-    #admin-section .adm-header,.adm-tabs,.adm-close,.adm-filters,.adm-stats,.legal-strip,.adm-btn,.adm-btn-green,.no-print{display:none!important}
+    /* legacy modal-hide rule removed */
 </style>
 </head>
 <body>
@@ -170,7 +170,7 @@ var adminAuthed = true;
     <div class="adm-tabs">
       <button class="adm-tab active" onclick="admTab('ledger',this)">📒 Ledger</button>
       <button class="adm-tab" onclick="admTab('consign',this)">📄 Consignment</button>
-      <button class="adm-tab" onclick="window.open('/trading','_blank')">📺 Trading Sheet ↗</button>
+      <button class="adm-tab" onclick="window.location.href='/trading'">📺 Trading Sheet</button>
     </div>
     <button class="adm-close" onclick="closeAdmin()">✕ Close</button>
   </div>

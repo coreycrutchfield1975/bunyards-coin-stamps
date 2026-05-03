@@ -33,10 +33,18 @@
 </div>
 <script>
 const PASS = 'Coinguy6$';
-function login(){
+async function login(){
   const v = document.getElementById('pw').value;
   if(v === PASS){
     sessionStorage.setItem('bunyards_admin','1');
+    // Also set server-side session so /trading auto-unlocks
+    try {
+      await fetch('/api/admin/login', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ password: v })
+      });
+    } catch(e) { /* non-fatal */ }
     window.location.href = '/admin-dashboard';
   } else {
     document.getElementById('err').style.display='block';
