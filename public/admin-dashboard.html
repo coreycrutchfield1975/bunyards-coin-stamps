@@ -368,6 +368,8 @@ body {
   .adm-pane { display: none !important; }
   .adm-pane.active { display: block !important; }
 }
+
+@keyframes qrspin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -377,6 +379,112 @@ body {
 if (sessionStorage.getItem('bunyards_admin') !== '1') {
   window.location.replace('/admin');
 }
+
+// ══════════════════════════════════════════
+// QR PHOTO UPLOAD
+// ══════════════════════════════════════════
+var qrPollInterval = null;
+var currentQRToken = null;
+var qrPhotoData = null;
+
+function setUploadMethod(method) {
+  var isQR = method === 'qr';
+  document.getElementById('method-file').style.display = isQR ? 'none' : 'block';
+  document.getElementById('method-qr').style.display = isQR ? 'block' : 'none';
+  var fileBtn = document.getElementById('method-file-btn');
+  var qrBtn = document.getElementById('method-qr-btn');
+  if (isQR) {
+    qrBtn.style.borderColor = '#1d4ed8'; qrBtn.style.background = '#eff6ff'; qrBtn.style.color = '#1d4ed8';
+    fileBtn.style.borderColor = '#e2e8f0'; fileBtn.style.background = 'transparent'; fileBtn.style.color = '#64748b';
+  } else {
+    fileBtn.style.borderColor = '#1d4ed8'; fileBtn.style.background = '#eff6ff'; fileBtn.style.color = '#1d4ed8';
+    qrBtn.style.borderColor = '#e2e8f0'; qrBtn.style.background = 'transparent'; qrBtn.style.color = '#64748b';
+  }
+  if (!isQR) stopQRPolling();
+}
+
+async function generateQR() {
+  try {
+    var r = await fetch('/api/qr/session', { method: 'POST' });
+    var d = await r.json();
+    if (!d.token) { alert('Could not create QR session'); return; }
+    currentQRToken = d.token;
+    qrPhotoData = null;
+    document.getElementById('qr-waiting').style.display = 'none';
+    document.getElementById('qr-active').style.display = 'block';
+    document.getElementById('qr-done').style.display = 'none';
+    document.getElementById('qr-status-text').textContent = 'Waiting for photo…';
+    drawQR(d.uploadUrl);
+    startQRPolling();
+  } catch(e) { alert('Error generating QR: ' + e.message); }
+}
+
+function drawQR(url) {
+  var canvas = document.getElementById('qr-canvas');
+  var size = 160;
+  canvas.width = size; canvas.height = size;
+  var ctx = canvas.getContext('2d');
+  // Use QR Server API to generate the QR image
+  var img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = function() { ctx.drawImage(img, 0, 0, size, size); };
+  img.onerror = function() {
+    // Fallback: show the URL as text
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,size,size);
+    ctx.fillStyle = '#000'; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Scan URL:', size/2, 20);
+    var words = url.split('/'); var short = words[words.length-1];
+    ctx.fillText(short.substring(0,20), size/2, 40);
+  };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
+}
+
+function startQRPolling() {
+  stopQRPolling();
+  qrPollInterval = setInterval(async function() {
+    if (!currentQRToken) return;
+    try {
+      var r = await fetch('/api/qr/poll/' + currentQRToken);
+      var d = await r.json();
+      if (d.status === 'ready') {
+        stopQRPolling();
+        qrPhotoData = d.image;
+        document.getElementById('qr-active').style.display = 'none';
+        document.getElementById('qr-done').style.display = 'block';
+        document.getElementById('qr-photo-preview').src = d.image;
+        // Also update the main preview
+        document.getElementById('id-preview').src = d.image;
+        document.getElementById('id-preview').style.display = 'block';
+        document.getElementById('id-zone-text').style.display = 'none';
+        document.getElementById('id-drop-zone').classList.add('has-file');
+        currentQRToken = null;
+        pendingIDData = d.image; // wire into existing save logic
+      } else if (d.status === 'expired') {
+        stopQRPolling();
+        document.getElementById('qr-status-text').textContent = 'Session expired. Generate a new QR.';
+        document.getElementById('qr-spinner').style.display = 'none';
+      }
+    } catch(e) { /* ignore poll errors */ }
+  }, 2000);
+}
+
+function stopQRPolling() {
+  if (qrPollInterval) { clearInterval(qrPollInterval); qrPollInterval = null; }
+}
+
+function resetQR() {
+  stopQRPolling();
+  currentQRToken = null; qrPhotoData = null;
+  document.getElementById('qr-waiting').style.display = 'block';
+  document.getElementById('qr-active').style.display = 'none';
+  document.getElementById('qr-done').style.display = 'none';
+}
+
+// Override getIDPhotoForSave to also grab QR photo
+var _origGetIDPhoto = null;
+
+
+
 </script>
 
 <div id="admin-section">
@@ -753,11 +861,43 @@ if (sessionStorage.getItem('bunyards_admin') !== '1') {
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:6px">
         Customer ID Photo * (Driver's License — required by law)
       </div>
-      <div class="id-zone" id="id-drop-zone" onclick="document.getElementById('em-id-file').click()">
-        <div id="id-zone-text">📷 Click to upload or take photo of ID<br><span style="font-size:10px;color:#94a3b8">JPG, PNG, HEIC accepted</span></div>
-        <img id="id-preview" style="display:none;max-width:100%;max-height:120px;border-radius:6px;margin-top:8px">
+
+      <!-- Upload method toggle -->
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button type="button" id="method-file-btn" onclick="setUploadMethod('file')" style="flex:1;padding:7px;border-radius:8px;border:2px solid #1d4ed8;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer">💻 Upload / Camera</button>
+        <button type="button" id="method-qr-btn" onclick="setUploadMethod('qr')" style="flex:1;padding:7px;border-radius:8px;border:2px solid #e2e8f0;background:transparent;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">📱 Phone QR Code</button>
       </div>
-      <input type="file" id="em-id-file" accept="image/*" capture="environment" style="display:none" onchange="previewIDUpload(this)">
+
+      <!-- File upload method -->
+      <div id="method-file">
+        <div class="id-zone" id="id-drop-zone" onclick="document.getElementById('em-id-file').click()">
+          <div id="id-zone-text">📷 Click to upload or take photo of ID<br><span style="font-size:10px;color:#94a3b8">JPG, PNG, HEIC accepted</span></div>
+          <img id="id-preview" style="display:none;max-width:100%;max-height:120px;border-radius:6px;margin-top:8px">
+        </div>
+        <input type="file" id="em-id-file" accept="image/*" style="display:none" onchange="previewIDUpload(this)">
+      </div>
+
+      <!-- QR code method -->
+      <div id="method-qr" style="display:none">
+        <div id="qr-zone" style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:10px;padding:18px;text-align:center">
+          <div id="qr-waiting" style="color:#64748b;font-size:13px">
+            <button type="button" onclick="generateQR()" style="padding:9px 20px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:800;cursor:pointer">📱 Generate QR Code</button>
+            <div style="font-size:11px;color:#94a3b8;margin-top:8px">Scan with Dale's phone to take photo instantly</div>
+          </div>
+          <div id="qr-active" style="display:none">
+            <div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:10px">📱 Scan with your phone camera</div>
+            <canvas id="qr-canvas" style="border-radius:8px;max-width:160px"></canvas>
+            <div style="font-size:11px;color:#64748b;margin-top:8px" id="qr-status-text">Waiting for photo…</div>
+            <div id="qr-spinner" style="margin-top:6px"><span style="display:inline-block;width:14px;height:14px;border:2px solid #e2e8f0;border-top-color:#1d4ed8;border-radius:50%;animation:qrspin .7s linear infinite;vertical-align:middle"></span></div>
+          </div>
+          <div id="qr-done" style="display:none">
+            <img id="qr-photo-preview" style="max-width:100%;max-height:130px;border-radius:8px;margin-bottom:8px">
+            <div style="color:#16a34a;font-weight:700;font-size:13px">✅ Photo received!</div>
+            <button type="button" onclick="resetQR()" style="margin-top:8px;padding:5px 14px;border-radius:6px;border:1px solid #e2e8f0;background:transparent;color:#64748b;font-size:11px;cursor:pointer">Retake</button>
+          </div>
+        </div>
+      </div>
+
       <div class="req-note" id="id-req-note" style="display:none">⚠️ ID photo required for compliance</div>
     </div>
 

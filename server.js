@@ -50,6 +50,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s/g,'_'))
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const uploadMem = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 // Stripe webhook MUST come before express.json
@@ -357,6 +358,134 @@ app.get('/trading', (req, res) => res.sendFile(path.join(__dirname, 'public', 't
 app.get('/trading.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'trading.html')));
 app.get('/trading-tv', (req, res) => res.sendFile(path.join(__dirname, 'public', 'trading-tv.html')));
 app.get('/trading-tv.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'trading-tv.html')));
+
+
+// ══════════════════════════════════════════
+// QR PHOTO UPLOAD SESSION ROUTES
+// ══════════════════════════════════════════
+const crypto = require('crypto');
+const qrSessions = {}; // token -> { image: base64, created: timestamp }
+
+// Clean up sessions older than 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  Object.keys(qrSessions).forEach(k => {
+    if (now - qrSessions[k].created > 600000) delete qrSessions[k];
+  });
+}, 60000);
+
+// Create a new QR session token
+app.post('/api/qr/session', requireAdmin, (req, res) => {
+  const token = crypto.randomBytes(16).toString('hex');
+  qrSessions[token] = { image: null, created: Date.now() };
+  const uploadUrl = `${process.env.APP_URL || ''}/qr-upload?token=${token}`;
+  res.json({ token, uploadUrl });
+});
+
+// Mobile phone polls this to upload the photo
+app.post('/api/qr/upload/:token', uploadMem.single('photo'), (req, res) => {
+  const { token } = req.params;
+  if (!qrSessions[token]) return res.status(404).json({ error: 'Session expired or invalid' });
+  if (!req.file) return res.status(400).json({ error: 'No photo received' });
+  const b64 = 'data:' + req.file.mimetype + ';base64,' + req.file.buffer.toString('base64');
+  qrSessions[token].image = b64;
+  res.json({ success: true });
+});
+
+// Desktop polls this to check if photo arrived
+app.get('/api/qr/poll/:token', requireAdmin, (req, res) => {
+  const { token } = req.params;
+  if (!qrSessions[token]) return res.json({ status: 'expired' });
+  if (qrSessions[token].image) {
+    const img = qrSessions[token].image;
+    delete qrSessions[token]; // one-time use
+    return res.json({ status: 'ready', image: img });
+  }
+  res.json({ status: 'waiting' });
+});
+
+// Mobile upload page
+app.get('/qr-upload', (req, res) => {
+  const token = req.query.token || '';
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Bunyards — ID Photo Upload</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f172a;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.logo{font-size:22px;font-weight:800;color:#f59e0b;margin-bottom:6px;text-align:center}
+.sub{font-size:12px;color:#64748b;margin-bottom:32px;text-align:center}
+.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px;width:100%;max-width:360px;text-align:center}
+h2{font-size:17px;font-weight:700;margin-bottom:8px}
+p{font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:24px}
+.cam-btn{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:12px;color:#000;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:12px;transition:.15s}
+.cam-btn:active{opacity:.8}
+.file-btn{display:block;width:100%;padding:14px;background:transparent;border:2px solid #334155;border-radius:12px;color:#94a3b8;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.file-btn:active{background:#1e293b}
+input[type=file]{display:none}
+.preview{width:100%;border-radius:10px;margin:16px 0;display:none}
+.status{padding:14px;border-radius:10px;font-size:14px;font-weight:700;margin-top:14px;display:none}
+.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#4ade80}
+.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #334155;border-top-color:#f59e0b;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="logo">🏛️ Bunyards</div>
+<div class="sub">Coin &amp; Stamps · Poplar Bluff, MO</div>
+<div class="card">
+  <h2>📷 ID Photo Upload</h2>
+  <p>Take a photo of the customer's ID. It will appear instantly on the desktop.</p>
+  <button class="cam-btn" onclick="document.getElementById('cam-input').click()">📸 Open Camera</button>
+  <button class="file-btn" onclick="document.getElementById('file-input').click()">🖼️ Choose from Gallery</button>
+  <input type="file" id="cam-input" accept="image/*" capture="environment">
+  <input type="file" id="file-input" accept="image/*">
+  <img id="preview" class="preview">
+  <div id="status" class="status"></div>
+</div>
+<script>
+const TOKEN = '${token}';
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview').src = e.target.result;
+    document.getElementById('preview').style.display = 'block';
+    uploadPhoto(file);
+  };
+  reader.readAsDataURL(file);
+}
+document.getElementById('cam-input').onchange = e => handleFile(e.target.files[0]);
+document.getElementById('file-input').onchange = e => handleFile(e.target.files[0]);
+async function uploadPhoto(file) {
+  const st = document.getElementById('status');
+  st.className = 'status'; st.style.display = 'block';
+  st.innerHTML = '<span class="spinner"></span> Uploading…';
+  try {
+    const fd = new FormData();
+    fd.append('photo', file);
+    const r = await fetch('/api/qr/upload/${token}', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (d.success) {
+      st.className = 'status ok';
+      st.innerHTML = '✅ Photo sent! You can close this page.';
+    } else {
+      st.className = 'status err';
+      st.innerHTML = '❌ ' + (d.error || 'Upload failed');
+    }
+  } catch(e) {
+    st.className = 'status err';
+    st.innerHTML = '❌ Network error. Try again.';
+  }
+}
+</script>
+</body>
+</html>`);
+});
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
