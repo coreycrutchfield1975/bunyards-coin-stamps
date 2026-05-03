@@ -1502,8 +1502,7 @@ function exportLedgerCSV(){
   if(!data.length){ alert('No entries to export.'); return; }
   const headers = ['File #','Ref #','Date','Time','Type','Name','DOB','Address','Gender','Phone','Plate','Description','Weight(g)','Amount','Payment','Staff','Notes'];
   const rows = data.map(e=>[e.fileno,e.refno||'',e.date,e.time,e.type,e.name,e.dob,e.addr,e.gender,e.phone||'',e.plate,e.desc,e.weight||'',e.amount,e.payment,e.staff||'',e.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
-  const csv = [headers.join(','),...rows].join('
-');
+  const csv = [headers.join(','),...rows].join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download = 'bunyards_ledger_'+new Date().toISOString().slice(0,10)+'.csv';
