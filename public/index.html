@@ -874,7 +874,7 @@ function renderShop(cat='all'){
           <div class="shop-price">$${price}</div>
           ${outOfStock
             ? '<div class="shop-sold">SOLD</div>'
-            : `<button class="shop-buy" onclick="openModal('${item.name.replace(/'/g,"\'")}','$${price}')">Buy</button>`
+            : `<button class="shop-buy" onclick="openModal('${(item.title||item.name||'').replace(/'/g,"\'")}','$${price}')">Buy</button>`
           }
         </div>
       </div>
