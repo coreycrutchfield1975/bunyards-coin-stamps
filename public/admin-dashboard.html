@@ -485,6 +485,139 @@ var _origGetIDPhoto = null;
 
 
 
+
+// ══════════════════════════════════════════
+// SHOP — PRODUCT MANAGEMENT
+// ══════════════════════════════════════════
+var editingProductId = null;
+
+async function loadShopProducts() {
+  try {
+    var r = await fetch('/api/admin/products');
+    var products = await r.json();
+    var grid = document.getElementById('shop-product-grid');
+    if (!products.length) {
+      grid.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1">No products yet. Click "+ Add Product" to get started.</div>';
+      return;
+    }
+    grid.innerHTML = products.map(function(p) {
+      var img = p.images && p.images[0] ? '<img src="' + p.images[0] + '" style="width:100%;height:140px;object-fit:cover;border-radius:8px 8px 0 0">' : '<div style="width:100%;height:140px;background:#f1f5f9;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-size:32px">🪙</div>';
+      var featured = p.featured ? '<span style="background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px">⭐ Featured</span>' : '';
+      var stock = p.stock !== undefined ? p.stock : '—';
+      return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">' +
+        img +
+        '<div style="padding:12px">' +
+          '<div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:2px">' + p.name + featured + '</div>' +
+          '<div style="font-size:12px;color:#64748b;margin-bottom:6px">' + (p.category || 'Uncategorized') + ' · Stock: ' + stock + '</div>' +
+          '<div style="font-size:18px;font-weight:800;color:#16a34a;margin-bottom:10px">$' + (parseFloat(p.price)||0).toFixed(2) + '</div>' +
+          '<div style="display:flex;gap:6px">' +
+            '<button onclick="editProduct(' + JSON.stringify(p).replace(/"/g,"&quot;") + ')" style="flex:1;padding:6px;background:#eff6ff;border:none;border-radius:6px;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer">✏️ Edit</button>' +
+            '<button onclick="deleteProduct(\'' + p._id + '\')" style="padding:6px 10px;background:#fef2f2;border:none;border-radius:6px;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer">🗑️</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    document.getElementById('shop-product-grid').innerHTML = '<div style="color:#dc2626;text-align:center;padding:30px;grid-column:1/-1">Error loading products: ' + e.message + '</div>';
+  }
+}
+
+function openProductModal(product) {
+  editingProductId = null;
+  document.getElementById('pm-name').value = '';
+  document.getElementById('pm-category').value = 'Silver';
+  document.getElementById('pm-price').value = '';
+  document.getElementById('pm-desc').value = '';
+  document.getElementById('pm-stock').value = '1';
+  document.getElementById('pm-featured').checked = false;
+  document.getElementById('pm-image').value = '';
+  document.getElementById('pm-img-preview').style.display = 'none';
+  document.getElementById('product-modal-title').textContent = 'Add Product';
+  document.getElementById('product-modal').style.display = 'flex';
+}
+
+function editProduct(p) {
+  editingProductId = p._id;
+  document.getElementById('pm-name').value = p.name || '';
+  document.getElementById('pm-category').value = p.category || 'Silver';
+  document.getElementById('pm-price').value = p.price || '';
+  document.getElementById('pm-desc').value = p.description || '';
+  document.getElementById('pm-stock').value = p.stock !== undefined ? p.stock : 1;
+  document.getElementById('pm-featured').checked = !!p.featured;
+  document.getElementById('pm-image').value = '';
+  var prev = document.getElementById('pm-img-preview');
+  if (p.images && p.images[0]) {
+    prev.src = p.images[0]; prev.style.display = 'block';
+  } else {
+    prev.style.display = 'none';
+  }
+  document.getElementById('product-modal-title').textContent = 'Edit Product';
+  document.getElementById('product-modal').style.display = 'flex';
+}
+
+function closeProductModal() {
+  document.getElementById('product-modal').style.display = 'none';
+  editingProductId = null;
+}
+
+document.getElementById('pm-image').addEventListener('change', function() {
+  var file = this.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var prev = document.getElementById('pm-img-preview');
+    prev.src = e.target.result; prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+async function saveProduct() {
+  var name = document.getElementById('pm-name').value.trim();
+  var price = document.getElementById('pm-price').value.trim();
+  if (!name || !price) { alert('Name and price are required.'); return; }
+
+  var btn = document.getElementById('pm-save-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  var fd = new FormData();
+  fd.append('name', name);
+  fd.append('category', document.getElementById('pm-category').value);
+  fd.append('price', price);
+  fd.append('description', document.getElementById('pm-desc').value.trim());
+  fd.append('stock', document.getElementById('pm-stock').value || 1);
+  fd.append('featured', document.getElementById('pm-featured').checked ? 'true' : 'false');
+  var imgFile = document.getElementById('pm-image').files[0];
+  if (imgFile) fd.append('images', imgFile);
+
+  try {
+    var url = editingProductId ? '/api/admin/products/' + editingProductId : '/api/admin/products';
+    var method = editingProductId ? 'PUT' : 'POST';
+    var r = await fetch(url, { method: method, body: fd });
+    if (!r.ok) throw new Error('Server error ' + r.status);
+    closeProductModal();
+    loadShopProducts();
+  } catch(e) {
+    alert('Error saving product: ' + e.message);
+  } finally {
+    btn.textContent = '💾 Save Product'; btn.disabled = false;
+  }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product from the shop?')) return;
+  try {
+    await fetch('/api/admin/products/' + id, { method: 'DELETE' });
+    loadShopProducts();
+  } catch(e) { alert('Error deleting product: ' + e.message); }
+}
+
+// Load shop products when tab is clicked
+var _origAdmTab = admTab;
+function admTab(name, btn) {
+  _origAdmTab(name, btn);
+  if (name === 'shop') loadShopProducts();
+}
+
 </script>
 
 <div id="admin-section">
@@ -495,6 +628,7 @@ var _origGetIDPhoto = null;
     <div class="adm-tabs">
       <button class="adm-tab active" id="tab-btn-ledger" onclick="admTab('ledger',this)">📒 Ledger</button>
       <button class="adm-tab" id="tab-btn-consign" onclick="admTab('consign',this)">📄 Consignment</button>
+      <button class="adm-tab" id="tab-btn-shop" onclick="admTab('shop',this)">🛍️ Shop</button>
       <button class="adm-tab" onclick="window.location.href='/trading'">📺 Trading Sheet</button>
     </div>
     <button class="adm-close" onclick="closeAdmin()">✕ Close</button>
@@ -759,7 +893,80 @@ var _origGetIDPhoto = null;
     </div>
   </div>
 
+
+  <!-- ══════════════════════════════════════════════════════
+       SHOP — PRODUCT MANAGEMENT
+  ══════════════════════════════════════════════════════ -->
+  <div class="adm-pane" id="adm-pane-shop">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="font-size:18px;font-weight:800;color:#1e293b">🛍️ Shop Products</div>
+      <button class="adm-btn adm-btn-green" onclick="openProductModal()">+ Add Product</button>
+    </div>
+
+    <!-- Product grid -->
+    <div id="shop-product-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+      <div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1" id="shop-loading">Loading products…</div>
+    </div>
+  </div>
+
 </div><!-- end #admin-section -->
+
+<!-- ══════════════════════════════════════════════════════
+     PRODUCT MODAL
+══════════════════════════════════════════════════════ -->
+<div id="product-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:14px;padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-size:16px;font-weight:800;color:#1e293b" id="product-modal-title">Add Product</div>
+      <button onclick="closeProductModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b">✕</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Product Name *</label>
+        <input id="pm-name" type="text" placeholder="e.g. 1oz Silver Eagle" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Category</label>
+        <select id="pm-category" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px">
+          <option value="Silver">Silver</option>
+          <option value="Gold">Gold</option>
+          <option value="Coins">Coins</option>
+          <option value="Currency">Currency</option>
+          <option value="Stamps">Stamps</option>
+          <option value="Jewelry">Jewelry</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Price ($) *</label>
+        <input id="pm-price" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Description</label>
+        <textarea id="pm-desc" rows="3" placeholder="Describe the item…" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Stock Quantity</label>
+        <input id="pm-stock" type="number" min="0" value="1" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input id="pm-featured" type="checkbox" style="width:16px;height:16px;cursor:pointer">
+        <label for="pm-featured" style="font-size:13px;font-weight:600;color:#1e293b;cursor:pointer">⭐ Featured product (shows first in shop)</label>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Product Image</label>
+        <input id="pm-image" type="file" accept="image/*" style="width:100%;padding:8px;border:1.5px dashed #cbd5e1;border-radius:8px;font-size:13px;cursor:pointer">
+        <img id="pm-img-preview" style="display:none;max-width:100%;max-height:120px;border-radius:8px;margin-top:8px;object-fit:cover">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:16px;margin-top:8px;border-top:1px solid #e2e8f0">
+      <button class="adm-btn adm-btn-outline" onclick="closeProductModal()">Cancel</button>
+      <button class="adm-btn adm-btn-green" onclick="saveProduct()" id="pm-save-btn">💾 Save Product</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════
      ENTRY MODAL
