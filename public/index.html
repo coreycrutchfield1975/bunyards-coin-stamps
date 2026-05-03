@@ -826,41 +826,56 @@ function toggleMenu(){document.getElementById('mobile-menu').classList.toggle('o
 function closeMenu(){document.getElementById('mobile-menu').classList.remove('open');}
 
 // Shop data — Dale can add items here
-const SHOP_ITEMS = [
-  // Example (commented out — Dale adds real items):
-  // {id:1,category:'silver',title:'1921 Morgan Dollar MS-63',desc:'Beautifully struck 1921 Morgan Dollar, graded MS-63. Original luster, minimal marks.',price:65,img:'',sold:false},
-];
+let SHOP_ITEMS = [];
+let shopCurrentCat = 'all';
+
+async function loadShopFromAPI() {
+  const grid = document.getElementById('shop-grid');
+  grid.innerHTML = '<div class="shop-empty">Loading inventory…</div>';
+  try {
+    const r = await fetch('/api/products');
+    SHOP_ITEMS = await r.json();
+    renderShop(shopCurrentCat);
+  } catch(e) {
+    grid.innerHTML = '<div class="shop-empty">🪙 Unable to load inventory right now. Check back soon!</div>';
+  }
+}
 
 function filterShop(cat, btn){
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  shopCurrentCat = cat;
   renderShop(cat);
 }
 
 function renderShop(cat='all'){
   const grid = document.getElementById('shop-grid');
-  const filtered = cat==='all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i=>i.category===cat);
+  const filtered = cat==='all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i=>(i.category||'').toLowerCase()===cat.toLowerCase());
   if(!filtered.length){
     grid.innerHTML='<div class="shop-empty">🪙 No items in this category right now. Check back soon or browse WhatNot for live listings!</div>';
     return;
   }
-  grid.innerHTML = filtered.map(item=>`
+  grid.innerHTML = filtered.map(item=>{
+    const img = item.images && item.images[0] ? `<img src="${item.images[0]}" alt="${item.name}">` : '🪙';
+    const price = (parseFloat(item.price)||0).toFixed(2);
+    const outOfStock = item.stock !== undefined && item.stock < 1;
+    return `
     <div class="shop-item">
-      <div class="shop-img">${item.img?`<img src="${item.img}" alt="${item.title}">`:'🪙'}</div>
+      <div class="shop-img">${img}</div>
       <div class="shop-body">
-        <div class="shop-category">${item.category.toUpperCase()}</div>
-        <div class="shop-title">${item.title}</div>
-        <div class="shop-desc">${item.desc}</div>
+        <div class="shop-category">${(item.category||'Item').toUpperCase()}</div>
+        <div class="shop-title">${item.name}</div>
+        <div class="shop-desc">${item.description||''}</div>
         <div class="shop-footer">
-          <div class="shop-price">$${item.price.toFixed(2)}</div>
-          ${item.sold
+          <div class="shop-price">$${price}</div>
+          ${outOfStock
             ? '<div class="shop-sold">SOLD</div>'
-            : `<button class="shop-buy" onclick="openModal('${item.title}','$${item.price.toFixed(2)}')">Buy</button>`
+            : `<button class="shop-buy" onclick="openModal('${item.name.replace(/'/g,"\'")}','$${price}')">Buy</button>`
           }
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function openModal(title, price){
@@ -872,29 +887,7 @@ function openModal(title, price){
 function closeModal(){document.getElementById('buy-modal').classList.remove('open');}
 document.getElementById('buy-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-// Contact form
-function submitForm(e){
-  e.preventDefault();
-  document.getElementById('form-success').style.display='block';
-  e.target.reset();
-  setTimeout(()=>document.getElementById('form-success').style.display='none',6000);
-}
-
-// Active nav on scroll
-const sections=['home','about','services','shop','whatnot','dale','contact'];
-function updateNav(){
-  let current='home';
-  sections.forEach(id=>{
-    const el=document.getElementById(id);
-    if(el&&window.scrollY>=el.offsetTop-100)current=id;
-  });
-  document.querySelectorAll('.nav-links a').forEach(a=>{
-    a.classList.toggle('active',a.getAttribute('href')==='#'+current);
-  });
-}
-window.addEventListener('scroll',updateNav);
-
-renderShop();
+loadShopFromAPI();
 </script>
 
 <!-- ═══════════════════════════════════════════════ -->
