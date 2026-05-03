@@ -176,7 +176,7 @@ var adminAuthed = true;
   </div>
 
   <!-- ── LEDGER PANE ── -->
-  <div class="adm-pane" id="adm-pane-ledger" style="display:block">
+  <div class="adm-pane active" id="adm-pane-ledger">
 
     <div class="print-ledger-header" style="display:none;text-align:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #000">
       <div style="font-size:18px;font-weight:700;font-family:'Playfair Display',serif">Bunyards Coin and Stamps</div>
@@ -477,10 +477,17 @@ function closeAdmin(){
 // ADMIN TABS
 // ═══════════════════════════════════════════
 function admTab(name, btn){
-  document.querySelectorAll('.adm-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.adm-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.adm-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.adm-pane').forEach(function(p){
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
   btn.classList.add('active');
-  document.getElementById('adm-pane-'+name).classList.add('active');
+  var pane = document.getElementById('adm-pane-'+name);
+  if(pane){
+    pane.classList.add('active');
+    pane.style.display = 'block';
+  }
 }
 
 // ═══════════════════════════════════════════
