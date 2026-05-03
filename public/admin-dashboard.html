@@ -494,6 +494,13 @@ var editingProductId = null;
 async function loadShopProducts() {
   try {
     var r = await fetch('/api/admin/products');
+    if (!r.ok) {
+      if (r.status === 401) {
+        document.getElementById('shop-product-grid').innerHTML = '<div style="text-align:center;color:#dc2626;padding:40px;grid-column:1/-1">Session expired. Please <a href="/admin">log in again</a>.</div>';
+        return;
+      }
+      throw new Error('Server error ' + r.status);
+    }
     var products = await r.json();
     var grid = document.getElementById('shop-product-grid');
     if (!products.length) {

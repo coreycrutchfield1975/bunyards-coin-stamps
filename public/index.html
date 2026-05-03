@@ -831,12 +831,16 @@ let shopCurrentCat = 'all';
 
 async function loadShopFromAPI() {
   const grid = document.getElementById('shop-grid');
+  if (!grid) return;
   grid.innerHTML = '<div class="shop-empty">Loading inventory…</div>';
   try {
     const r = await fetch('/api/products');
-    SHOP_ITEMS = await r.json();
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    SHOP_ITEMS = Array.isArray(data) ? data : [];
     renderShop(shopCurrentCat);
   } catch(e) {
+    console.error('Shop load error:', e);
     grid.innerHTML = '<div class="shop-empty">🪙 Unable to load inventory right now. Check back soon!</div>';
   }
 }
@@ -887,7 +891,12 @@ function openModal(title, price){
 function closeModal(){document.getElementById('buy-modal').classList.remove('open');}
 document.getElementById('buy-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-loadShopFromAPI();
+// Load shop on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadShopFromAPI);
+} else {
+  loadShopFromAPI();
+}
 </script>
 
 <!-- ═══════════════════════════════════════════════ -->
