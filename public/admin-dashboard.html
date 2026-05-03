@@ -149,7 +149,15 @@ body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #f1f5
 
 /* ── PRINT ── */
 @media print{
-    /* legacy modal-hide rule removed */
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .adm-header { display: none !important; }
+  .adm-filters { display: none !important; }
+  .entry-modal-overlay { display: none !important; }
+  .print-ledger-header { display: block !important; }
+  .adm-pane { display: block !important; }
+  .adm-pane:not(.active) { display: none !important; }
+}
 </style>
 </head>
 <body>
