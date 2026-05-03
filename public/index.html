@@ -937,7 +937,7 @@ if (document.readyState === 'loading') {
     <div class="print-ledger-header" style="display:none;text-align:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #000">
       <div style="font-size:18px;font-weight:700;font-family:'Playfair Display',serif">Bunyards Coin and Stamps</div>
       <div style="font-size:12px">1912 N. Westwood Blvd., Poplar Bluff, MO · Transaction Ledger · Admin Use Only</div>
-      <div style="font-size:11px;color:#555;margin-top:4px">Printed: <script>document.write(new Date().toLocaleDateString())<\/script> · RSMo §407.300 Compliant · Records retained 36 months minimum</div>
+      <div style="font-size:11px;color:#555;margin-top:4px">Printed: <span id="print-date"></span> · RSMo §407.300 Compliant · Records retained 36 months minimum</div>
     </div>
     <div class="legal-strip">
       <strong>⚖️ Missouri RSMo §407.300 Compliance</strong> — Records maintained min. 36 months · Available for law enforcement inspection · Driver's license copy required per transaction.
@@ -1192,6 +1192,9 @@ if (document.readyState === 'loading') {
 // ═══════════════════════════════════════════
 const ADMIN_PASS = 'Coinguy6$';
 let adminAuthed = false;
+// Set print date (replaces broken inline script)
+const _pd = document.getElementById('print-date');
+if (_pd) _pd.textContent = new Date().toLocaleDateString();
 
 function openAdminLogin(e){
   if(e) e.preventDefault();
