@@ -6,6 +6,9 @@
 <title>Admin Dashboard · Bunyards Coin & Stamps</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; padding: 0; font-family: 'Lato', sans-serif; background: #f1f5f9; }
+
 
   :root{
     --red:#9B1C1C;
@@ -476,18 +479,24 @@
     #admin-section{background:#fff}
   }
 
-/* Standalone admin page overrides */
-body { margin: 0; padding: 0; }
-#admin-section { display: block !important; position: static !important; min-height: 100vh; }
-#admin-login-overlay { display: none; }
-.no-access { display: none; }
+
+/* ── Standalone overrides ── */
+#admin-login-overlay { display: none !important; }
+#admin-section {
+  display: block !important;
+  position: static !important;
+  inset: auto !important;
+  overflow: visible !important;
+  min-height: 100vh;
+}
 </style>
 </head>
 <body>
+
 <script>
-// Auth check - redirect if not logged in
-if(sessionStorage.getItem('bunyards_admin') !== '1'){
-  window.location.href = '/admin';
+// Auth gate
+if (sessionStorage.getItem('bunyards_admin') !== '1') {
+  window.location.replace('/admin');
 }
 </script>
 
@@ -702,6 +711,82 @@ if(sessionStorage.getItem('bunyards_admin') !== '1'){
 </div><!-- end admin-section -->
 
 
+<!-- ═══════════════════════════════════════════════ -->
+<!-- NEW ENTRY MODAL                                  -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="entry-modal-overlay" id="entry-modal">
+  <div class="entry-modal">
+    <div class="em-title" id="em-title">＋ New Transaction Entry</div>
+    <div class="em-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="em-group"><label>File # (Auto)</label><input type="text" id="em-fileno" placeholder="2026-05-001"></div>
+      <div class="em-group"><label>Dale's Ref # <span style="font-size:9px;color:#94a3b8">(optional)</span></label><input type="text" id="em-refno" placeholder="e.g. D-001, #42..."></div>
+      <div class="em-group"><label>Transaction Type *</label>
+        <select id="em-type"><option value="">Select...</option><option>Buy</option><option>Sell</option><option>Trade</option><option>Consignment</option></select></div>
+    </div>
+    <div class="em-row">
+      <div class="em-group"><label>Date *</label><input type="date" id="em-date"></div>
+      <div class="em-group"><label>Time *</label><input type="time" id="em-time"></div>
+    </div>
+    <div class="mo-notice">⚖️ <strong>RSMo §407.300 Required Fields</strong></div>
+    <div class="em-row">
+      <div class="em-group"><label>Customer Full Name *</label><input type="text" id="em-name" placeholder="As shown on ID"></div>
+      <div class="em-group"><label>Date of Birth *</label><input type="date" id="em-dob"></div>
+    </div>
+    <div class="em-row">
+      <div class="em-group"><label>Current Address *</label><input type="text" id="em-addr" placeholder="Street address"></div>
+      <div class="em-group"><label>Gender *</label>
+        <select id="em-gender"><option value="">Select...</option><option>Male</option><option>Female</option><option>Other/Not specified</option></select></div>
+    </div>
+    <div class="em-row">
+      <div class="em-group"><label>Phone</label><input type="tel" id="em-phone" placeholder="573-555-0000"></div>
+      <div class="em-group"><label>Vehicle License Plate *</label><input type="text" id="em-plate" placeholder="MO · ABC 1234"><div class="req-note">Required — RSMo §407.300</div></div>
+    </div>
+    <div class="em-row full">
+      <div class="em-group"><label>Item Description *</label><textarea id="em-desc" placeholder="Full description: type, date, mint, grade, condition, any identifying marks..."></textarea></div>
+    </div>
+    <div class="em-row">
+      <div class="em-group"><label>Weight (grams)</label><input type="number" id="em-weight" placeholder="0.00" step="0.01"></div>
+      <div class="em-group"><label>Amount ($) *</label><input type="number" id="em-amount" placeholder="0.00" step="0.01"></div>
+    </div>
+    <div class="em-row">
+      <div class="em-group"><label>Payment Method *</label>
+        <select id="em-payment"><option value="">Select...</option><option>Cash</option><option>Check</option><option>Credit Card</option><option>N/A (Trade)</option><option>N/A (Consignment)</option></select></div>
+      <div class="em-group"><label>Staff Member</label>
+        <select id="em-staff"><option>Dale</option><option>Trevor</option><option>Billy</option><option>Corey</option></select></div>
+    </div>
+    <div class="em-row full">
+      <div class="em-group"><label>Notes</label><textarea id="em-notes" placeholder="Trade details, consignment terms, special conditions..." style="min-height:44px"></textarea></div>
+    </div>
+    <div class="em-group" style="margin-bottom:14px">
+      <label>Driver's License / Gov. ID Photo * <span style="font-size:10px;color:#64748b">(Stored privately · Admin only)</span></label>
+      <div class="id-zone" id="id-zone" onclick="document.getElementById('em-id-file').click()">
+        <div style="font-size:24px;margin-bottom:4px">📷</div>
+        <div style="font-weight:700;font-size:12px" id="id-zone-text">Click to upload ID photo</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:2px">JPG or PNG · Required by RSMo §407.300</div>
+      </div>
+      <input type="file" id="em-id-file" accept="image/*" style="display:none" onchange="previewIDUpload(this)">
+      <div class="req-note">Required by RSMo §407.300</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:10px;border-top:1px solid #e2e8f0">
+      <button class="adm-btn adm-btn-outline" onclick="closeEntryModal()">Cancel</button>
+      <button class="adm-btn adm-btn-dark" onclick="saveEntry()">💾 Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ID VIEWER MODAL -->
+<div class="entry-modal-overlay" id="id-viewer-modal">
+  <div class="entry-modal" style="max-width:480px;text-align:center">
+    <div class="em-title">🪪 ID Photo — <span id="id-viewer-name"></span></div>
+    <img id="id-viewer-img" src="" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:12px">
+    <div style="font-size:11px;color:#64748b;margin-bottom:12px">Private · Admin access only · RSMo §407.300</div>
+    <button class="adm-btn adm-btn-outline" onclick="document.getElementById('id-viewer-modal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+
+<script>
+
 <script>
 // ═══════════════════════════════════════════
 // ADMIN AUTH
@@ -748,9 +833,16 @@ function closeAdmin(){
 // ═══════════════════════════════════════════
 function admTab(name, btn){
   document.querySelectorAll('.adm-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.adm-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.adm-pane').forEach(function(p){
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
   btn.classList.add('active');
-  document.getElementById('adm-pane-'+name).classList.add('active');
+  var pane = document.getElementById('adm-pane-'+name);
+  if(pane){
+    pane.classList.add('active');
+    pane.style.display = 'block';
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1034,21 +1126,31 @@ function exportLedgerCSV(){
 document.getElementById('entry-modal').addEventListener('click',function(e){if(e.target===this)closeEntryModal();});
 document.getElementById('id-viewer-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 document.getElementById('admin-login-overlay').addEventListener('click',function(e){if(e.target===this)closeAdminLogin();});
-
 </script>
 
 <script>
-// Override openAdmin for standalone mode - already on admin page
-function openAdmin(){ /* already open */ }
-function closeAdmin(){
+// Standalone dashboard init
+adminAuthed = true;
+
+// Override close to log out
+function closeAdmin() {
   sessionStorage.removeItem('bunyards_admin');
   window.location.href = '/';
 }
-// Show admin section immediately
-document.getElementById('admin-section').style.display = 'block';
-document.getElementById('admin-section').style.position = 'static';
-adminAuthed = true;
-renderLedger();
+
+// Make sure ledger tab shows on load
+document.addEventListener('DOMContentLoaded', function() {
+  var ledgerPane = document.getElementById('adm-pane-ledger');
+  var consignPane = document.getElementById('adm-pane-consign');
+  if (ledgerPane) {
+    ledgerPane.classList.add('active');
+    ledgerPane.style.display = 'block';
+  }
+  // Activate the first tab button
+  var firstTab = document.querySelector('.adm-tab');
+  if (firstTab) firstTab.classList.add('active');
+  renderLedger();
+});
 </script>
 </body>
 </html>
