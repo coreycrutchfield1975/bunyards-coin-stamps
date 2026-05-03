@@ -802,11 +802,6 @@
   </div>
 </footer>
 
-<!-- Admin Access -->
-<div style="text-align:center;padding:14px 0 20px;background:#f8f5f0;border-top:1px solid #e2d9cd;">
-  <a href="#" onclick="openAdminLogin(event)" style="font-size:12px;color:#94a3b8;text-decoration:none;font-family:monospace;letter-spacing:1px">🔐 admin access</a>
-</div>
-
 <!-- BUY MODAL -->
 <div class="modal-overlay" id="buy-modal">
   <div class="modal">
@@ -1520,5 +1515,18 @@ document.getElementById('id-viewer-modal').addEventListener('click',function(e){
 document.getElementById('admin-login-overlay').addEventListener('click',function(e){if(e.target===this)closeAdminLogin();});
 </script>
 
+<script>
+// Auto-open admin if navigated to /#admin
+if(window.location.hash === '#admin'){
+  window.addEventListener('load', function(){
+    setTimeout(function(){ openAdminLogin(); }, 300);
+  });
+}
+</script>
+
+<!-- Admin Access (after all scripts so function is defined) -->
+<div style="text-align:center;padding:14px 0 20px;background:#f8f5f0;border-top:1px solid #e2d9cd;">
+  <a href="javascript:void(0)" onclick="openAdminLogin(event)" style="font-size:12px;color:#94a3b8;text-decoration:none;font-family:monospace;letter-spacing:1px">🔐 admin access</a>
+</div>
 </body>
 </html>
