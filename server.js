@@ -48,7 +48,11 @@ const productSchema = new mongoose.Schema({
   featured: { type: Boolean, default: false },
   active: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
-});
+}, { timestamps: false });
+
+productSchema.index({ createdAt: -1 });
+productSchema.index({ featured: -1, createdAt: -1 });
+productSchema.index({ active: 1, stock: 1 });
 
 const orderSchema = new mongoose.Schema({
   stripeSessionId: String,
@@ -180,7 +184,7 @@ app.get('/api/products', async (req, res) => {
     { description: { $regex: search, $options: 'i' } },
     { subcategory: { $regex: search, $options: 'i' } }
   ];
-  const products = await Product.find(filter).sort({ featured: -1, createdAt: -1 });
+  const products = await Product.find(filter).sort({ featured: -1, createdAt: -1 }).lean();
   res.json(products);
 });
 
@@ -191,12 +195,24 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 // ── Products API (admin) ─────────────────────────────────────────────────────
+// Simple in-memory cache for admin product list (30s TTL)
+let _productCache = null;
+let _productCacheTime = 0;
+function invalidateProductCache() { _productCache = null; _productCacheTime = 0; }
+
 app.get('/api/admin/products', requireAdmin, async (req, res) => {
-  const products = await Product.find().sort({ createdAt: -1 });
+  const now = Date.now();
+  if (_productCache && (now - _productCacheTime) < 30000) {
+    return res.json(_productCache);
+  }
+  const products = await Product.find().sort({ createdAt: -1 }).lean();
+  _productCache = products;
+  _productCacheTime = now;
   res.json(products);
 });
 
 app.post('/api/admin/products', requireAdmin, upload.array('images', 5), async (req, res) => {
+  invalidateProductCache();
   const { title, description, category, subcategory, price, stock, shipping, shippingCost, featured } = req.body;
   const images = await Promise.all((req.files || []).map(f => uploadToCloudinary(f.buffer)));
   const product = new Product({
@@ -214,6 +230,7 @@ app.post('/api/admin/products', requireAdmin, upload.array('images', 5), async (
 });
 
 app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 5), async (req, res) => {
+  invalidateProductCache();
   const { title, description, category, subcategory, price, stock, shipping, shippingCost, featured, active, removeImages } = req.body;
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ error: 'Not found' });
@@ -239,6 +256,7 @@ app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 5), asyn
 });
 
 app.delete('/api/admin/products/:id', requireAdmin, async (req, res) => {
+  invalidateProductCache();
   await Product.findByIdAndDelete(req.params.id);
   res.json({ ok: true });
 });
