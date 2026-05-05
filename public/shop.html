@@ -94,7 +94,7 @@ footer{background:var(--dark);color:#aaa;text-align:center;padding:30px;font-siz
 footer a{color:var(--gold);text-decoration:none}
 @media(max-width:600px){.products-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}.cart-drawer{width:100%}}
 </style>
-  <script src="https://www.paypal.com/sdk/js?client-id=AQPBBkz5XJaVAlYPltVu4j1Cv9xDfhVmyW0cKxsbq5jCEF3I5YvWcG6Atop8f2_wwzdtWtcWiHa__cBh&currency=USD"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id=AQPBBkz5XJaVAlYPltVu4j1Cv9xDfhVmyW0cKxsbq5jCEF3I5YvWcG6Atop8f2_wwzdtWtcWiHa__cBh&currency=USD&intent=capture"></script>
 </head>
 <body>
 
@@ -354,6 +354,11 @@ function renderPayPalButton() {
 
   if (!cart.length) {
     container.innerHTML = '<p style="color:var(--lightgray);text-align:center;font-size:13px">Add items to your cart to checkout.</p>';
+    return;
+  }
+
+  if (typeof paypal === 'undefined') {
+    container.innerHTML = '<p style="color:#dc2626;text-align:center;font-size:13px">PayPal failed to load. Please refresh the page.</p>';
     return;
   }
 
