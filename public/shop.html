@@ -291,7 +291,7 @@ function removeFromCart(id) {
 function saveCart() { localStorage.setItem('bunyards-cart', JSON.stringify(cart)); }
 
 function updateCartUI() {
-  if (typeof paypal !== "undefined") renderPayPalButton();
+  if (typeof paypal !== 'undefined' && document.getElementById('cart-drawer').classList.contains('open')) renderPayPalButton();
   const count = cart.reduce((s, x) => s + (x.qty || 1), 0);
   const subtotal = cart.reduce((s, x) => s + x.price * (x.qty || 1), 0);
   document.getElementById('cart-count').textContent = count;
@@ -299,8 +299,12 @@ function updateCartUI() {
 }
 
 function toggleCart() {
-  document.getElementById('cart-drawer').classList.toggle('open');
+  const drawer = document.getElementById('cart-drawer');
+  drawer.classList.toggle('open');
   renderCartDrawer();
+  if (drawer.classList.contains('open')) {
+    setTimeout(renderPayPalButton, 150);
+  }
 }
 
 function renderCartDrawer() {
@@ -381,7 +385,7 @@ function renderPayPalButton() {
         saveCart();
         updateCartUI();
         showAlert('Payment complete! Thank you, ' + details.payer.name.given_name + '. Dale will be in touch soon.', 'success');
-        document.getElementById('cart-modal').style.display = 'none';
+        document.getElementById('cart-drawer').classList.remove('open');
       });
     },
     onError: function(err) {
