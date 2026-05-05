@@ -347,13 +347,14 @@ function getCartTotal() {
   return cart.reduce((sum, item) => sum + parseFloat(item.price) * (item.qty || 1), 0).toFixed(2);
 }
 
+let _ppRendered = false;
 function renderPayPalButton() {
   const container = document.getElementById('paypal-button-container');
   if (!container) return;
-  container.innerHTML = '';
 
   if (!cart.length) {
     container.innerHTML = '<p style="color:var(--lightgray);text-align:center;font-size:13px">Add items to your cart to checkout.</p>';
+    _ppRendered = false;
     return;
   }
 
@@ -361,6 +362,11 @@ function renderPayPalButton() {
     container.innerHTML = '<p style="color:#dc2626;text-align:center;font-size:13px">PayPal failed to load. Please refresh the page.</p>';
     return;
   }
+
+  // Only render once — PayPal SDK cannot re-render into same container
+  if (_ppRendered) return;
+  _ppRendered = true;
+  container.innerHTML = '';
 
   paypal.Buttons({
     style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
@@ -390,6 +396,7 @@ function renderPayPalButton() {
         saveCart();
         updateCartUI();
         showAlert('Payment complete! Thank you, ' + details.payer.name.given_name + '. Dale will be in touch soon.', 'success');
+        _ppRendered = false;
         document.getElementById('cart-drawer').classList.remove('open');
       });
     },
