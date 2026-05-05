@@ -80,6 +80,12 @@ nav{background:var(--dark);padding:0 24px;display:flex;align-items:center;justif
 .alert-error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
 .empty-msg{text-align:center;padding:50px 20px;color:var(--lightgray)}
 .empty-msg .icon{font-size:44px;margin-bottom:10px}
+.rate-option{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:2px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;font-size:13px;transition:all .2s}
+.rate-option:hover{border-color:var(--red)}
+.rate-option.selected{border-color:var(--red);background:#fff5f5}
+.rate-option .rate-name{font-weight:600;color:var(--dark)}
+.rate-option .rate-days{font-size:11px;color:var(--lightgray)}
+.rate-option .rate-price{font-weight:700;color:var(--red);font-size:15px}
 #pp-loading{text-align:center;padding:12px;color:var(--lightgray);font-size:13px}
 footer{background:var(--dark);color:#aaa;text-align:center;padding:28px;font-size:13px;margin-top:60px}
 footer a{color:var(--gold);text-decoration:none}
@@ -160,8 +166,22 @@ footer a{color:var(--gold);text-decoration:none}
     <div class="empty-msg"><div class="icon">🛒</div><div>Your cart is empty.</div></div>
   </div>
   <div class="cart-footer" id="cart-footer" style="display:none">
-    <div class="cart-total"><span>Total</span><span id="cart-total-amt">$0.00</span></div>
-    <div id="pp-loading" style="display:none">Loading checkout…</div>
+    <div class="cart-total"><span>Subtotal</span><span id="cart-subtotal-amt">$0.00</span></div>
+    <!-- Shipping section -->
+    <div id="ship-section">
+      <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">📦 Shipping</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="zip-input" type="text" maxlength="5" placeholder="Enter ZIP code" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:14px">
+        <button class="btn btn-red btn-sm" onclick="calcShipping()">Get Rates</button>
+      </div>
+      <div id="rate-loading" style="display:none;font-size:13px;color:var(--lightgray);text-align:center;padding:8px">Calculating rates…</div>
+      <div id="rate-list"></div>
+      <div id="ship-total-row" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <div class="cart-total" style="font-size:15px"><span>Shipping</span><span id="ship-cost-display" style="color:var(--red)">$0.00</span></div>
+      </div>
+    </div>
+    <div class="cart-total" style="margin-top:8px;padding-top:8px;border-top:2px solid var(--dark)"><span>Total</span><span id="cart-total-amt">$0.00</span></div>
+    <div id="pp-loading" style="display:none;font-size:13px;color:var(--lightgray);text-align:center;padding:8px">Loading checkout…</div>
     <div id="paypal-button-container"></div>
   </div>
 </div>
@@ -181,6 +201,8 @@ let shippingMethod = 'ship';
 let cart = JSON.parse(localStorage.getItem('bunyards-cart') || '[]');
 let ppLoaded = false;
 let ppRendering = false;
+let selectedRate = null; // { service, amount, days }
+let shippingCost = 0;
 
 // ── Load PayPal SDK dynamically after page load ────────────────────────────
 function loadPayPalSDK() {
@@ -371,7 +393,8 @@ function renderCartBody() {
       </div>
       <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</span>
     </div>`).join('');
-  document.getElementById('cart-total-amt').textContent = '$' + getCartTotal();
+  document.getElementById('cart-subtotal-amt').textContent = '$' + getCartTotal();
+  updateTotalDisplay();
   footer.style.display = 'block';
 }
 
@@ -380,6 +403,80 @@ function resetPayPal() {
   ppRendering = false;
   const c = document.getElementById('paypal-button-container');
   if (c) c.innerHTML = '';
+}
+
+
+// ── Shipping ────────────────────────────────────────────────────────────────
+function updateTotalDisplay() {
+  const sub = parseFloat(getCartTotal());
+  const total = (sub + shippingCost).toFixed(2);
+  const el = document.getElementById('cart-total-amt');
+  if (el) el.textContent = '$' + total;
+}
+
+async function calcShipping() {
+  const zip = document.getElementById('zip-input').value.trim();
+  if (zip.length !== 5 || !/^\d+$/.test(zip)) {
+    showAlert('Please enter a valid 5-digit ZIP code.', 'error'); return;
+  }
+  // total weight = sum of all cart items weightOz (default 4oz each)
+  const totalOz = cart.reduce((s, item) => {
+    const p = allProducts.find(x => x._id === item.id);
+    return s + ((p && p.weightOz ? parseFloat(p.weightOz) : 4) * (item.qty || 1));
+  }, 0);
+
+  document.getElementById('rate-loading').style.display = 'block';
+  document.getElementById('rate-list').innerHTML = '';
+  selectedRate = null;
+  shippingCost = 0;
+  updateTotalDisplay();
+  resetPayPal();
+
+  try {
+    const r = await fetch('/api/shipping-rates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ toZip: zip, weightOz: totalOz })
+    });
+    const data = await r.json();
+    document.getElementById('rate-loading').style.display = 'none';
+    if (!r.ok || !data.rates || !data.rates.length) {
+      document.getElementById('rate-list').innerHTML = '<p style="color:#dc2626;font-size:13px">Could not get rates. Try again.</p>';
+      return;
+    }
+    renderRates(data.rates);
+  } catch(e) {
+    document.getElementById('rate-loading').style.display = 'none';
+    document.getElementById('rate-list').innerHTML = '<p style="color:#dc2626;font-size:13px">Network error. Try again.</p>';
+  }
+}
+
+function renderRates(rates) {
+  document.getElementById('rate-list').innerHTML = rates.map((rt, i) => `
+    <div class="rate-option${i===0?' selected':''}" onclick="selectRate(${i})" id="rate-opt-${i}">
+      <div>
+        <div class="rate-name">${rt.service}</div>
+        <div class="rate-days">${rt.days !== '?' ? rt.days + ' business day' + (rt.days==1?'':'s') : 'Estimated delivery'}</div>
+      </div>
+      <div class="rate-price">$${rt.amount}</div>
+    </div>`).join('');
+  // auto-select cheapest
+  window._rates = rates;
+  selectRate(0);
+}
+
+function selectRate(i) {
+  window._rates = window._rates || [];
+  const rt = window._rates[i];
+  if (!rt) return;
+  document.querySelectorAll('.rate-option').forEach((el,j) => el.classList.toggle('selected', j===i));
+  selectedRate = rt;
+  shippingCost = parseFloat(rt.amount);
+  document.getElementById('ship-cost-display').textContent = '$' + rt.amount;
+  document.getElementById('ship-total-row').style.display = 'block';
+  updateTotalDisplay();
+  resetPayPal();
+  schedulePayPal();
 }
 
 function schedulePayPal() {
@@ -422,6 +519,8 @@ function renderPayPalButton() {
         quantity: String(item.qty || 1)
       }));
       const itemTotal = parseFloat(getCartTotal());
+      const shipAmt = shippingCost || 0;
+      const grandTotal = (itemTotal + shipAmt).toFixed(2);
       return actions.order.create({
         application_context: {
           shipping_preference: allPickup ? 'NO_SHIPPING' : 'GET_FROM_FILE',
@@ -431,8 +530,11 @@ function renderPayPalButton() {
           description: 'Bunyards Coin and Stamps — Poplar Bluff MO',
           amount: {
             currency_code: 'USD',
-            value: itemTotal.toFixed(2),
-            breakdown: { item_total: { currency_code: 'USD', value: itemTotal.toFixed(2) } }
+            value: grandTotal,
+            breakdown: {
+              item_total: { currency_code: 'USD', value: itemTotal.toFixed(2) },
+              shipping: { currency_code: 'USD', value: shipAmt.toFixed(2) }
+            }
           },
           items: items
         }]
@@ -442,6 +544,8 @@ function renderPayPalButton() {
       return actions.order.capture().then(function(details) {
         const name = details.payer.name.given_name || 'Customer';
         cart = [];
+        shippingCost = 0;
+        selectedRate = null;
         saveCart();
         updateCartBar();
         resetPayPal();

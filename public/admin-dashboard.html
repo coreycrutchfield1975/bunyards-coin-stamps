@@ -536,6 +536,7 @@ function openProductModal(product) {
   document.getElementById('pm-price').value = '';
   document.getElementById('pm-desc').value = '';
   document.getElementById('pm-stock').value = '1';
+  document.getElementById('pm-weight').value = '4';
   document.getElementById('pm-featured').checked = false;
   document.getElementById('pm-image').value = '';
   document.getElementById('pm-img-preview').style.display = 'none';
@@ -550,6 +551,7 @@ function editProduct(p) {
   document.getElementById('pm-price').value = p.price || '';
   document.getElementById('pm-desc').value = p.description || '';
   document.getElementById('pm-stock').value = p.stock !== undefined ? p.stock : 1;
+  document.getElementById('pm-weight').value = p.weightOz !== undefined ? p.weightOz : 4;
   document.getElementById('pm-featured').checked = !!p.featured;
   document.getElementById('pm-image').value = '';
   var prev = document.getElementById('pm-img-preview');
@@ -592,6 +594,7 @@ async function saveProduct() {
   fd.append('price', price);
   fd.append('description', document.getElementById('pm-desc').value.trim());
   fd.append('stock', document.getElementById('pm-stock').value || 1);
+  fd.append('weightOz', document.getElementById('pm-weight').value || 4);
   fd.append('featured', document.getElementById('pm-featured').checked ? 'true' : 'false');
   var imgFile = document.getElementById('pm-image').files[0];
   if (imgFile) fd.append('images', imgFile);
@@ -954,6 +957,10 @@ function admTab(name, btn) {
       <div>
         <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Stock Quantity</label>
         <input id="pm-stock" type="number" min="0" value="1" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Weight (oz) <span style="font-weight:400;text-transform:none">— used for shipping calc</span></label>
+        <input id="pm-weight" type="number" min="0.1" step="0.1" value="4" placeholder="e.g. 3.5" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px">
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <input id="pm-featured" type="checkbox" style="width:16px;height:16px;cursor:pointer">

@@ -44,6 +44,7 @@ const productSchema = new mongoose.Schema({
   stock: { type: Number, default: 1 },
   shipping: { type: String, enum: ['both','ship-only','pickup-only'], default: 'both' },
   shippingCost: { type: Number, default: 5.00 },
+  weightOz: { type: Number, default: 4 },
   images: [String],
   featured: { type: Boolean, default: false },
   active: { type: Boolean, default: true },
@@ -350,6 +351,64 @@ async function sendOrderEmail(order) {
 }
 
 // ── Page routes ──────────────────────────────────────────────────────────────
+
+
+// ── Shippo Shipping Rates ─────────────────────────────────────────────────
+app.post('/api/shipping-rates', async (req, res) => {
+  try {
+    const { toZip, weightOz } = req.body;
+    if (!toZip || !weightOz) return res.status(400).json({ error: 'Missing toZip or weightOz' });
+
+    const SHIPPO_KEY = process.env.SHIPPO_API_KEY;
+    if (!SHIPPO_KEY) return res.status(500).json({ error: 'Shippo not configured' });
+
+    const weightLb = Math.max(parseFloat(weightOz) / 16, 0.1);
+    
+    const body = {
+      address_from: { zip: '63901', country: 'US' },
+      address_to: { zip: String(toZip).replace(/\D/g,''), country: 'US' },
+      parcels: [{ length: '6', width: '4', height: '3', distance_unit: 'in', weight: weightLb.toFixed(3), mass_unit: 'lb' }],
+      async: false
+    };
+
+    const r = await fetch('https://api.goshippo.com/shipments/', {
+      method: 'POST',
+      headers: { 'Authorization': 'ShippoToken ' + SHIPPO_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!r.ok) {
+      const err = await r.text();
+      console.error('Shippo error:', err);
+      return res.status(502).json({ error: 'Shippo API error' });
+    }
+
+    const data = await r.json();
+    const uspsRates = (data.rates || [])
+      .filter(rt => rt.provider === 'USPS' && rt.amount && parseFloat(rt.amount) > 0)
+      .sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount))
+      .slice(0, 5)
+      .map(rt => ({
+        service: rt.servicelevel?.name || rt.servicelevel_name || rt.service,
+        provider: rt.provider,
+        amount: parseFloat(rt.amount).toFixed(2),
+        days: rt.estimated_days || rt.days || '?'
+      }));
+
+    if (!uspsRates.length) {
+      // fallback flat rates if Shippo returns nothing useful
+      return res.json({ rates: [
+        { service: 'USPS First Class', provider: 'USPS', amount: '4.50', days: '3' },
+        { service: 'USPS Priority Mail', provider: 'USPS', amount: '8.95', days: '2' }
+      ]});
+    }
+
+    res.json({ rates: uspsRates });
+  } catch(e) {
+    console.error('Shippo route error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // METALS PROXY — Yahoo Finance, 5-min cache
 const metalsCache = {};
