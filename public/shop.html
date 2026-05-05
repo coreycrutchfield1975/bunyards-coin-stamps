@@ -378,6 +378,9 @@ function renderPayPalButton() {
       }));
       const itemTotal = getCartTotal();
       return actions.order.create({
+        application_context: {
+          shipping_preference: shippingMethod === 'pickup' ? 'NO_SHIPPING' : 'GET_FROM_FILE'
+        },
         purchase_units: [{
           description: 'Bunyards Coin and Stamps',
           amount: {
@@ -385,8 +388,7 @@ function renderPayPalButton() {
             value: itemTotal,
             breakdown: { item_total: { currency_code: 'USD', value: itemTotal } }
           },
-          items: items,
-          shipping_preference: shippingMethod === 'pickup' ? 'NO_SHIPPING' : 'GET_FROM_FILE'
+          items: items
         }]
       });
     },
