@@ -339,16 +339,61 @@ async function sendOrderEmail(order) {
           <p><strong>Customer:</strong> ${order.customer?.name || 'N/A'}</p>
           <p><strong>Email:</strong> ${order.customer?.email || 'N/A'}</p>
           <p><strong>Fulfillment:</strong> ${order.shipping === 'ship' ? '📦 Ship' : '🏪 Local Pickup'}</p>
+          ${order.shippingService ? `<p><strong>Shipping Service:</strong> ${order.shippingService} — <strong>$${order.shippingCost ? order.shippingCost.toFixed(2) : '0.00'}</strong></p>` : ''}
           <p><strong>Items:</strong></p>
           <ul>${itemList}</ul>
           <p style="font-size:18px"><strong>Total: $${order.total.toFixed(2)}</strong></p>
-          ${order.customer?.address ? `<p><strong>Ship To:</strong><br>${order.customer.address.line1}, ${order.customer.address.city}, ${order.customer.address.state} ${order.customer.address.postal_code}</p>` : ''}
+          ${order.shipTo ? `<p><strong>Ship To:</strong><br>${order.shipTo}</p>` : (order.customer?.address ? `<p><strong>Ship To:</strong><br>${order.customer.address.line1}, ${order.customer.address.city}, ${order.customer.address.state} ${order.customer.address.postal_code}</p>` : '')}
           <hr>
           <p style="font-size:12px;color:#888">Log in to your admin panel to update order status.</p>
         </div>
       </div>`
   });
 }
+
+
+// ── PayPal Order Notification ─────────────────────────────────────────────
+app.post('/api/order-notify', async (req, res) => {
+  try {
+    const { paypalOrderId, payer, items, subtotal, shippingCost, shippingService, shipTo, total } = req.body;
+
+    // Save order to DB
+    const order = new Order({
+      stripeSessionId: 'paypal_' + (paypalOrderId || Date.now()),
+      items: (items || []).map(i => ({ id: i.id, title: i.title, qty: i.qty || 1, price: i.price })),
+      customer: {
+        name: payer?.name,
+        email: payer?.email,
+        address: null
+      },
+      shipping: shipTo ? 'ship' : 'pickup',
+      total: parseFloat(total) || 0,
+      status: 'paid'
+    });
+    await order.save();
+
+    // Decrement stock
+    for (const item of (items || [])) {
+      if (item.id) await Product.findByIdAndUpdate(item.id, { $inc: { stock: -1 } }).catch(()=>{});
+    }
+
+    // Send email notification
+    await sendOrderEmail({
+      customer: { name: payer?.name, email: payer?.email },
+      items: (items || []).map(i => ({ title: i.title, qty: i.qty || 1, price: parseFloat(i.price) || 0 })),
+      shipping: shipTo ? 'ship' : 'pickup',
+      shippingService: shippingService || null,
+      shippingCost: parseFloat(shippingCost) || 0,
+      shipTo: shipTo || null,
+      total: parseFloat(total) || 0
+    });
+
+    res.json({ ok: true });
+  } catch(e) {
+    console.error('order-notify error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // ── Page routes ──────────────────────────────────────────────────────────────
 

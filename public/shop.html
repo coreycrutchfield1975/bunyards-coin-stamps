@@ -543,6 +543,31 @@ function renderPayPalButton() {
     onApprove: function(data, actions) {
       return actions.order.capture().then(function(details) {
         const name = details.payer.name.given_name || 'Customer';
+        const payer = details.payer;
+        const shipAddr = details.purchase_units?.[0]?.shipping?.address;
+        const shipTo = shipAddr
+          ? [shipAddr.address_line_1, shipAddr.admin_area_2, shipAddr.admin_area_1, shipAddr.postal_code].filter(Boolean).join(', ')
+          : null;
+
+        // Notify server — save order + email Dale
+        fetch('/api/order-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paypalOrderId: data.orderID,
+            payer: { name: (payer.name?.given_name || '') + ' ' + (payer.name?.surname || ''), email: payer.email_address },
+            items: cart.map(item => {
+              const p = allProducts.find(x => x._id === item.id);
+              return { id: item.id, title: p ? p.title : item.id, qty: item.qty || 1, price: p ? p.price : 0 };
+            }),
+            subtotal: getCartTotal(),
+            shippingCost: shippingCost || 0,
+            shippingService: selectedRate ? selectedRate.service : null,
+            shipTo: shipTo,
+            total: (parseFloat(getCartTotal()) + (shippingCost || 0)).toFixed(2)
+          })
+        }).catch(e => console.error('Order notify failed:', e));
+
         cart = [];
         shippingCost = 0;
         selectedRate = null;
