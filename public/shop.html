@@ -303,7 +303,9 @@ function toggleCart() {
   drawer.classList.toggle('open');
   renderCartDrawer();
   if (drawer.classList.contains('open')) {
-    setTimeout(renderPayPalButton, 150);
+    _ppRendered = false;
+    document.getElementById('paypal-button-container').innerHTML = '';
+    setTimeout(renderPayPalButton, 300);
   }
 }
 
