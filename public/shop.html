@@ -12,304 +12,348 @@
 :root{--red:#9B1C1C;--darkred:#7a1515;--gold:#C8972A;--lightgold:#e8b84b;--cream:#FAF6F0;--parchment:#F2EAD8;--dark:#1a1a1a;--gray:#555;--lightgray:#888;--border:#ddd;--white:#fff}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--dark)}
-/* NAV */
-nav{background:var(--dark);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+nav{background:var(--dark);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:200}
 .nav-logo{font-family:'Cinzel',serif;color:var(--gold);font-size:18px;text-decoration:none}
 .nav-links a{color:#ccc;text-decoration:none;margin-left:20px;font-size:14px;transition:color .2s}
 .nav-links a:hover,.nav-links a.active{color:var(--gold)}
-/* HEADER */
-.shop-header{background:var(--red);color:#fff;padding:40px 24px;text-align:center}
-.shop-header h1{font-family:'Cinzel',serif;font-size:36px;color:var(--lightgold);margin-bottom:8px}
-.shop-header p{color:#ffcccc;font-size:15px}
-/* CART BAR */
-#cart-bar{background:var(--dark);color:#fff;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:60px;z-index:99;transition:all .3s}
+.shop-header{background:var(--red);color:#fff;padding:36px 24px;text-align:center}
+.shop-header h1{font-family:'Cinzel',serif;font-size:32px;color:var(--lightgold);margin-bottom:6px}
+.shop-header p{color:#ffcccc;font-size:14px}
+.cart-bar{background:var(--dark);color:#fff;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:60px;z-index:150}
 .cart-bar-info{font-size:14px;color:#ccc}
 .cart-bar-info span{color:var(--lightgold);font-weight:700}
-.cart-btns{display:flex;gap:10px}
-.btn{padding:8px 20px;border:none;border-radius:6px;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;font-size:14px;transition:all .2s}
-.btn-gold{background:var(--gold);color:#fff}
-.btn-gold:hover{background:var(--lightgold);color:var(--dark)}
-.btn-outline{background:transparent;color:#ccc;border:1px solid #555}
-.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
-.btn-red{background:var(--red);color:#fff}
-.btn-red:hover{background:var(--darkred)}
-/* FILTERS */
-.filters{background:var(--parchment);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.filter-btn{padding:7px 18px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--gray);cursor:pointer;font-size:13px;transition:all .2s}
+.btn{padding:8px 20px;border:none;border-radius:6px;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;font-size:14px;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-gold{background:var(--gold);color:#fff}.btn-gold:hover{background:var(--lightgold);color:var(--dark)}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{background:var(--darkred)}
+.btn-outline{background:transparent;color:#ccc;border:1px solid #555}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:5px 14px;font-size:13px}
+.filters{background:var(--parchment);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--gray);cursor:pointer;font-size:13px;transition:all .2s}
 .filter-btn.active,.filter-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
-.search-box{flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--border);border-radius:20px;font-size:14px;background:#fff}
-/* PRODUCTS */
-.products-wrap{max-width:1200px;margin:0 auto;padding:32px 24px}
-.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
-.product-card{background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s;cursor:pointer}
-.product-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-.product-img{width:100%;height:200px;object-fit:cover;background:var(--parchment);display:flex;align-items:center;justify-content:center;color:var(--lightgray);font-size:40px}
-.product-img img{width:100%;height:200px;object-fit:cover}
-.product-info{padding:14px}
-.product-cat{font-size:11px;color:var(--red);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
-.product-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:6px;line-height:1.3}
-.product-sub{font-size:12px;color:var(--lightgray);margin-bottom:8px}
-.product-price{font-size:20px;font-weight:700;color:var(--red);margin-bottom:10px}
-.product-actions{display:flex;gap:8px}
-.featured-badge{background:var(--gold);color:#fff;font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:10px;position:absolute;top:10px;right:10px}
+.search-box{flex:1;min-width:180px;padding:7px 14px;border:1px solid var(--border);border-radius:20px;font-size:14px;background:#fff}
+.products-wrap{max-width:1200px;margin:0 auto;padding:28px 24px}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px}
 .product-card-wrap{position:relative}
-/* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;padding:20px}
+.featured-badge{background:var(--gold);color:#fff;font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:10px;position:absolute;top:10px;right:10px;z-index:2}
+.product-card{background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s;cursor:pointer}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.product-img{width:100%;height:190px;object-fit:cover;background:var(--parchment);display:flex;align-items:center;justify-content:center;color:var(--lightgray);font-size:40px}
+.product-img img{width:100%;height:190px;object-fit:cover}
+.product-info{padding:12px}
+.product-cat{font-size:11px;color:var(--red);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.product-title{font-family:'Playfair Display',serif;font-size:15px;margin-bottom:5px;line-height:1.3}
+.product-price{font-size:18px;font-weight:700;color:var(--red);margin-bottom:8px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal{background:#fff;border-radius:12px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto}
-.modal-img{width:100%;height:300px;object-fit:cover;background:var(--parchment);display:flex;align-items:center;justify-content:center;font-size:60px;color:var(--lightgray)}
-.modal-img img{width:100%;height:300px;object-fit:cover;border-radius:12px 12px 0 0}
-.modal-body{padding:24px}
+.modal{background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-img-wrap{width:100%;height:280px;overflow:hidden;border-radius:12px 12px 0 0;background:var(--parchment);display:flex;align-items:center;justify-content:center;font-size:60px;color:var(--lightgray)}
+.modal-img-wrap img{width:100%;height:280px;object-fit:cover}
+.modal-body{padding:22px}
 .modal-cat{font-size:12px;color:var(--red);font-weight:700;letter-spacing:1px;text-transform:uppercase}
-.modal-title{font-family:'Playfair Display',serif;font-size:24px;margin:6px 0}
-.modal-price{font-size:28px;font-weight:700;color:var(--red);margin-bottom:12px}
-.modal-desc{color:var(--gray);font-size:15px;line-height:1.7;margin-bottom:16px}
-.modal-shipping{background:var(--parchment);border-radius:8px;padding:12px;font-size:13px;color:var(--gray);margin-bottom:16px}
-.ship-options{display:flex;gap:10px;margin-top:10px}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;margin:6px 0}
+.modal-price{font-size:26px;font-weight:700;color:var(--red);margin-bottom:10px}
+.modal-desc{color:var(--gray);font-size:14px;line-height:1.7;margin-bottom:14px}
+.ship-options{display:flex;gap:10px;margin:10px 0 16px}
 .ship-opt{flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;font-size:13px;transition:all .2s}
-.ship-opt.selected{border-color:var(--red);background:#fff0f0}
-.modal-actions{display:flex;gap:10px}
-.modal-close{position:absolute;top:16px;right:16px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-/* CART DRAWER */
-.cart-drawer{position:fixed;right:-400px;top:0;width:380px;height:100%;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.15);z-index:600;transition:right .3s;overflow-y:auto;display:flex;flex-direction:column}
+.ship-opt.selected{border-color:var(--red);background:#fff0f0;font-weight:700}
+.modal-close{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10}
+.cart-drawer{position:fixed;right:-420px;top:0;width:400px;height:100%;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.18);z-index:700;transition:right .3s;display:flex;flex-direction:column}
 .cart-drawer.open{right:0}
-.cart-header{background:var(--dark);color:#fff;padding:20px;display:flex;align-items:center;justify-content:space-between}
-.cart-header h3{font-family:'Cinzel',serif;color:var(--gold)}
-.cart-body{flex:1;padding:20px;overflow-y:auto}
-.cart-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
-.cart-item-img{width:60px;height:60px;object-fit:cover;border-radius:6px;background:var(--parchment);flex-shrink:0}
+.cart-header{background:var(--dark);color:#fff;padding:18px 20px;display:flex;align-items:center;justify-content:space-between}
+.cart-header h3{font-family:'Cinzel',serif;color:var(--gold);font-size:16px}
+.cart-body{flex:1;padding:18px;overflow-y:auto}
+.cart-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.cart-item-img{width:56px;height:56px;object-fit:cover;border-radius:6px;background:var(--parchment);flex-shrink:0}
 .cart-item-info{flex:1}
-.cart-item-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.cart-item-title{font-size:13px;font-weight:700;margin-bottom:3px}
 .cart-item-price{font-size:13px;color:var(--red)}
-.cart-item-remove{color:var(--lightgray);cursor:pointer;font-size:18px;align-self:flex-start}
-.cart-footer{padding:20px;border-top:1px solid var(--border)}
-.cart-total{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between}
-/* Alerts */
-.alert{padding:14px 20px;border-radius:8px;margin-bottom:16px;font-size:14px}
+.cart-item-ship{font-size:11px;color:var(--lightgray)}
+.cart-item-remove{color:var(--lightgray);cursor:pointer;font-size:16px;align-self:flex-start;padding:2px 6px}
+.cart-item-remove:hover{color:var(--red)}
+.cart-footer{padding:18px;border-top:1px solid var(--border)}
+.cart-total{font-size:17px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:600}
+.overlay.active{display:block}
+.alert-area{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:900;width:340px;max-width:90vw}
+.alert{padding:12px 18px;border-radius:8px;font-size:14px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.15)}
 .alert-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
 .alert-error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
-.empty-msg{text-align:center;padding:60px 20px;color:var(--lightgray)}
-.empty-msg .icon{font-size:48px;margin-bottom:12px}
-footer{background:var(--dark);color:#aaa;text-align:center;padding:30px;font-size:13px;margin-top:60px}
+.empty-msg{text-align:center;padding:50px 20px;color:var(--lightgray)}
+.empty-msg .icon{font-size:44px;margin-bottom:10px}
+#pp-loading{text-align:center;padding:12px;color:var(--lightgray);font-size:13px}
+footer{background:var(--dark);color:#aaa;text-align:center;padding:28px;font-size:13px;margin-top:60px}
 footer a{color:var(--gold);text-decoration:none}
-@media(max-width:600px){.products-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}.cart-drawer{width:100%}}
+@media(max-width:600px){.products-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}.cart-drawer{width:100%;right:-100%}.cart-drawer.open{right:0}}
 </style>
-  <script src="https://www.paypal.com/sdk/js?client-id=ASveTe8Ec9MDMX5RLEBK8RQExQmi0XXfgbtXeXvIyIIYF3DGjP7LDCFdZxozyuEvK0c2LlnPbuZbqSkH&currency=USD&intent=capture"></script>
 </head>
 <body>
 
 <nav>
-  <a href="/" class="nav-logo">Bunyards Coin & Stamps</a>
+  <a class="nav-logo" href="/">🏛 Bunyards</a>
   <div class="nav-links">
     <a href="/">Home</a>
-    <a href="/shop" class="active">Shop</a>
-    <a href="/#contact">Contact</a>
+    <a href="/shop.html" class="active">Shop</a>
+    <a href="/trading.html">Prices</a>
+    <a href="/admin">Admin</a>
   </div>
 </nav>
 
 <div class="shop-header">
-  <h1>Our Shop</h1>
-  <p>Coins • Stamps • Currency • Tokens • Supplies — Poplar Bluff, MO</p>
+  <h1>🪙 Our Collection</h1>
+  <p>Coins · Currency · Stamps · Supplies — Poplar Bluff, MO</p>
 </div>
 
-<!-- CART BAR -->
-<div id="cart-bar">
+<div class="cart-bar">
   <div class="cart-bar-info">🛒 Cart: <span id="cart-count">0</span> items — <span id="cart-subtotal">$0.00</span></div>
-  <div class="cart-btns">
-    <button class="btn btn-outline" onclick="toggleCart()">View Cart</button>
-    <button class="btn btn-gold" onclick="toggleCart()">Checkout</button>
+  <button class="btn btn-gold btn-sm" onclick="openCart()">View Cart</button>
+</div>
+
+<div class="filters">
+  <input class="search-box" id="search-box" placeholder="🔍 Search products..." oninput="applyFilters()">
+  <button class="filter-btn active" onclick="setCategory('',this)">All</button>
+  <button class="filter-btn" onclick="setCategory('Coins',this)">Coins</button>
+  <button class="filter-btn" onclick="setCategory('Currency',this)">Currency</button>
+  <button class="filter-btn" onclick="setCategory('Stamps',this)">Stamps</button>
+  <button class="filter-btn" onclick="setCategory('Supplies',this)">Supplies</button>
+  <button class="filter-btn" onclick="setCategory('Other',this)">Other</button>
+</div>
+
+<div class="products-wrap">
+  <div id="alert-area" class="alert-area"></div>
+  <div class="products-grid" id="products-grid">
+    <div style="text-align:center;color:var(--lightgray);padding:60px;grid-column:1/-1">Loading products…</div>
   </div>
 </div>
 
-<!-- FILTERS -->
-<div class="filters">
-  <input type="text" class="search-box" placeholder="Search items..." id="search-input" oninput="debounceSearch()">
-  <button class="filter-btn active" onclick="setCategory('All',this)">All</button>
-  <button class="filter-btn" onclick="setCategory('Coins',this)">Coins</button>
-  <button class="filter-btn" onclick="setCategory('Stamps',this)">Stamps</button>
-  <button class="filter-btn" onclick="setCategory('Currency',this)">Currency</button>
-  <button class="filter-btn" onclick="setCategory('Tokens',this)">Tokens</button>
-  <button class="filter-btn" onclick="setCategory('Supplies',this)">Supplies</button>
-</div>
-
-<!-- PRODUCTS -->
-<div class="products-wrap">
-  <div id="alert-area"></div>
-  <div id="products-grid" class="products-grid"></div>
-  <div id="loading" style="text-align:center;padding:40px;color:var(--lightgray)">Loading items…</div>
-</div>
-
-<!-- PRODUCT MODAL -->
+<!-- Product Modal -->
 <div class="modal-overlay" id="product-modal">
-  <div class="modal" style="position:relative">
+  <div class="modal" id="modal-inner">
     <button class="modal-close" onclick="closeModal()">✕</button>
-    <div id="modal-img-wrap"></div>
+    <div class="modal-img-wrap" id="modal-img"></div>
     <div class="modal-body">
       <div class="modal-cat" id="modal-cat"></div>
       <div class="modal-title" id="modal-title"></div>
       <div class="modal-price" id="modal-price"></div>
       <div class="modal-desc" id="modal-desc"></div>
-      <div class="modal-shipping" id="modal-shipping"></div>
-      <div class="modal-actions">
-        <button class="btn btn-gold" onclick="addToCartFromModal()" style="flex:1">🛒 Add to Cart</button>
-        <button class="btn btn-outline" onclick="closeModal()">Close</button>
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--dark)">Delivery Method:</div>
+      <div class="ship-options">
+        <div class="ship-opt selected" id="opt-ship" onclick="setShipping('ship')">📦 Ship to Me</div>
+        <div class="ship-opt" id="opt-pickup" onclick="setShipping('pickup')">🏪 Local Pickup</div>
+      </div>
+      <div id="modal-alert-area"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-gold" style="flex:1" onclick="addToCartFromModal()">🛒 Add to Cart</button>
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- CART DRAWER -->
+<!-- Cart Drawer -->
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
 <div class="cart-drawer" id="cart-drawer">
   <div class="cart-header">
     <h3>🛒 Your Cart</h3>
-    <button onclick="toggleCart()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">✕</button>
+    <button class="btn btn-outline btn-sm" onclick="closeCart()">✕ Close</button>
   </div>
-  <div class="cart-body" id="cart-body"></div>
+  <div class="cart-body" id="cart-body">
+    <div class="empty-msg"><div class="icon">🛒</div><div>Your cart is empty.</div></div>
+  </div>
   <div class="cart-footer" id="cart-footer" style="display:none">
     <div class="cart-total"><span>Total</span><span id="cart-total-amt">$0.00</span></div>
-    <div style="margin-bottom:12px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--gray)">Fulfillment Method</div>
-      <div class="ship-options">
-        <div class="ship-opt selected" id="opt-ship" onclick="selectShipping('ship')">📦 Ship to Me</div>
-        <div class="ship-opt" id="opt-pickup" onclick="selectShipping('pickup')">🏪 Local Pickup</div>
-      </div>
-      <div id="ship-note" style="font-size:12px;color:var(--lightgray);margin-top:8px">Shipping cost added at checkout based on items.</div>
-    </div>
-    <div id="paypal-button-container" style="margin-top:10px"></div>
-    <button class="btn btn-outline" onclick="toggleCart()" style="width:100%;margin-top:8px">Continue Shopping</button>
+    <div id="pp-loading" style="display:none">Loading checkout…</div>
+    <div id="paypal-button-container"></div>
   </div>
 </div>
 
 <footer>
-  <div>© 2024 Bunyards Coin & Stamps — 1912 N. Westwood Blvd, Poplar Bluff, MO</div>
-  <div style="margin-top:6px"><a href="/">Home</a> · <a href="/#contact">Contact</a> · <a href="https://www.facebook.com/p/Bunyards-100090638094075/" target="_blank" rel="noopener">📘 Facebook</a></div>
+  <p>📍 1912 N. Westwood Blvd, Poplar Bluff MO &nbsp;|&nbsp; Tue–Sat 10am–5pm</p>
+  <p style="margin-top:6px"><a href="tel:5737720889">📞 (573) 772-0889</a> &nbsp;|&nbsp; <a href="mailto:dalebunyard@hotmail.com">✉️ Email Dale</a></p>
 </footer>
 
 <script>
-let allProducts = [], currentCategory = 'All', searchTimer = null;
+// ── State ──────────────────────────────────────────────────────────────────
+let allProducts = [];
+let filteredProducts = [];
+let activeCategory = '';
+let currentProduct = null;
+let shippingMethod = 'ship';
 let cart = JSON.parse(localStorage.getItem('bunyards-cart') || '[]');
-let currentProduct = null, shippingMethod = 'ship';
+let ppLoaded = false;
+let ppRendering = false;
 
-// ── Load Products ─────────────────────────────────────────────────────────
-async function loadProducts() {
-  const params = new URLSearchParams();
-  if (currentCategory !== 'All') params.set('category', currentCategory);
-  const q = document.getElementById('search-input').value.trim();
-  if (q) params.set('search', q);
-  const res = await fetch('/api/products?' + params);
-  allProducts = await res.json();
-  renderProducts();
+// ── Load PayPal SDK dynamically after page load ────────────────────────────
+function loadPayPalSDK() {
+  if (document.querySelector('script[src*="paypal.com/sdk"]')) { ppLoaded = true; return; }
+  const s = document.createElement('script');
+  s.src = 'https://www.paypal.com/sdk/js?client-id=ASveTe8Ec9MDMX5RLEBK8RQExQmi0XXfgbtXeXvIyIIYF3DGjP7LDCFdZxozyuEvK0c2LlnPbuZbqSkH&currency=USD&intent=capture';
+  s.onload = () => { ppLoaded = true; };
+  s.onerror = () => { console.error('PayPal SDK failed to load'); };
+  document.body.appendChild(s);
 }
 
-function renderProducts() {
-  document.getElementById('loading').style.display = 'none';
+// ── Init ──────────────────────────────────────────────────────────────────
+async function init() {
+  loadPayPalSDK();
+  await loadProducts();
+  updateCartBar();
+}
+
+// ── Products ───────────────────────────────────────────────────────────────
+async function loadProducts() {
+  try {
+    const r = await fetch('/api/products');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    allProducts = await r.json();
+    filteredProducts = [...allProducts];
+    renderGrid();
+  } catch(e) {
+    document.getElementById('products-grid').innerHTML =
+      '<div style="text-align:center;color:#dc2626;padding:60px;grid-column:1/-1">Failed to load products. Please refresh.</div>';
+  }
+}
+
+function applyFilters() {
+  const q = document.getElementById('search-box').value.toLowerCase();
+  filteredProducts = allProducts.filter(p => {
+    const matchCat = !activeCategory || p.category === activeCategory;
+    const matchQ = !q || p.title.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+  renderGrid();
+}
+
+function setCategory(cat, el) {
+  activeCategory = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function renderGrid() {
   const grid = document.getElementById('products-grid');
-  if (!allProducts.length) {
-    grid.innerHTML = '<div class="empty-msg"><div class="icon">🪙</div><div>No items found.</div></div>';
+  if (!filteredProducts.length) {
+    grid.innerHTML = '<div style="text-align:center;color:var(--lightgray);padding:60px;grid-column:1/-1">No products found.</div>';
     return;
   }
-  grid.innerHTML = allProducts.map(p => `
-    <div class="product-card-wrap">
-      ${p.featured ? '<div class="featured-badge">⭐ FEATURED</div>' : ''}
-      <div class="product-card" onclick="openModal('${p._id}')">
-        <div class="product-img">${p.images?.[0] ? `<img src="${p.images[0]}" alt="${p.title}" loading="lazy">` : '🪙'}</div>
-        <div class="product-info">
-          <div class="product-cat">${p.category}</div>
-          <div class="product-title">${p.title}</div>
-          ${p.subcategory ? `<div class="product-sub">${p.subcategory}</div>` : ''}
-          <div class="product-price">$${parseFloat(p.price).toFixed(2)}</div>
-          <div class="product-actions">
-            <button class="btn btn-gold" style="flex:1;padding:8px" onclick="event.stopPropagation();quickAdd('${p._id}')">🛒 Add</button>
-            <button class="btn btn-outline" style="padding:8px 12px" onclick="event.stopPropagation();openModal('${p._id}')">Details</button>
+  grid.innerHTML = filteredProducts.map(p => {
+    const img = p.images && p.images.length
+      ? `<div class="product-img"><img src="${p.images[0]}" alt="${p.title}" loading="lazy"></div>`
+      : `<div class="product-img">🪙</div>`;
+    return `
+      <div class="product-card-wrap">
+        ${p.featured ? '<div class="featured-badge">⭐ Featured</div>' : ''}
+        <div class="product-card" onclick="openModal('${p._id}')">
+          ${img}
+          <div class="product-info">
+            <div class="product-cat">${p.category || ''}</div>
+            <div class="product-title">${p.title}</div>
+            <div class="product-price">$${parseFloat(p.price).toFixed(2)}</div>
+            <button class="btn btn-red btn-sm" style="width:100%" onclick="event.stopPropagation();quickAdd('${p._id}')">🛒 Add to Cart</button>
           </div>
         </div>
-      </div>
-    </div>`).join('');
+      </div>`;
+  }).join('');
 }
 
-function setCategory(cat, btn) {
-  currentCategory = cat;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  loadProducts();
-}
-
-function debounceSearch() {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(loadProducts, 400);
-}
-
-// ── Modal ─────────────────────────────────────────────────────────────────
+// ── Modal ──────────────────────────────────────────────────────────────────
 function openModal(id) {
   currentProduct = allProducts.find(p => p._id === id);
   if (!currentProduct) return;
   const p = currentProduct;
-  document.getElementById('modal-img-wrap').innerHTML = p.images?.[0]
-    ? `<img src="${p.images[0]}" alt="${p.title}" style="width:100%;height:300px;object-fit:cover;border-radius:12px 12px 0 0">`
-    : `<div class="modal-img">🪙</div>`;
-  document.getElementById('modal-cat').textContent = p.category + (p.subcategory ? ' · ' + p.subcategory : '');
+  document.getElementById('modal-img').innerHTML = p.images && p.images.length
+    ? `<img src="${p.images[0]}" alt="${p.title}">`
+    : '🪙';
+  document.getElementById('modal-cat').textContent = p.category || '';
   document.getElementById('modal-title').textContent = p.title;
   document.getElementById('modal-price').textContent = '$' + parseFloat(p.price).toFixed(2);
   document.getElementById('modal-desc').textContent = p.description || '';
-  const shipMap = { both: '📦 Ships nationwide or 🏪 local pickup available', 'ship-only': '📦 Ships nationwide only', 'pickup-only': '🏪 Local pickup only (Poplar Bluff, MO)' };
-  document.getElementById('modal-shipping').innerHTML = `<strong>Fulfillment:</strong> ${shipMap[p.shipping] || ''}${p.shipping !== 'pickup-only' ? `<br><small style="color:var(--lightgray)">Shipping: $${parseFloat(p.shippingCost).toFixed(2)}</small>` : ''}`;
+  document.getElementById('modal-alert-area').innerHTML = '';
+  shippingMethod = 'ship';
+  document.getElementById('opt-ship').classList.add('selected');
+  document.getElementById('opt-pickup').classList.remove('selected');
   document.getElementById('product-modal').classList.add('open');
 }
 
-function closeModal() { document.getElementById('product-modal').classList.remove('open'); currentProduct = null; }
+function closeModal() {
+  document.getElementById('product-modal').classList.remove('open');
+  currentProduct = null;
+}
+
+function setShipping(method) {
+  shippingMethod = method;
+  document.getElementById('opt-ship').classList.toggle('selected', method === 'ship');
+  document.getElementById('opt-pickup').classList.toggle('selected', method === 'pickup');
+}
 
 function addToCartFromModal() {
   if (!currentProduct) return;
-  addToCart(currentProduct._id);
+  addToCart(currentProduct._id, shippingMethod);
   closeModal();
-  toggleCart();
+  openCart();
 }
 
-// ── Cart ──────────────────────────────────────────────────────────────────
 function quickAdd(id) {
-  addToCart(id);
-  showAlert('Item added to cart! 🛒', 'success');
+  addToCart(id, 'ship');
+  showAlert('Added to cart! 🛒', 'success');
+  openCart();
 }
 
-function addToCart(id) {
+// ── Cart ───────────────────────────────────────────────────────────────────
+function addToCart(id, method) {
   const p = allProducts.find(x => x._id === id);
   if (!p) return;
   const existing = cart.find(x => x.id === id);
-  if (existing) { existing.qty = (existing.qty || 1) + 1; }
-  else { cart.push({ id, title: p.title, price: p.price, image: p.images?.[0] || '', qty: 1, shipping: p.shipping, shippingCost: p.shippingCost }); }
+  if (existing) {
+    existing.qty = (existing.qty || 1) + 1;
+  } else {
+    cart.push({
+      id, title: p.title, price: parseFloat(p.price),
+      image: p.images && p.images.length ? p.images[0] : '',
+      qty: 1, shipping: method || 'ship',
+      shippingCost: p.shippingCost || 0
+    });
+  }
   saveCart();
-  updateCartUI();
+  updateCartBar();
 }
 
 function removeFromCart(id) {
   cart = cart.filter(x => x.id !== id);
   saveCart();
-  updateCartUI();
-  renderCartDrawer();
+  updateCartBar();
+  renderCartBody();
+  resetPayPal();
 }
 
-function saveCart() { localStorage.setItem('bunyards-cart', JSON.stringify(cart)); }
+function saveCart() {
+  localStorage.setItem('bunyards-cart', JSON.stringify(cart));
+}
 
-function updateCartUI() {
-  if (typeof paypal !== 'undefined' && document.getElementById('cart-drawer').classList.contains('open')) renderPayPalButton();
+function updateCartBar() {
   const count = cart.reduce((s, x) => s + (x.qty || 1), 0);
   const subtotal = cart.reduce((s, x) => s + x.price * (x.qty || 1), 0);
   document.getElementById('cart-count').textContent = count;
   document.getElementById('cart-subtotal').textContent = '$' + subtotal.toFixed(2);
 }
 
-function toggleCart() {
-  const drawer = document.getElementById('cart-drawer');
-  drawer.classList.toggle('open');
-  renderCartDrawer();
-  if (drawer.classList.contains('open')) {
-    _ppRendered = false;
-    document.getElementById('paypal-button-container').innerHTML = '';
-    setTimeout(renderPayPalButton, 300);
-  }
+function getCartTotal() {
+  return cart.reduce((s, x) => s + x.price * (x.qty || 1), 0).toFixed(2);
 }
 
-function renderCartDrawer() {
+function openCart() {
+  document.getElementById('cart-drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('active');
+  renderCartBody();
+  schedulePayPal();
+}
+
+function closeCart() {
+  document.getElementById('cart-drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('active');
+}
+
+function renderCartBody() {
   const body = document.getElementById('cart-body');
   const footer = document.getElementById('cart-footer');
   if (!cart.length) {
@@ -317,78 +361,78 @@ function renderCartDrawer() {
     footer.style.display = 'none';
     return;
   }
-  footer.style.display = 'block';
-  const total = cart.reduce((s, x) => s + x.price * (x.qty || 1), 0);
-  document.getElementById('cart-total-amt').textContent = '$' + total.toFixed(2);
   body.innerHTML = cart.map(item => `
     <div class="cart-item">
       ${item.image ? `<img class="cart-item-img" src="${item.image}" alt="${item.title}">` : '<div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;font-size:24px">🪙</div>'}
       <div class="cart-item-info">
         <div class="cart-item-title">${item.title}</div>
-        <div class="cart-item-price">$${parseFloat(item.price).toFixed(2)} × ${item.qty || 1}</div>
+        <div class="cart-item-price">$${(item.price * (item.qty||1)).toFixed(2)}</div>
+        <div class="cart-item-ship">${item.shipping === 'pickup' ? '🏪 Local Pickup' : '📦 Ship to Me'}</div>
       </div>
       <span class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</span>
     </div>`).join('');
-  // Check if any pickup-only items
-  const hasPickupOnly = cart.some(x => x.shipping === 'pickup-only');
-  const hasShipOnly = cart.some(x => x.shipping === 'ship-only');
-  document.getElementById('opt-ship').style.display = hasPickupOnly ? 'none' : 'flex';
-  document.getElementById('opt-pickup').style.display = hasShipOnly ? 'none' : 'flex';
+  document.getElementById('cart-total-amt').textContent = '$' + getCartTotal();
+  footer.style.display = 'block';
 }
 
-function selectShipping(method) {
-  shippingMethod = method;
-  document.getElementById('opt-ship').classList.toggle('selected', method === 'ship');
-  document.getElementById('opt-pickup').classList.toggle('selected', method === 'pickup');
-  document.getElementById('ship-note').textContent = method === 'ship'
-    ? 'Shipping cost will be added based on items in your cart.'
-    : '🏪 Pick up at 1912 N. Westwood Blvd, Poplar Bluff, MO — we\'ll contact you to arrange.';
+// ── PayPal ─────────────────────────────────────────────────────────────────
+function resetPayPal() {
+  ppRendering = false;
+  const c = document.getElementById('paypal-button-container');
+  if (c) c.innerHTML = '';
 }
 
-function getCartTotal() {
-  return cart.reduce((sum, item) => sum + parseFloat(item.price) * (item.qty || 1), 0).toFixed(2);
+function schedulePayPal() {
+  if (!cart.length) return;
+  resetPayPal();
+  // Wait for SDK + small render delay
+  let attempts = 0;
+  const tryRender = () => {
+    attempts++;
+    if (typeof paypal !== 'undefined') {
+      renderPayPalButton();
+    } else if (attempts < 20) {
+      setTimeout(tryRender, 300);
+    } else {
+      document.getElementById('pp-loading').style.display = 'none';
+      document.getElementById('paypal-button-container').innerHTML =
+        '<p style="color:#dc2626;font-size:13px;text-align:center">PayPal unavailable. Please refresh.</p>';
+    }
+  };
+  document.getElementById('pp-loading').style.display = 'block';
+  setTimeout(tryRender, 400);
 }
 
-let _ppRendered = false;
 function renderPayPalButton() {
+  if (ppRendering) return;
+  ppRendering = true;
+  document.getElementById('pp-loading').style.display = 'none';
   const container = document.getElementById('paypal-button-container');
-  if (!container) return;
-
-  if (!cart.length) {
-    container.innerHTML = '<p style="color:var(--lightgray);text-align:center;font-size:13px">Add items to your cart to checkout.</p>';
-    _ppRendered = false;
-    return;
-  }
-
-  if (typeof paypal === 'undefined') {
-    container.innerHTML = '<p style="color:#dc2626;text-align:center;font-size:13px">PayPal failed to load. Please refresh the page.</p>';
-    return;
-  }
-
-  // Only render once — PayPal SDK cannot re-render into same container
-  if (_ppRendered) return;
-  _ppRendered = true;
   container.innerHTML = '';
+
+  const hasPickup = cart.some(x => x.shipping === 'pickup');
+  const allPickup = cart.every(x => x.shipping === 'pickup');
 
   paypal.Buttons({
     style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
     createOrder: function(data, actions) {
       const items = cart.map(item => ({
-        name: item.title,
-        unit_amount: { value: parseFloat(item.price).toFixed(2), currency_code: 'USD' },
+        name: item.title.substring(0, 127),
+        unit_amount: { value: item.price.toFixed(2), currency_code: 'USD' },
         quantity: String(item.qty || 1)
       }));
-      const itemTotal = getCartTotal();
+      const itemTotal = parseFloat(getCartTotal());
       return actions.order.create({
         application_context: {
-          shipping_preference: shippingMethod === 'pickup' ? 'NO_SHIPPING' : 'GET_FROM_FILE'
+          shipping_preference: allPickup ? 'NO_SHIPPING' : 'GET_FROM_FILE',
+          brand_name: 'Bunyards Coin & Stamps'
         },
         purchase_units: [{
-          description: 'Bunyards Coin and Stamps',
+          description: 'Bunyards Coin and Stamps — Poplar Bluff MO',
           amount: {
             currency_code: 'USD',
-            value: itemTotal,
-            breakdown: { item_total: { currency_code: 'USD', value: itemTotal } }
+            value: itemTotal.toFixed(2),
+            breakdown: { item_total: { currency_code: 'USD', value: itemTotal.toFixed(2) } }
           },
           items: items
         }]
@@ -396,41 +440,37 @@ function renderPayPalButton() {
     },
     onApprove: function(data, actions) {
       return actions.order.capture().then(function(details) {
+        const name = details.payer.name.given_name || 'Customer';
         cart = [];
         saveCart();
-        updateCartUI();
-        showAlert('Payment complete! Thank you, ' + details.payer.name.given_name + '. Dale will be in touch soon.', 'success');
-        _ppRendered = false;
-        document.getElementById('cart-drawer').classList.remove('open');
+        updateCartBar();
+        resetPayPal();
+        renderCartBody();
+        closeCart();
+        showAlert('✅ Payment complete! Thank you, ' + name + '. Dale will be in touch soon.', 'success');
       });
     },
     onError: function(err) {
-      showAlert('PayPal error. Please try again or contact us directly.', 'error');
-      console.error(err);
+      console.error('PayPal error:', err);
+      ppRendering = false;
+      showAlert('PayPal error — please try again or call (573) 772-0889.', 'error');
     },
     onCancel: function() {
+      ppRendering = false;
       showAlert('Checkout cancelled. Your cart is saved.', 'error');
     }
   }).render('#paypal-button-container');
 }
 
+// ── Alerts ─────────────────────────────────────────────────────────────────
 function showAlert(msg, type) {
   const a = document.getElementById('alert-area');
   a.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-  setTimeout(() => a.innerHTML = '', 4000);
+  setTimeout(() => { a.innerHTML = ''; }, 5000);
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────
-const params = new URLSearchParams(location.search);
-if (params.get('success') === '1') {
-  cart = [];
-  saveCart();
-  showAlert('✅ Order placed successfully! Dale will be in touch soon.', 'success');
-}
-if (params.get('cancelled') === '1') showAlert('Checkout cancelled. Your cart is saved.', 'error');
-
-updateCartUI();
-loadProducts();
+// ── Boot ────────────────────────────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>
