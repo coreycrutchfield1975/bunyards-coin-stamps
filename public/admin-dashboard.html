@@ -405,7 +405,7 @@ function setUploadMethod(method) {
 
 async function generateQR() {
   try {
-    var r = await fetch('/api/qr/session', { method: 'POST' });
+    var r = await fetch('/api/qr/session', { method: 'POST', credentials: 'include' });
     var d = await r.json();
     if (!d.token) { alert('Could not create QR session'); return; }
     currentQRToken = d.token;
@@ -444,7 +444,7 @@ function startQRPolling() {
   qrPollInterval = setInterval(async function() {
     if (!currentQRToken) return;
     try {
-      var r = await fetch('/api/qr/poll/' + currentQRToken);
+      var r = await fetch('/api/qr/poll/' + currentQRToken, { credentials: 'include' });
       var d = await r.json();
       if (d.status === 'ready') {
         stopQRPolling();
@@ -493,7 +493,7 @@ var editingProductId = null;
 
 async function loadShopProducts() {
   try {
-    var r = await fetch('/api/admin/products');
+    var r = await fetch('/api/admin/products', {credentials:'include'});
     if (!r.ok) {
       if (r.status === 401) {
         document.getElementById('shop-product-grid').innerHTML = '<div style="text-align:center;color:#dc2626;padding:40px;grid-column:1/-1">Session expired. Please <a href="/admin">log in again</a>.</div>';
@@ -613,7 +613,7 @@ async function saveProduct() {
 async function deleteProduct(id) {
   if (!confirm('Delete this product from the shop?')) return;
   try {
-    await fetch('/api/admin/products/' + id, { method: 'DELETE' });
+    await fetch('/api/admin/products/' + id, { method: 'DELETE', credentials:'include' });
     loadShopProducts();
   } catch(e) { alert('Error deleting product: ' + e.message); }
 }
