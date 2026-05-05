@@ -94,6 +94,7 @@ footer{background:var(--dark);color:#aaa;text-align:center;padding:30px;font-siz
 footer a{color:var(--gold);text-decoration:none}
 @media(max-width:600px){.products-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}.cart-drawer{width:100%}}
 </style>
+  <script src="https://www.paypal.com/sdk/js?client-id=AQPBBkz5XJaVAlYPltVu4j1Cv9xDfhVmyW0cKxsbq5jCEF3I5YvWcG6Atop8f2_wwzdtWtcWiHa__cBh&currency=USD"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@ footer a{color:var(--gold);text-decoration:none}
       </div>
       <div id="ship-note" style="font-size:12px;color:var(--lightgray);margin-top:8px">Shipping cost added at checkout based on items.</div>
     </div>
-    <button class="btn btn-gold" onclick="checkout()" style="width:100%;padding:14px;font-size:16px">Proceed to Checkout →</button>
+    <div id="paypal-button-container" style="margin-top:10px"></div>
     <button class="btn btn-outline" onclick="toggleCart()" style="width:100%;margin-top:8px">Continue Shopping</button>
   </div>
 </div>
@@ -290,6 +291,7 @@ function removeFromCart(id) {
 function saveCart() { localStorage.setItem('bunyards-cart', JSON.stringify(cart)); }
 
 function updateCartUI() {
+  if (typeof paypal !== "undefined") renderPayPalButton();
   const count = cart.reduce((s, x) => s + (x.qty || 1), 0);
   const subtotal = cart.reduce((s, x) => s + x.price * (x.qty || 1), 0);
   document.getElementById('cart-count').textContent = count;
@@ -337,27 +339,59 @@ function selectShipping(method) {
     : '🏪 Pick up at 1912 N. Westwood Blvd, Poplar Bluff, MO — we\'ll contact you to arrange.';
 }
 
-function checkout() {
-  if (!cart.length) return;
+function getCartTotal() {
+  return cart.reduce((sum, item) => sum + parseFloat(item.price) * (item.qty || 1), 0).toFixed(2);
+}
 
-  // Build PayPal cart checkout URL
-  const business = 'dalebunyard@hotmail.com';
-  let url = `https://www.paypal.com/cgi-bin/webscr?cmd=_cart&business=${encodeURIComponent(business)}&upload=1&currency_code=USD`;
+function renderPayPalButton() {
+  const container = document.getElementById('paypal-button-container');
+  if (!container) return;
+  container.innerHTML = '';
 
-  let i = 1;
-  cart.forEach(item => {
-    const qty = item.qty || 1;
-    url += `&item_name_${i}=${encodeURIComponent(item.title)}`;
-    url += `&amount_${i}=${parseFloat(item.price).toFixed(2)}`;
-    url += `&quantity_${i}=${qty}`;
+  if (!cart.length) {
+    container.innerHTML = '<p style="color:var(--lightgray);text-align:center;font-size:13px">Add items to your cart to checkout.</p>';
+    return;
+  }
 
-    i++;
-  });
-
-  if (shippingMethod === 'pickup') url += '&no_shipping=1';
-
-  localStorage.removeItem('bunyards-cart');
-  window.location.href = url;
+  paypal.Buttons({
+    style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
+    createOrder: function(data, actions) {
+      const items = cart.map(item => ({
+        name: item.title,
+        unit_amount: { value: parseFloat(item.price).toFixed(2), currency_code: 'USD' },
+        quantity: String(item.qty || 1)
+      }));
+      const itemTotal = getCartTotal();
+      return actions.order.create({
+        purchase_units: [{
+          description: 'Bunyards Coin and Stamps',
+          amount: {
+            currency_code: 'USD',
+            value: itemTotal,
+            breakdown: { item_total: { currency_code: 'USD', value: itemTotal } }
+          },
+          items: items,
+          shipping_preference: shippingMethod === 'pickup' ? 'NO_SHIPPING' : 'GET_FROM_FILE'
+        }]
+      });
+    },
+    onApprove: function(data, actions) {
+      return actions.order.capture().then(function(details) {
+        cart = [];
+        saveCart();
+        updateCartUI();
+        showAlert('Payment complete! Thank you, ' + details.payer.name.given_name + '. Dale will be in touch soon.', 'success');
+        document.getElementById('cart-modal').style.display = 'none';
+      });
+    },
+    onError: function(err) {
+      showAlert('PayPal error. Please try again or contact us directly.', 'error');
+      console.error(err);
+    },
+    onCancel: function() {
+      showAlert('Checkout cancelled. Your cart is saved.', 'error');
+    }
+  }).render('#paypal-button-container');
 }
 
 function showAlert(msg, type) {
