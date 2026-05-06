@@ -657,15 +657,18 @@ function closeProductModal() {
   editingProductId = null;
 }
 
-document.getElementById('pm-image').addEventListener('change', function() {
-  var file = this.files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var prev = document.getElementById('pm-img-preview');
-    prev.src = e.target.result; prev.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
+document.addEventListener('DOMContentLoaded', function() {
+  var _pmImage = document.getElementById('pm-image');
+  if (_pmImage) _pmImage.addEventListener('change', function() {
+    var file = this.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var prev = document.getElementById('pm-img-preview');
+      if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
+    };
+    reader.readAsDataURL(file);
+  });
 });
 
 async function saveProduct() {
