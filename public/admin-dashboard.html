@@ -491,28 +491,13 @@ var _origGetIDPhoto = null;
 // ══════════════════════════════════════════
 var editingProductId = null;
 
-var _allAdminProducts = [];
-
-async function loadShopProducts() {
-  var grid = document.getElementById('shop-product-grid');
-  grid.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px;grid-column:1/-1">Loading…</div>';
-  try {
-    var r = await fetch('/api/admin/products', {credentials:'include'});
-    if (!r.ok) {
-      if (r.status === 401) {
-        grid.innerHTML = '<div style="text-align:center;color:#dc2626;padding:40px;grid-column:1/-1">Session expired. Please <a href="/admin">log in again</a>.</div>';
-        return;
-      }
-      throw new Error('Server error ' + r.status);
-    }
-    _allAdminProducts = await r.json();
-    renderProductTable(_allAdminProducts);
-  } catch(e) {
-    grid.innerHTML = '<div style="color:#dc2626;text-align:center;padding:30px;grid-column:1/-1">Error: ' + e.message + '</div>';
-  }
-}
+var _adminPage = 1;
+var _adminPages = 1;
+var _adminTotal = 0;
+var _adminSearchTimer = null;
 
 function buildProductRows(products) {
+  if (!products || !products.length) return '<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">No products found</td></tr>';
   return products.map(function(p) {
     var thumb = p.images && p.images[0]
       ? '<img src="' + p.images[0] + '" loading="lazy" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0">'
@@ -534,20 +519,74 @@ function buildProductRows(products) {
   }).join('');
 }
 
+function renderPager() {
+  if (_adminPages <= 1) return '';
+  var btns = '';
+  btns += '<button onclick="goAdminPage(' + (_adminPage-1) + ')" ' + (_adminPage===1?'disabled':'') + ' style="padding:5px 12px;border:1.5px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:13px' + (_adminPage===1?';opacity:.4':'') + '">‹ Prev</button> ';
+  btns += '<span style="font-size:13px;color:#64748b;padding:0 8px">Page ' + _adminPage + ' of ' + _adminPages + '</span>';
+  btns += ' <button onclick="goAdminPage(' + (_adminPage+1) + ')" ' + (_adminPage===_adminPages?'disabled':'') + ' style="padding:5px 12px;border:1.5px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:13px' + (_adminPage===_adminPages?';opacity:.4':'') + '">Next ›</button>';
+  return '<div style="margin-top:12px;text-align:center">' + btns + '</div>';
+}
+
+function goAdminPage(p) {
+  if (p < 1 || p > _adminPages) return;
+  _adminPage = p;
+  loadShopProducts();
+}
+
+async function loadShopProducts() {
+  var grid = document.getElementById('shop-product-grid');
+  var tbody = document.getElementById('product-tbody');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">Loading…</td></tr>';
+  } else {
+    grid.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px">Loading…</div>';
+  }
+  try {
+    var search = (document.getElementById('product-search')||{}).value || '';
+    var cat = (document.getElementById('product-cat-filter')||{}).value || '';
+    var url = '/api/admin/products?page=' + _adminPage + '&limit=25';
+    if (search) url += '&search=' + encodeURIComponent(search);
+    if (cat) url += '&category=' + encodeURIComponent(cat);
+
+    var r = await fetch(url, {credentials:'include'});
+    if (!r.ok) {
+      if (r.status === 401) {
+        grid.innerHTML = '<div style="text-align:center;color:#dc2626;padding:40px">Session expired. Please <a href="/admin">log in again</a>.</div>';
+        return;
+      }
+      throw new Error('Server error ' + r.status);
+    }
+    var data = await r.json();
+    var products = data.products || data;
+    _adminTotal = data.total || products.length;
+    _adminPages = data.pages || 1;
+
+    var existingTbody = document.getElementById('product-tbody');
+    if (existingTbody) {
+      existingTbody.innerHTML = buildProductRows(products);
+      var pager = document.getElementById('admin-pager');
+      if (pager) pager.innerHTML = renderPager();
+      var counter = document.getElementById('admin-counter');
+      if (counter) counter.textContent = _adminTotal + ' items';
+    } else {
+      renderProductTable(products);
+    }
+  } catch(e) {
+    grid.innerHTML = '<div style="color:#dc2626;text-align:center;padding:30px">Error: ' + e.message + '</div>';
+  }
+}
+
 function renderProductTable(products) {
   var grid = document.getElementById('shop-product-grid');
-  if (!products.length) {
-    grid.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1">No products yet. Click &ldquo;+ Add Product&rdquo; to get started.</div>';
-    return;
-  }
-  grid.innerHTML = '<div style="overflow-x:auto;grid-column:1/-1">' +
+  grid.innerHTML = '<div style="overflow-x:auto">' +
     '<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-      '<input id="product-search" type="text" placeholder="🔍 Search…" oninput="filterProducts(this.value)" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;width:180px">' +
-      '<select id="product-cat-filter" onchange="filterProducts(document.getElementById('product-search').value)" style="padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px">' +
+      '<input id="product-search" type="text" placeholder="🔍 Search…" oninput="adminSearchDebounce(this.value)" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;width:180px">' +
+      '<select id="product-cat-filter" onchange="adminCatFilter()" style="padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px">' +
         '<option value="">All Categories</option>' +
         '<option>Coins</option><option>Stamps</option><option>Currency</option><option>Tokens</option><option>Supplies</option>' +
       '</select>' +
-      '<span style="font-size:12px;color:#94a3b8">' + products.length + ' items</span>' +
+      '<span id="admin-counter" style="font-size:12px;color:#94a3b8">' + _adminTotal + ' items</span>' +
     '</div>' +
     '<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">' +
       '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">' +
@@ -559,19 +598,22 @@ function renderProductTable(products) {
         '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">ACTIONS</th>' +
       '</tr></thead>' +
       '<tbody id="product-tbody">' + buildProductRows(products) + '</tbody>' +
-    '</table></div>';
+    '</table>' +
+    '<div id="admin-pager">' + renderPager() + '</div>' +
+  '</div>';
 }
 
-function filterProducts(query) {
-  var cat = (document.getElementById('product-cat-filter')||{}).value || '';
-  var q = (query||'').toLowerCase();
-  var filtered = _allAdminProducts.filter(function(p) {
-    var matchQ = !q || (p.title||'').toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q);
-    var matchCat = !cat || p.category === cat;
-    return matchQ && matchCat;
-  });
-  var tbody = document.getElementById('product-tbody');
-  if (tbody) tbody.innerHTML = buildProductRows(filtered) || '<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">No results</td></tr>';
+function adminSearchDebounce(val) {
+  clearTimeout(_adminSearchTimer);
+  _adminSearchTimer = setTimeout(function() {
+    _adminPage = 1;
+    loadShopProducts();
+  }, 400);
+}
+
+function adminCatFilter() {
+  _adminPage = 1;
+  loadShopProducts();
 }
 
 

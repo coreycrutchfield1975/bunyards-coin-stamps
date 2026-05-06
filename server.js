@@ -203,13 +203,40 @@ function invalidateProductCache() { _productCache = null; _productCacheTime = 0;
 
 app.get('/api/admin/products', requireAdmin, async (req, res) => {
   const now = Date.now();
-  if (_productCache && (now - _productCacheTime) < 300000) {
-    return res.json(_productCache);
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 25;
+  const search = (req.query.search || '').trim();
+  const category = (req.query.category || '').trim();
+
+  // Only use cache for default first page with no filters
+  if (!search && !category && page === 1 && _productCache && (now - _productCacheTime) < 300000) {
+    const total = _productCache._total || _productCache.length;
+    return res.json({ products: _productCache.products || _productCache, total, page: 1, pages: Math.ceil(total / limit) });
   }
-  const products = await Product.find().sort({ createdAt: -1 }).lean();
-  _productCache = products;
-  _productCacheTime = now;
-  res.json(products);
+
+  const filter = {};
+  if (search) filter.$or = [
+    { title: { $regex: search, $options: 'i' } },
+    { description: { $regex: search, $options: 'i' } }
+  ];
+  if (category) filter.category = category;
+
+  const total = await Product.countDocuments(filter);
+  const products = await Product.find(filter)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .lean();
+
+  const result = { products, total, page, pages: Math.ceil(total / limit) };
+
+  // Cache only unfiltered page 1
+  if (!search && !category && page === 1) {
+    _productCache = result;
+    _productCacheTime = now;
+  }
+
+  res.json(result);
 });
 
 app.post('/api/admin/products', requireAdmin, upload.array('images', 5), async (req, res) => {
