@@ -487,224 +487,212 @@ var _origGetIDPhoto = null;
 
 
 // ══════════════════════════════════════════
-// SHOP — PRODUCT MANAGEMENT
+// SHOP — PRODUCT MANAGEMENT (client-side like ledger)
 // ══════════════════════════════════════════
 var editingProductId = null;
+var _allProducts = [];
+var _pmQRToken = null;
+var _pmQRPollTimer = null;
+var _pmQRPhotoData = null;
 
-var _adminPage = 1;
-var _adminPages = 1;
-var _adminTotal = 0;
-var _adminSearchTimer = null;
-
-function buildProductRows(products) {
-  if (!products || !products.length) return '<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">No products found</td></tr>';
+function buildShopRows(products) {
+  if (!products || !products.length) return '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8">No products found</td></tr>';
   return products.map(function(p) {
     var thumb = p.images && p.images[0]
       ? '<img src="' + p.images[0] + '" loading="lazy" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0">'
       : '<div style="width:44px;height:44px;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px">🪙</div>';
     var badge = p.featured ? '<span style="background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px">⭐</span>' : '';
-    var inactive = !p.active ? '<span style="background:#fef2f2;color:#dc2626;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px">OFF</span>' : '';
     var stockColor = (p.stock||0) < 2 ? '#dc2626' : '#16a34a';
-    var pJson = JSON.stringify(p).replace(/"/g,"&quot;");
+    var pStr = JSON.stringify(p).replace(/\'/g,"\\'").replace(/"/g,'&quot;');
     return '<tr style="border-bottom:1px solid #f1f5f9">' +
       '<td style="padding:8px 6px">' + thumb + '</td>' +
-      '<td style="padding:8px 6px;font-weight:600;font-size:13px;color:#1e293b">' + (p.title||p.name||'Untitled') + badge + inactive + '</td>' +
+      '<td style="padding:8px 6px;font-weight:600;font-size:13px;color:#1e293b">' + (p.title||p.name||'Untitled') + badge + '</td>' +
       '<td style="padding:8px 6px;font-size:12px;color:#64748b">' + (p.category||'—') + '</td>' +
       '<td style="padding:8px 6px;font-weight:700;color:#16a34a;font-size:14px">$' + (parseFloat(p.price)||0).toFixed(2) + '</td>' +
       '<td style="padding:8px 6px;font-weight:700;font-size:14px;color:' + stockColor + '">' + (p.stock !== undefined ? p.stock : '—') + '</td>' +
       '<td style="padding:8px 6px;white-space:nowrap">' +
-        '<button onclick="editProduct(' + pJson + ')" style="padding:5px 10px;background:#eff6ff;border:none;border-radius:6px;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;margin-right:4px">✏️ Edit</button>' +
-        '<button onclick="deleteProduct(\'' + p._id + '\')" style="padding:5px 10px;background:#fef2f2;border:none;border-radius:6px;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer">🗑️</button>' +
+        '<button onclick="editProduct(' + pStr + ')" style="padding:5px 10px;background:#eff6ff;border:none;border-radius:6px;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;margin-right:4px">✏️ Edit</button>' +
+        '<button onclick="deleteProduct(\"' + p._id + '\")"' + ' style="padding:5px 10px;background:#fef2f2;border:none;border-radius:6px;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer">🗑️</button>' +
       '</td></tr>';
   }).join('');
 }
 
-function renderPager() {
-  if (_adminPages <= 1) return '';
-  var btns = '';
-  btns += '<button onclick="goAdminPage(' + (_adminPage-1) + ')" ' + (_adminPage===1?'disabled':'') + ' style="padding:5px 12px;border:1.5px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:13px' + (_adminPage===1?';opacity:.4':'') + '">‹ Prev</button> ';
-  btns += '<span style="font-size:13px;color:#64748b;padding:0 8px">Page ' + _adminPage + ' of ' + _adminPages + '</span>';
-  btns += ' <button onclick="goAdminPage(' + (_adminPage+1) + ')" ' + (_adminPage===_adminPages?'disabled':'') + ' style="padding:5px 12px;border:1.5px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:13px' + (_adminPage===_adminPages?';opacity:.4':'') + '">Next ›</button>';
-  return '<div style="margin-top:12px;text-align:center">' + btns + '</div>';
-}
-
-function goAdminPage(p) {
-  if (p < 1 || p > _adminPages) return;
-  _adminPage = p;
-  loadShopProducts();
+function renderShopTable() {
+  var search = ((document.getElementById('shop-search')||{}).value||''). toLowerCase();
+  var cat = (document.getElementById('shop-cat')||{}).value||'';
+  var filtered = _allProducts.filter(function(p) {
+    var title = (p.title||p.name||'').toLowerCase();
+    var desc = (p.description||'').toLowerCase();
+    return (!search || title.includes(search) || desc.includes(search)) && (!cat || p.category===cat);
+  });
+  var tbody = document.getElementById('shop-tbody');
+  if (tbody) tbody.innerHTML = buildShopRows(filtered);
+  var counter = document.getElementById('shop-counter');
+  if (counter) counter.textContent = filtered.length + ' of ' + _allProducts.length + ' products';
 }
 
 async function loadShopProducts() {
-  var grid = document.getElementById('shop-product-grid');
-  var tbody = document.getElementById('product-tbody');
-  if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">Loading…</td></tr>';
-  } else {
-    grid.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px">Loading…</div>';
-  }
+  var tbody = document.getElementById('shop-tbody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8">Loading…</td></tr>';
   try {
-    var search = (document.getElementById('product-search')||{}).value || '';
-    var cat = (document.getElementById('product-cat-filter')||{}).value || '';
-    var url = '/api/admin/products?page=' + _adminPage + '&limit=25';
-    if (search) url += '&search=' + encodeURIComponent(search);
-    if (cat) url += '&category=' + encodeURIComponent(cat);
-
-    var r = await fetch(url, {credentials:'include'});
-    if (!r.ok) {
-      if (r.status === 401) {
-        grid.innerHTML = '<div style="text-align:center;color:#dc2626;padding:40px">Session expired. Please <a href="/admin">log in again</a>.</div>';
-        return;
+    var allProds = [], page = 1, total = Infinity;
+    while (allProds.length < total) {
+      var r = await fetch('/api/admin/products?page=' + page + '&limit=100', {credentials:'include'});
+      if (!r.ok) {
+        if (r.status===401) { if(tbody) tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:30px;color:#dc2626">Session expired. <a href="/admin">Log in again</a>.</td></tr>'; return; }
+        throw new Error('Server error ' + r.status);
       }
-      throw new Error('Server error ' + r.status);
+      var data = await r.json();
+      var prods = data.products || data;
+      total = data.total || prods.length;
+      allProds = allProds.concat(prods);
+      if (prods.length < 100) break;
+      page++;
     }
-    var data = await r.json();
-    var products = data.products || data;
-    _adminTotal = data.total || products.length;
-    _adminPages = data.pages || 1;
-
-    var existingTbody = document.getElementById('product-tbody');
-    if (existingTbody) {
-      existingTbody.innerHTML = buildProductRows(products);
-      var pager = document.getElementById('admin-pager');
-      if (pager) pager.innerHTML = renderPager();
-      var counter = document.getElementById('admin-counter');
-      if (counter) counter.textContent = _adminTotal + ' items';
-    } else {
-      renderProductTable(products);
-    }
+    _allProducts = allProds;
+    renderShopTable();
   } catch(e) {
-    grid.innerHTML = '<div style="color:#dc2626;text-align:center;padding:30px">Error: ' + e.message + '</div>';
+    if(tbody) tbody.innerHTML='<tr><td colspan="6" style="color:#dc2626;text-align:center;padding:30px">Error: '+e.message+'</td></tr>';
   }
 }
 
-function renderProductTable(products) {
-  var grid = document.getElementById('shop-product-grid');
-  grid.innerHTML = '<div style="overflow-x:auto">' +
-    '<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-      '<input id="product-search" type="text" placeholder="🔍 Search…" oninput="adminSearchDebounce(this.value)" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;width:180px">' +
-      '<select id="product-cat-filter" onchange="adminCatFilter()" style="padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px">' +
-        '<option value="">All Categories</option>' +
-        '<option>Coins</option><option>Stamps</option><option>Currency</option><option>Tokens</option><option>Supplies</option>' +
-      '</select>' +
-      '<span id="admin-counter" style="font-size:12px;color:#94a3b8">' + _adminTotal + ' items</span>' +
-    '</div>' +
-    '<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">' +
-      '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">' +
-        '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700;width:52px">IMG</th>' +
-        '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">TITLE</th>' +
-        '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">CAT</th>' +
-        '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">PRICE</th>' +
-        '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">STOCK</th>' +
-        '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">ACTIONS</th>' +
-      '</tr></thead>' +
-      '<tbody id="product-tbody">' + buildProductRows(products) + '</tbody>' +
-    '</table>' +
-    '<div id="admin-pager">' + renderPager() + '</div>' +
-  '</div>';
-}
-
-function adminSearchDebounce(val) {
-  clearTimeout(_adminSearchTimer);
-  _adminSearchTimer = setTimeout(function() {
-    _adminPage = 1;
-    loadShopProducts();
-  }, 400);
-}
-
-function adminCatFilter() {
-  _adminPage = 1;
-  loadShopProducts();
-}
-
-
-function openProductModal(product) {
-  editingProductId = null;
-  document.getElementById('pm-name').value = '';
-  document.getElementById('pm-category').value = 'Silver';
-  document.getElementById('pm-price').value = '';
-  document.getElementById('pm-desc').value = '';
-  document.getElementById('pm-stock').value = '1';
-  document.getElementById('pm-weight').value = '4';
-  document.getElementById('pm-featured').checked = false;
-  document.getElementById('pm-image').value = '';
-  document.getElementById('pm-img-preview').style.display = 'none';
-  document.getElementById('product-modal-title').textContent = 'Add Product';
-  document.getElementById('product-modal').style.display = 'flex';
+function openProductModal() {
+  editingProductId = null; _pmQRPhotoData = null;
+  ['pm-name','pm-price','pm-desc'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('pm-category').value='Coins';
+  document.getElementById('pm-stock').value='1';
+  document.getElementById('pm-weight').value='4';
+  document.getElementById('pm-featured').checked=false;
+  document.getElementById('pm-image').value='';
+  document.getElementById('pm-img-preview').style.display='none';
+  document.getElementById('pm-qr-panel').style.display='none';
+  document.getElementById('product-modal-title').textContent='Add Product';
+  document.getElementById('product-modal').style.display='flex';
 }
 
 function editProduct(p) {
-  editingProductId = p._id;
-  document.getElementById('pm-name').value = p.title || p.name || '';
-  document.getElementById('pm-category').value = p.category || 'Silver';
-  document.getElementById('pm-price').value = p.price || '';
-  document.getElementById('pm-desc').value = p.description || '';
-  document.getElementById('pm-stock').value = p.stock !== undefined ? p.stock : 1;
-  document.getElementById('pm-weight').value = p.weightOz !== undefined ? p.weightOz : 4;
-  document.getElementById('pm-featured').checked = !!p.featured;
-  document.getElementById('pm-image').value = '';
-  var prev = document.getElementById('pm-img-preview');
-  if (p.images && p.images[0]) {
-    prev.src = p.images[0]; prev.style.display = 'block';
-  } else {
-    prev.style.display = 'none';
-  }
-  document.getElementById('product-modal-title').textContent = 'Edit Product';
-  document.getElementById('product-modal').style.display = 'flex';
+  editingProductId=p._id; _pmQRPhotoData=null;
+  document.getElementById('pm-name').value=p.title||p.name||'';
+  document.getElementById('pm-category').value=p.category||'Coins';
+  document.getElementById('pm-price').value=p.price||'';
+  document.getElementById('pm-desc').value=p.description||'';
+  document.getElementById('pm-stock').value=p.stock!==undefined?p.stock:1;
+  document.getElementById('pm-weight').value=p.weightOz!==undefined?p.weightOz:4;
+  document.getElementById('pm-featured').checked=!!p.featured;
+  document.getElementById('pm-image').value='';
+  document.getElementById('pm-qr-panel').style.display='none';
+  var prev=document.getElementById('pm-img-preview');
+  if(p.images&&p.images[0]){prev.src=p.images[0];prev.style.display='block';}else{prev.style.display='none';}
+  document.getElementById('product-modal-title').textContent='Edit Product';
+  document.getElementById('product-modal').style.display='flex';
 }
 
 function closeProductModal() {
-  document.getElementById('product-modal').style.display = 'none';
-  editingProductId = null;
+  stopProductQRPolling();
+  document.getElementById('product-modal').style.display='none';
+  editingProductId=null; _pmQRPhotoData=null;
 }
 
-// pm-image listener moved to bottom script block
+async function generateProductQR() {
+  var panel=document.getElementById('pm-qr-panel');
+  panel.style.display='block';
+  document.getElementById('pm-qr-waiting').style.display='block';
+  document.getElementById('pm-qr-active').style.display='none';
+  document.getElementById('pm-qr-done').style.display='none';
+  try {
+    var r=await fetch('/api/qr/session',{method:'POST',credentials:'include'});
+    var d=await r.json();
+    if(!d.token){alert('Could not create QR session');panel.style.display='none';return;}
+    _pmQRToken=d.token;
+    document.getElementById('pm-qr-waiting').style.display='none';
+    document.getElementById('pm-qr-active').style.display='block';
+    var canvas=document.getElementById('pm-qr-canvas');
+    new QRious({element:canvas,value:d.uploadUrl,size:180,foreground:'#1e293b',background:'#ffffff'});
+    startProductQRPolling();
+  } catch(e){alert('QR error: '+e.message);panel.style.display='none';}
+}
+
+function startProductQRPolling() {
+  stopProductQRPolling();
+  _pmQRPollTimer=setInterval(async function(){
+    if(!_pmQRToken)return;
+    try{
+      var r=await fetch('/api/qr/poll/'+_pmQRToken,{credentials:'include'});
+      var d=await r.json();
+      if(d.status==='ready'){
+        stopProductQRPolling(); _pmQRPhotoData=d.image;
+        document.getElementById('pm-qr-active').style.display='none';
+        document.getElementById('pm-qr-done').style.display='block';
+        var prev=document.getElementById('pm-img-preview');
+        prev.src=d.image; prev.style.display='block';
+      } else if(d.status==='expired'){
+        stopProductQRPolling();
+        document.getElementById('pm-qr-status').textContent='QR expired. Try again.';
+      }
+    }catch(e){}
+  },2000);
+}
+
+function stopProductQRPolling(){if(_pmQRPollTimer){clearInterval(_pmQRPollTimer);_pmQRPollTimer=null;}}
+
+// pm-image file preview
+document.addEventListener('DOMContentLoaded',function(){
+  var el=document.getElementById('pm-image');
+  if(el) el.addEventListener('change',function(){
+    var file=this.files[0]; if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var prev=document.getElementById('pm-img-preview');
+      if(prev){prev.src=e.target.result;prev.style.display='block';}
+      _pmQRPhotoData=null;
+    };
+    reader.readAsDataURL(file);
+  });
+});
 
 async function saveProduct() {
-  var name = document.getElementById('pm-name').value.trim();
-  var price = document.getElementById('pm-price').value.trim();
-  if (!name || !price) { alert('Name and price are required.'); return; }
-
-  var btn = document.getElementById('pm-save-btn');
-  btn.textContent = 'Saving…'; btn.disabled = true;
-
-  var fd = new FormData();
-  fd.append('title', name);
-  fd.append('category', document.getElementById('pm-category').value);
-  fd.append('price', price);
-  fd.append('description', document.getElementById('pm-desc').value.trim());
-  fd.append('stock', document.getElementById('pm-stock').value || 1);
-  fd.append('weightOz', document.getElementById('pm-weight').value || 4);
-  fd.append('featured', document.getElementById('pm-featured').checked ? 'true' : 'false');
-  var imgFile = document.getElementById('pm-image').files[0];
-  if (imgFile) fd.append('images', imgFile);
-
-  try {
-    var url = editingProductId ? '/api/admin/products/' + editingProductId : '/api/admin/products';
-    var method = editingProductId ? 'PUT' : 'POST';
-    var r = await fetch(url, { method: method, body: fd });
-    if (!r.ok) throw new Error('Server error ' + r.status);
-    closeProductModal();
-    loadShopProducts();
-  } catch(e) {
-    alert('Error saving product: ' + e.message);
-  } finally {
-    btn.textContent = '💾 Save Product'; btn.disabled = false;
+  var name=document.getElementById('pm-name').value.trim();
+  var price=document.getElementById('pm-price').value.trim();
+  if(!name||!price){alert('Name and price are required.');return;}
+  var btn=document.getElementById('pm-save-btn');
+  btn.textContent='Saving…';btn.disabled=true;
+  var fd=new FormData();
+  fd.append('title',name);
+  fd.append('category',document.getElementById('pm-category').value);
+  fd.append('price',price);
+  fd.append('description',document.getElementById('pm-desc').value.trim());
+  fd.append('stock',document.getElementById('pm-stock').value||1);
+  fd.append('weightOz',document.getElementById('pm-weight').value||4);
+  fd.append('featured',document.getElementById('pm-featured').checked?'true':'false');
+  if(_pmQRPhotoData){
+    var arr=_pmQRPhotoData.split(','),mime=arr[0].match(/:(.*?);/)[1];
+    var bstr=atob(arr[1]),n=bstr.length,u8=new Uint8Array(n);
+    while(n--)u8[n]=bstr.charCodeAt(n);
+    fd.append('images',new Blob([u8],{type:mime}),'photo.jpg');
+  } else {
+    var imgFile=document.getElementById('pm-image').files[0];
+    if(imgFile)fd.append('images',imgFile);
   }
+  try{
+    var url=editingProductId?'/api/admin/products/'+editingProductId:'/api/admin/products';
+    var method=editingProductId?'PUT':'POST';
+    var r=await fetch(url,{method:method,body:fd,credentials:'include'});
+    if(!r.ok)throw new Error('Server error '+r.status);
+    closeProductModal(); loadShopProducts();
+  }catch(e){alert('Error saving: '+e.message);}
+  finally{btn.textContent='💾 Save Product';btn.disabled=false;}
 }
 
-async function deleteProduct(id) {
-  if (!confirm('Delete this product from the shop?')) return;
-  try {
-    await fetch('/api/admin/products/' + id, { method: 'DELETE', credentials:'include' });
-    loadShopProducts();
-  } catch(e) { alert('Error deleting product: ' + e.message); }
+async function deleteProduct(id){
+  if(!confirm('Delete this product?'))return;
+  try{await fetch('/api/admin/products/'+id,{method:'DELETE',credentials:'include'});loadShopProducts();}
+  catch(e){alert('Error: '+e.message);}
 }
 
-// Load shop products when tab is clicked
-var _origAdmTab = admTab;
-function admTab(name, btn) {
-  _origAdmTab(name, btn);
-  if (name === 'shop') loadShopProducts();
+var _origAdmTab = typeof admTab === 'function' ? admTab : function(){};
+function admTab(name,btn){
+  _origAdmTab(name,btn);
+  if(name==='shop')loadShopProducts();
 }
 
 </script>
@@ -987,14 +975,34 @@ function admTab(name, btn) {
        SHOP — PRODUCT MANAGEMENT
   ══════════════════════════════════════════════════════ -->
   <div class="adm-pane" id="adm-pane-shop">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <!-- Shop toolbar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
       <div style="font-size:18px;font-weight:800;color:#1e293b">🛍️ Shop Products</div>
-      <button class="adm-btn adm-btn-green" onclick="openProductModal()">+ Add Product</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="shop-search" type="text" placeholder="🔍 Search…" oninput="renderShopTable()" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;width:160px">
+        <select id="shop-cat" onchange="renderShopTable()" style="padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px">
+          <option value="">All Categories</option>
+          <option>Coins</option><option>Stamps</option><option>Currency</option><option>Tokens</option><option>Supplies</option>
+        </select>
+        <button class="adm-btn adm-btn-green" onclick="openProductModal()">+ Add Product</button>
+      </div>
     </div>
-
-    <!-- Product grid -->
-    <div id="shop-product-grid" style="width:100%">
-      <div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1" id="shop-loading">Loading products…</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:8px"><span id="shop-counter">Loading…</span></div>
+    <!-- Fast table like ledger -->
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <thead>
+          <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">
+            <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700;width:52px">IMG</th>
+            <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">TITLE</th>
+            <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">CAT</th>
+            <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">PRICE</th>
+            <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">STOCK</th>
+            <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="shop-tbody"><tr><td colspan="6" style="text-align:center;padding:30px;color:#94a3b8">Loading…</td></tr></tbody>
+      </table>
     </div>
   </div>
 
@@ -1047,8 +1055,24 @@ function admTab(name, btn) {
       </div>
       <div>
         <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Product Image</label>
-        <input id="pm-image" type="file" accept="image/*" style="width:100%;padding:8px;border:1.5px dashed #cbd5e1;border-radius:8px;font-size:13px;cursor:pointer">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button type="button" onclick="document.getElementById('pm-image').click()" class="adm-btn adm-btn-outline" style="font-size:12px;padding:6px 12px">📁 Choose File</button>
+          <button type="button" onclick="generateProductQR()" class="adm-btn adm-btn-outline" style="font-size:12px;padding:6px 12px">📷 QR / Phone Camera</button>
+        </div>
+        <input id="pm-image" type="file" accept="image/*" style="display:none">
         <img id="pm-img-preview" style="display:none;max-width:100%;max-height:120px;border-radius:8px;margin-top:8px;object-fit:cover">
+        <!-- QR upload panel for product -->
+        <div id="pm-qr-panel" style="display:none;border:1.5px dashed #cbd5e1;border-radius:10px;padding:14px;text-align:center;margin-top:6px">
+          <div id="pm-qr-waiting" style="display:none;color:#94a3b8;font-size:13px">Generating QR code…</div>
+          <div id="pm-qr-active" style="display:none">
+            <div style="font-size:12px;color:#64748b;margin-bottom:8px">Scan with phone to take photo</div>
+            <canvas id="pm-qr-canvas" width="180" height="180" style="border-radius:8px"></canvas>
+            <div id="pm-qr-status" style="font-size:12px;color:#94a3b8;margin-top:8px">Waiting for photo…</div>
+          </div>
+          <div id="pm-qr-done" style="display:none">
+            <div style="color:#16a34a;font-size:13px;font-weight:700">✅ Photo received!</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1210,21 +1234,6 @@ function admTab(name, btn) {
      JAVASCRIPT
 ══════════════════════════════════════════════════════ -->
 <script>
-// pm-image file preview listener (must run after HTML is in DOM)
-(function() {
-  var el = document.getElementById('pm-image');
-  if (el) el.addEventListener('change', function() {
-    var file = this.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var prev = document.getElementById('pm-img-preview');
-      if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
-    };
-    reader.readAsDataURL(file);
-  });
-})();
-
 // ── TAB SWITCHING ──────────────────────────────────────
 function admTab(name, btn) {
   // Hide all panes
