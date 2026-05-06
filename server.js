@@ -129,7 +129,7 @@ app.use(session({
   cookie: {
     maxAge: 8 * 60 * 60 * 1000,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    sameSite: 'none'
   }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
