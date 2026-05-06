@@ -4,6 +4,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const multer = require('multer');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const crypto = require('crypto');
@@ -126,6 +127,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'bunyards-secret-2024',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    dbName: 'bunyards',
+    collectionName: 'sessions',
+    ttl: 8 * 60 * 60
+  }),
   cookie: {
     maxAge: 8 * 60 * 60 * 1000,
     secure: process.env.NODE_ENV === 'production',
