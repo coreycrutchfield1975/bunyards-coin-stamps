@@ -711,9 +711,9 @@ function admTab(name,btn){
     <button class="adm-close" onclick="closeAdmin()">✕ Close</button>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════
-       LEDGER PANE
-  ══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════
+     LEDGER PANE
+══════════════════════════════════════════════════════ -->
   <div class="adm-pane active" id="adm-pane-ledger">
 
     <!-- Print header (hidden on screen) -->
@@ -727,33 +727,38 @@ function admTab(name,btn){
       <strong>⚖️ Missouri RSMo §407.300 Compliance</strong> — Records maintained min. 36 months &nbsp;·&nbsp; Available for law enforcement inspection &nbsp;·&nbsp; Driver's license copy required per transaction.
     </div>
 
-    <!-- STATS -->
-    <div class="adm-stats">
-      <div class="adm-stat">
-        <div class="adm-stat-label">Transactions</div>
-        <div class="adm-stat-val" id="st-total">0</div>
-        <div style="font-size:10px;color:#64748b">This period</div>
+    <!-- PAYMENT TOTALS SUMMARY BAR -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px" id="ledger-summary-bar">
+      <div class="pay-summary-card" style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#16a34a;letter-spacing:.5px">💵 Cash</div>
+        <div style="font-size:20px;font-weight:800;color:#15803d" id="st-cash">$0.00</div>
+        <div style="font-size:10px;color:#86efac" id="st-cash-count">0 transactions</div>
       </div>
-      <div class="adm-stat">
-        <div class="adm-stat-label">Total Bought</div>
-        <div class="adm-stat-val green" id="st-bought">$0.00</div>
-        <div style="font-size:10px;color:#64748b">Cash/check paid out</div>
+      <div class="pay-summary-card" style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1d4ed8;letter-spacing:.5px">💳 Credit Card</div>
+        <div style="font-size:20px;font-weight:800;color:#1e40af" id="st-card">$0.00</div>
+        <div style="font-size:10px;color:#93c5fd" id="st-card-count">0 transactions</div>
       </div>
-      <div class="adm-stat">
-        <div class="adm-stat-label">Total Sold</div>
-        <div class="adm-stat-val red" id="st-sold">$0.00</div>
-        <div style="font-size:10px;color:#64748b">Revenue in</div>
+      <div class="pay-summary-card" style="background:#fefce8;border:1.5px solid #fef08a;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#ca8a04;letter-spacing:.5px">🏦 Check</div>
+        <div style="font-size:20px;font-weight:800;color:#a16207" id="st-check">$0.00</div>
+        <div style="font-size:10px;color:#fde047" id="st-check-count">0 transactions</div>
       </div>
-      <div class="adm-stat">
-        <div class="adm-stat-label">Consignments</div>
-        <div class="adm-stat-val gold" id="st-consign">0</div>
-        <div style="font-size:10px;color:#64748b">Active</div>
+      <div class="pay-summary-card" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:.5px">🔄 Trades</div>
+        <div style="font-size:20px;font-weight:800;color:#475569" id="st-trades">0</div>
+        <div style="font-size:10px;color:#94a3b8">not in totals</div>
+      </div>
+      <div class="pay-summary-card" style="background:#1e293b;border:1.5px solid #334155;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.5px">📊 All Transactions</div>
+        <div style="font-size:20px;font-weight:800;color:#f1f5f9" id="st-total">$0.00</div>
+        <div style="font-size:10px;color:#64748b" id="st-total-count">0 entries</div>
       </div>
     </div>
 
     <!-- FILTERS + ACTIONS -->
     <div class="adm-filters no-print">
-      <input type="text" id="lf-search" placeholder="🔍 Name, file #, item..." style="min-width:180px" oninput="renderLedger()">
+      <input type="text" id="lf-search" placeholder="🔍 Name, ref #, item..." style="min-width:180px" oninput="renderLedger()">
       <select id="lf-month" onchange="renderLedger()">
         <option value="">All Months</option>
       </select>
@@ -776,6 +781,7 @@ function admTab(name,btn){
         <option value="Cash">Cash</option>
         <option value="Check">Check</option>
         <option value="Credit Card">Credit Card</option>
+        <option value="Trade">Trade</option>
       </select>
       <div style="margin-left:auto;display:flex;gap:6px">
         <button class="adm-btn adm-btn-outline" onclick="exportLedgerCSV()">📥 CSV</button>
@@ -789,19 +795,16 @@ function admTab(name,btn){
       <table class="ledger-table" id="ledger-table">
         <thead>
           <tr>
-            <th>File #</th>
+            <th style="width:20px"></th>
+            <th>Date</th>
             <th>Ref #</th>
-            <th>Date / Time</th>
             <th>Type</th>
             <th>Customer</th>
             <th>DOB</th>
-            <th>Item Description</th>
-            <th>Weight</th>
-            <th>Amount</th>
+            <th>Address</th>
             <th>Payment</th>
-            <th>Plate #</th>
+            <th>Entry Total</th>
             <th>ID</th>
-            <th>Staff</th>
             <th class="no-print">Actions</th>
           </tr>
         </thead>
@@ -1091,10 +1094,11 @@ function admTab(name,btn){
     <div class="em-title" id="em-modal-title">New Ledger Entry</div>
     <div class="mo-notice">⚖️ <strong>Missouri RSMo §407.300</strong> — Customer ID required. All fields marked * are legally required.</div>
 
+    <!-- ROW 1: Type + Date + Ref -->
     <div class="em-row">
       <div class="em-group">
         <label>Transaction Type *</label>
-        <select id="em-type">
+        <select id="em-type" onchange="onTypeChange()">
           <option value="Buy">Buy (from customer)</option>
           <option value="Sell">Sell (to customer)</option>
           <option value="Trade">Trade</option>
@@ -1102,11 +1106,16 @@ function admTab(name,btn){
         </select>
       </div>
       <div class="em-group">
-        <label>Dale's Reference # (optional)</label>
+        <label>Transaction Date *</label>
+        <input type="date" id="em-date">
+      </div>
+      <div class="em-group">
+        <label>Dale's Ref # (optional)</label>
         <input type="text" id="em-ref" placeholder="e.g. D-2024-001">
       </div>
     </div>
 
+    <!-- ROW 2: Customer Name + DOB -->
     <div class="em-row">
       <div class="em-group">
         <label>Customer Full Name *</label>
@@ -1118,6 +1127,7 @@ function admTab(name,btn){
       </div>
     </div>
 
+    <!-- ROW 3: Address + Phone -->
     <div class="em-row">
       <div class="em-group">
         <label>Address *</label>
@@ -1129,52 +1139,66 @@ function admTab(name,btn){
       </div>
     </div>
 
-    <div class="em-row">
-      <div class="em-group">
-        <label>Vehicle Plate # *</label>
-        <input type="text" id="em-plate" placeholder="ABC-123 / MO">
-      </div>
-      <div class="em-group">
-        <label>Staff Member</label>
-        <select id="em-staff">
-          <option value="Dale">Dale</option>
-          <option value="Trevor">Trevor</option>
-          <option value="Billy">Billy</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="em-row full">
-      <div class="em-group">
-        <label>Item Description *</label>
-        <textarea id="em-desc" placeholder="Coin type, year, mint mark, condition, serial numbers, identifying features..."></textarea>
-      </div>
-    </div>
-
-    <div class="em-row">
-      <div class="em-group">
-        <label>Weight (oz/g — optional)</label>
-        <input type="text" id="em-weight" placeholder="e.g. 1.0 troy oz">
-      </div>
-      <div class="em-group">
-        <label>Amount ($) *</label>
-        <input type="number" id="em-amount" placeholder="0.00" step="0.01" min="0">
-      </div>
-    </div>
-
-    <div class="em-row">
+    <!-- PAYMENT (hidden for Trade) -->
+    <div id="em-payment-row" class="em-row">
       <div class="em-group">
         <label>Payment Method *</label>
-        <select id="em-payment">
+        <select id="em-payment" onchange="onPaymentChange()">
           <option value="Cash">Cash</option>
           <option value="Check">Check</option>
           <option value="Credit Card">Credit Card</option>
         </select>
       </div>
+      <div class="em-group" id="em-check-group" style="display:none">
+        <label>Check Number</label>
+        <input type="text" id="em-check-no" placeholder="e.g. 1042">
+      </div>
+    </div>
+
+    <!-- LINE ITEMS (hidden for Trade) -->
+    <div id="em-items-section">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:6px;letter-spacing:.5px">
+        📦 Line Items *
+        <button type="button" onclick="addLineItem()" style="margin-left:10px;padding:3px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1d4ed8;font-size:11px;font-weight:700;cursor:pointer">+ Add Item</button>
+      </div>
+      <div id="em-line-items">
+        <!-- rows added dynamically -->
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:2px solid #e2e8f0">
+        <div style="font-size:15px;font-weight:800;color:#1e293b">Entry Total: <span id="em-total-display" style="color:#16a34a">$0.00</span></div>
+      </div>
+    </div>
+
+    <!-- TRADE SECTION (shown only for Trade type) -->
+    <div id="em-trade-section" style="display:none">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:8px;letter-spacing:.5px">🔄 Trade Details</div>
+      <div class="em-row">
+        <div class="em-group">
+          <label>We Gave (item description)</label>
+          <textarea id="em-trade-gave" rows="2" placeholder="e.g. 1oz Silver Eagle, 2024 MS69..."></textarea>
+        </div>
+        <div class="em-group">
+          <label>Estimated Value Given ($)</label>
+          <input type="number" id="em-trade-gave-val" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="em-row">
+        <div class="em-group">
+          <label>We Received (item description)</label>
+          <textarea id="em-trade-received" rows="2" placeholder="e.g. 1921 Morgan Dollar, F12..."></textarea>
+        </div>
+        <div class="em-group">
+          <label>Estimated Value Received ($)</label>
+          <input type="number" id="em-trade-received-val" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="em-row full" style="margin-top:8px">
       <div class="em-group">
-        <label>Notes</label>
-        <input type="text" id="em-notes" placeholder="Optional notes">
+        <label>Notes (optional)</label>
+        <input type="text" id="em-notes" placeholder="Any additional details…">
       </div>
     </div>
 
@@ -1183,14 +1207,10 @@ function admTab(name,btn){
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:6px">
         Customer ID Photo * (Driver's License — required by law)
       </div>
-
-      <!-- Upload method toggle -->
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button type="button" id="method-file-btn" onclick="setUploadMethod('file')" style="flex:1;padding:7px;border-radius:8px;border:2px solid #1d4ed8;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer">💻 Upload / Camera</button>
         <button type="button" id="method-qr-btn" onclick="setUploadMethod('qr')" style="flex:1;padding:7px;border-radius:8px;border:2px solid #e2e8f0;background:transparent;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">📱 Phone QR Code</button>
       </div>
-
-      <!-- File upload method -->
       <div id="method-file">
         <div class="id-zone" id="id-drop-zone" onclick="document.getElementById('em-id-file').click()">
           <div id="id-zone-text">📷 Click to upload or take photo of ID<br><span style="font-size:10px;color:#94a3b8">JPG, PNG, HEIC accepted</span></div>
@@ -1198,8 +1218,6 @@ function admTab(name,btn){
         </div>
         <input type="file" id="em-id-file" accept="image/*" style="display:none" onchange="previewIDUpload(this)">
       </div>
-
-      <!-- QR code method -->
       <div id="method-qr" style="display:none">
         <div id="qr-zone" style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:10px;padding:18px;text-align:center">
           <div id="qr-waiting" style="color:#64748b;font-size:13px">
@@ -1219,7 +1237,6 @@ function admTab(name,btn){
           </div>
         </div>
       </div>
-
       <div class="req-note" id="id-req-note" style="display:none">⚠️ ID photo required for compliance</div>
     </div>
 
@@ -1229,6 +1246,7 @@ function admTab(name,btn){
     </div>
   </div>
 </div>
+
 
 <!-- ══════════════════════════════════════════════════════
      JAVASCRIPT
@@ -1289,6 +1307,84 @@ function genFileNo() {
   return 'BCS-' + yy + mm + dd + '-' + seq;
 }
 
+// ── LOCAL STORAGE HELPERS ──────────────────────────────
+function getLedger() {
+  try { return JSON.parse(localStorage.getItem('bunyards_ledger') || '[]'); } catch(e) { return []; }
+}
+function saveLedger(data) { localStorage.setItem('bunyards_ledger', JSON.stringify(data)); }
+function getIDPhotos() {
+  try { return JSON.parse(localStorage.getItem('bunyards_id_photos') || '{}'); } catch(e) { return {}; }
+}
+function saveIDPhotos(obj) { localStorage.setItem('bunyards_id_photos', JSON.stringify(obj)); }
+
+// ── LINE ITEMS ─────────────────────────────────────────
+var _lineItemCount = 0;
+function addLineItem(item) {
+  _lineItemCount++;
+  var id = 'li_' + _lineItemCount;
+  var name = (item && item.name) || '';
+  var qty  = (item && item.qty)  || 1;
+  var each = (item && item.each) || '';
+  var row = document.createElement('div');
+  row.id = id;
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;background:#f8fafc;border-radius:8px;padding:7px 8px';
+  row.innerHTML =
+    '<input type="text" placeholder="Item name / description" value="' + name + '" style="flex:3;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px" class="li-name" oninput="recalcTotal()">' +
+    '<input type="number" placeholder="Qty" value="' + qty + '" min="1" style="width:60px;padding:7px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;text-align:center" class="li-qty" oninput="recalcTotal()">' +
+    '<input type="number" placeholder="$ Each" value="' + each + '" min="0" step="0.01" style="width:90px;padding:7px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;text-align:right" class="li-each" oninput="recalcTotal()">' +
+    '<div style="width:80px;text-align:right;font-weight:700;font-size:13px;color:#16a34a" class="li-total">$0.00</div>' +
+    '<button type="button" onclick="removeLineItem(\'' + id + '\')" style="padding:4px 8px;background:#fef2f2;border:1px solid #fecaca;border-radius:5px;color:#dc2626;font-size:12px;cursor:pointer;flex-shrink:0">✕</button>';
+  document.getElementById('em-line-items').appendChild(row);
+  recalcTotal();
+}
+function removeLineItem(id) {
+  var el = document.getElementById(id);
+  if (el) el.remove();
+  recalcTotal();
+}
+function recalcTotal() {
+  var total = 0;
+  document.querySelectorAll('#em-line-items > div').forEach(function(row) {
+    var qty  = parseFloat((row.querySelector('.li-qty')  || {}).value) || 0;
+    var each = parseFloat((row.querySelector('.li-each') || {}).value) || 0;
+    var line = qty * each;
+    var td = row.querySelector('.li-total');
+    if (td) td.textContent = '$' + line.toFixed(2);
+    total += line;
+  });
+  var disp = document.getElementById('em-total-display');
+  if (disp) disp.textContent = '$' + total.toFixed(2);
+  return total;
+}
+function getLineItems() {
+  var items = [];
+  document.querySelectorAll('#em-line-items > div').forEach(function(row) {
+    var name = ((row.querySelector('.li-name') || {}).value || '').trim();
+    var qty  = parseFloat((row.querySelector('.li-qty')  || {}).value) || 1;
+    var each = parseFloat((row.querySelector('.li-each') || {}).value) || 0;
+    if (name || each) items.push({ name: name, qty: qty, each: each, total: qty * each });
+  });
+  return items;
+}
+function clearLineItems() {
+  document.getElementById('em-line-items').innerHTML = '';
+  _lineItemCount = 0;
+  recalcTotal();
+}
+
+// ── TYPE / PAYMENT CHANGE ──────────────────────────────
+function onTypeChange() {
+  var type = document.getElementById('em-type').value;
+  var isTrade = (type === 'Trade');
+  document.getElementById('em-trade-section').style.display   = isTrade ? 'block' : 'none';
+  document.getElementById('em-items-section').style.display   = isTrade ? 'none'  : 'block';
+  document.getElementById('em-payment-row').style.display     = isTrade ? 'none'  : 'flex';
+}
+function onPaymentChange() {
+  var pay = document.getElementById('em-payment').value;
+  document.getElementById('em-check-group').style.display = (pay === 'Check') ? 'block' : 'none';
+}
+
 // ── ENTRY MODAL ────────────────────────────────────────
 var pendingIDData = null;
 var editingId = null;
@@ -1296,65 +1392,69 @@ var editingId = null;
 function openEntryModal(id) {
   editingId = id || null;
   pendingIDData = null;
-  var overlay = document.getElementById('entry-modal-overlay');
-  overlay.classList.add('open');
+  clearLineItems();
+  document.getElementById('entry-modal-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 
+  // Default date to today
+  var today = new Date().toISOString().slice(0,10);
+
   if (id) {
-    // Edit mode
     var entry = getLedger().find(function(e){ return e.id === id; });
     if (!entry) return;
-    document.getElementById('em-modal-title').textContent = 'Edit Entry — ' + entry.fileNo;
+    document.getElementById('em-modal-title').textContent = 'Edit Entry';
     document.getElementById('em-type').value    = entry.type    || 'Buy';
+    document.getElementById('em-date').value    = entry.date    || today;
     document.getElementById('em-ref').value     = entry.ref     || '';
     document.getElementById('em-name').value    = entry.name    || '';
     document.getElementById('em-dob').value     = entry.dob     || '';
     document.getElementById('em-address').value = entry.address || '';
     document.getElementById('em-phone').value   = entry.phone   || '';
-    document.getElementById('em-plate').value   = entry.plate   || '';
-    document.getElementById('em-staff').value   = entry.staff   || 'Dale';
-    document.getElementById('em-desc').value    = entry.desc    || '';
-    document.getElementById('em-weight').value  = entry.weight  || '';
-    document.getElementById('em-amount').value  = entry.amount  || '';
     document.getElementById('em-payment').value = entry.payment || 'Cash';
+    document.getElementById('em-check-no').value= entry.checkNo || '';
     document.getElementById('em-notes').value   = entry.notes   || '';
-    // Restore ID photo if exists
+    document.getElementById('em-trade-gave').value        = (entry.trade && entry.trade.gave)        || '';
+    document.getElementById('em-trade-gave-val').value    = (entry.trade && entry.trade.gaveVal)    || '';
+    document.getElementById('em-trade-received').value    = (entry.trade && entry.trade.received)    || '';
+    document.getElementById('em-trade-received-val').value= (entry.trade && entry.trade.receivedVal) || '';
+    // Load line items
+    if (entry.items && entry.items.length) {
+      entry.items.forEach(function(item){ addLineItem(item); });
+    } else {
+      addLineItem();
+    }
+    // Restore ID photo
     var ids = getIDPhotos();
     if (ids[id]) {
       var img = document.getElementById('id-preview');
-      img.src = ids[id];
-      img.style.display = 'block';
+      img.src = ids[id]; img.style.display = 'block';
       document.getElementById('id-zone-text').style.display = 'none';
       document.getElementById('id-drop-zone').classList.add('has-file');
     }
   } else {
-    // New mode — clear form
     document.getElementById('em-modal-title').textContent = 'New Ledger Entry';
+    ['em-ref','em-name','em-address','em-phone','em-check-no','em-notes',
+     'em-trade-gave','em-trade-received'].forEach(function(id){ document.getElementById(id).value=''; });
+    ['em-trade-gave-val','em-trade-received-val'].forEach(function(id){ document.getElementById(id).value=''; });
     document.getElementById('em-type').value    = 'Buy';
-    document.getElementById('em-ref').value     = '';
-    document.getElementById('em-name').value    = '';
+    document.getElementById('em-date').value    = today;
     document.getElementById('em-dob').value     = '';
-    document.getElementById('em-address').value = '';
-    document.getElementById('em-phone').value   = '';
-    document.getElementById('em-plate').value   = '';
-    document.getElementById('em-staff').value   = 'Dale';
-    document.getElementById('em-desc').value    = '';
-    document.getElementById('em-weight').value  = '';
-    document.getElementById('em-amount').value  = '';
     document.getElementById('em-payment').value = 'Cash';
-    document.getElementById('em-notes').value   = '';
     document.getElementById('id-preview').style.display = 'none';
     document.getElementById('id-zone-text').style.display = 'block';
     document.getElementById('id-drop-zone').classList.remove('has-file');
     document.getElementById('id-req-note').style.display = 'none';
+    addLineItem();
   }
+  onTypeChange();
+  onPaymentChange();
+  setUploadMethod('file');
 }
 
 function closeEntryModal() {
   document.getElementById('entry-modal-overlay').classList.remove('open');
   document.body.style.overflow = '';
-  pendingIDData = null;
-  editingId = null;
+  pendingIDData = null; editingId = null;
 }
 
 function previewIDUpload(input) {
@@ -1363,8 +1463,7 @@ function previewIDUpload(input) {
   reader.onload = function(e) {
     pendingIDData = e.target.result;
     var img = document.getElementById('id-preview');
-    img.src = pendingIDData;
-    img.style.display = 'block';
+    img.src = pendingIDData; img.style.display = 'block';
     document.getElementById('id-zone-text').style.display = 'none';
     document.getElementById('id-drop-zone').classList.add('has-file');
     document.getElementById('id-req-note').style.display = 'none';
@@ -1373,76 +1472,63 @@ function previewIDUpload(input) {
 }
 
 function saveEntry() {
-  var name    = document.getElementById('em-name').value.trim();
-  var desc    = document.getElementById('em-desc').value.trim();
-  var amount  = document.getElementById('em-amount').value.trim();
-  var plate   = document.getElementById('em-plate').value.trim();
+  var type = document.getElementById('em-type').value;
+  var name = document.getElementById('em-name').value.trim();
+  var date = document.getElementById('em-date').value;
+  if (!name) { alert('Customer name is required.'); return; }
+  if (!date) { alert('Transaction date is required.'); return; }
 
-  if (!name || !desc || !amount || !plate) {
-    alert('Please fill in all required fields: Name, Description, Amount, and Plate #.');
-    return;
+  var items = [];
+  var total = 0;
+  if (type !== 'Trade') {
+    items = getLineItems();
+    if (!items.length) { alert('Add at least one line item.'); return; }
+    total = items.reduce(function(s,i){ return s + i.total; }, 0);
   }
 
   var data = getLedger();
-  var now  = new Date();
+  var now  = new Date().toISOString();
+  var entry = {
+    id:        editingId || Date.now().toString(),
+    type:      type,
+    date:      date,
+    ref:       document.getElementById('em-ref').value.trim(),
+    name:      name,
+    dob:       document.getElementById('em-dob').value,
+    address:   document.getElementById('em-address').value.trim(),
+    phone:     document.getElementById('em-phone').value.trim(),
+    payment:   type === 'Trade' ? 'Trade' : document.getElementById('em-payment').value,
+    checkNo:   document.getElementById('em-check-no').value.trim(),
+    items:     items,
+    total:     total,
+    trade:     type === 'Trade' ? {
+      gave:        document.getElementById('em-trade-gave').value.trim(),
+      gaveVal:     parseFloat(document.getElementById('em-trade-gave-val').value) || 0,
+      received:    document.getElementById('em-trade-received').value.trim(),
+      receivedVal: parseFloat(document.getElementById('em-trade-received-val').value) || 0
+    } : null,
+    notes:     document.getElementById('em-notes').value.trim(),
+    createdAt: editingId ? (data.find(function(e){return e.id===editingId;})||{}).createdAt || now : now,
+    updatedAt: now
+  };
 
   if (editingId) {
-    // Update existing
     var idx = data.findIndex(function(e){ return e.id === editingId; });
-    if (idx > -1) {
-      data[idx] = Object.assign(data[idx], {
-        type:    document.getElementById('em-type').value,
-        ref:     document.getElementById('em-ref').value.trim(),
-        name:    name,
-        dob:     document.getElementById('em-dob').value,
-        address: document.getElementById('em-address').value.trim(),
-        phone:   document.getElementById('em-phone').value.trim(),
-        plate:   plate,
-        staff:   document.getElementById('em-staff').value,
-        desc:    desc,
-        weight:  document.getElementById('em-weight').value.trim(),
-        amount:  parseFloat(amount) || 0,
-        payment: document.getElementById('em-payment').value,
-        notes:   document.getElementById('em-notes').value.trim(),
-        updatedAt: now.toISOString()
-      });
-    }
-    if (pendingIDData) {
-      var ids = getIDPhotos();
-      ids[editingId] = pendingIDData;
-      saveIDPhotos(ids);
-    }
+    if (idx > -1) data[idx] = entry; else data.push(entry);
   } else {
-    // New entry
-    var entry = {
-      id:       Date.now().toString(),
-      fileNo:   genFileNo(),
-      type:     document.getElementById('em-type').value,
-      ref:      document.getElementById('em-ref').value.trim(),
-      name:     name,
-      dob:      document.getElementById('em-dob').value,
-      address:  document.getElementById('em-address').value.trim(),
-      phone:    document.getElementById('em-phone').value.trim(),
-      plate:    plate,
-      staff:    document.getElementById('em-staff').value,
-      desc:     desc,
-      weight:   document.getElementById('em-weight').value.trim(),
-      amount:   parseFloat(amount) || 0,
-      payment:  document.getElementById('em-payment').value,
-      notes:    document.getElementById('em-notes').value.trim(),
-      createdAt: now.toISOString()
-    };
     data.push(entry);
-    if (pendingIDData) {
-      var ids = getIDPhotos();
-      ids[entry.id] = pendingIDData;
-      saveIDPhotos(ids);
-      pendingIDData = null;
-    }
+  }
+
+  if (pendingIDData || qrPhotoData) {
+    var ids = getIDPhotos();
+    ids[entry.id] = pendingIDData || qrPhotoData;
+    saveIDPhotos(ids);
+    pendingIDData = null; qrPhotoData = null;
   }
 
   saveLedger(data);
   closeEntryModal();
+  populateMonthFilter();
   renderLedger();
 }
 
@@ -1451,17 +1537,26 @@ function deleteEntry(id) {
   var data = getLedger().filter(function(e){ return e.id !== id; });
   saveLedger(data);
   var ids = getIDPhotos();
-  delete ids[id];
-  saveIDPhotos(ids);
+  delete ids[id]; saveIDPhotos(ids);
   renderLedger();
 }
 
 function viewID(id, name) {
   var ids = getIDPhotos();
   if (!ids[id]) { alert('No ID photo on file for ' + name); return; }
-  var w = window.open('', '_blank', 'width=600,height=400');
-  w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="' + ids[id] + '" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
+  var w = window.open('','_blank','width=600,height=400');
+  w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+ids[id]+'" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
   w.document.close();
+}
+
+// ── EXPAND ROW ─────────────────────────────────────────
+function toggleLedgerRow(id) {
+  var row = document.getElementById('detail_' + id);
+  var btn = document.getElementById('expand_' + id);
+  if (!row) return;
+  var open = row.style.display !== 'none';
+  row.style.display = open ? 'none' : 'table-row';
+  if (btn) btn.textContent = open ? '▶' : '▼';
 }
 
 // ── FILTERS ────────────────────────────────────────────
@@ -1469,19 +1564,24 @@ function populateMonthFilter() {
   var data = getLedger();
   var months = {};
   data.forEach(function(e) {
-    if (!e.createdAt) return;
-    var d = new Date(e.createdAt);
-    var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    var label = d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
-    months[key] = label;
+    var key, label;
+    if (e.date) {
+      var parts = e.date.split('-');
+      key = parts[0] + '-' + parts[1];
+      var d = new Date(e.date + 'T12:00:00');
+      label = d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+    } else if (e.createdAt) {
+      var d2 = new Date(e.createdAt);
+      key = d2.getFullYear() + '-' + String(d2.getMonth()+1).padStart(2,'0');
+      label = d2.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+    }
+    if (key) months[key] = label;
   });
   var sel = document.getElementById('lf-month');
-  // Keep "All Months" option, remove the rest
   while (sel.options.length > 1) sel.remove(1);
   Object.keys(months).sort().reverse().forEach(function(k) {
     var opt = document.createElement('option');
-    opt.value = k;
-    opt.textContent = months[k];
+    opt.value = k; opt.textContent = months[k];
     sel.appendChild(opt);
   });
 }
@@ -1489,122 +1589,181 @@ function populateMonthFilter() {
 // ── RENDER LEDGER ──────────────────────────────────────
 function renderLedger() {
   var data       = getLedger();
-  var search     = (document.getElementById('lf-search')  || {value:''}).value.toLowerCase();
-  var filterMo   = (document.getElementById('lf-month')   || {value:''}).value;
-  var filterQtr  = (document.getElementById('lf-quarter') || {value:''}).value;
-  var filterType = (document.getElementById('lf-type')    || {value:''}).value;
-  var filterPay  = (document.getElementById('lf-payment') || {value:''}).value;
+  var search     = (document.getElementById('lf-search')  ||{value:''}).value.toLowerCase();
+  var filterMo   = (document.getElementById('lf-month')   ||{value:''}).value;
+  var filterQtr  = (document.getElementById('lf-quarter') ||{value:''}).value;
+  var filterType = (document.getElementById('lf-type')    ||{value:''}).value;
+  var filterPay  = (document.getElementById('lf-payment') ||{value:''}).value;
   var ids        = getIDPhotos();
 
-  // Filter
+  // Migrate old entries that have desc/amount but no items
+  data.forEach(function(e) {
+    if (!e.items && e.desc) {
+      e.items = [{ name: e.desc, qty: 1, each: e.amount || 0, total: e.amount || 0 }];
+      e.total = e.amount || 0;
+    }
+  });
+
   var filtered = data.filter(function(e) {
     if (filterType && e.type !== filterType) return false;
     if (filterPay  && e.payment !== filterPay) return false;
-    if (filterMo && e.createdAt) {
-      var d = new Date(e.createdAt);
-      var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    var entryDate = e.date || (e.createdAt ? e.createdAt.slice(0,10) : null);
+    if (filterMo && entryDate) {
+      var key = entryDate.slice(0,7);
       if (key !== filterMo) return false;
     }
-    if (filterQtr && e.createdAt) {
-      var d2 = new Date(e.createdAt);
-      var q = Math.ceil((d2.getMonth()+1) / 3);
+    if (filterQtr && entryDate) {
+      var mo = parseInt(entryDate.slice(5,7));
+      var q = Math.ceil(mo/3);
       if (String(q) !== filterQtr) return false;
     }
     if (search) {
-      var haystack = [e.fileNo, e.ref, e.name, e.desc, e.notes, e.plate].join(' ').toLowerCase();
-      if (!haystack.includes(search)) return false;
+      var hay = [e.ref, e.name, e.notes, e.checkNo,
+        (e.items||[]).map(function(i){return i.name;}).join(' '),
+        e.trade ? [e.trade.gave, e.trade.received].join(' ') : ''
+      ].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
     }
     return true;
   });
 
-  // Sort newest first
-  filtered.sort(function(a,b){ return (b.createdAt||'') > (a.createdAt||'') ? 1 : -1; });
-
-  // Stats
-  var totalBought = 0, totalSold = 0, totalConsign = 0;
-  filtered.forEach(function(e) {
-    if (e.type === 'Buy')         totalBought  += e.amount || 0;
-    if (e.type === 'Sell')        totalSold    += e.amount || 0;
-    if (e.type === 'Consignment') totalConsign += 1;
-  });
-  document.getElementById('st-total').textContent   = filtered.length;
-  document.getElementById('st-bought').textContent  = '$' + totalBought.toFixed(2);
-  document.getElementById('st-sold').textContent    = '$' + totalSold.toFixed(2);
-  document.getElementById('st-consign').textContent = totalConsign;
-
-  // Group by month
-  var groups = {};
-  filtered.forEach(function(e) {
-    var key = 'Unsorted';
-    if (e.createdAt) {
-      var d = new Date(e.createdAt);
-      key = d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
-    }
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(e);
+  filtered.sort(function(a,b) {
+    var da = a.date || (a.createdAt||'').slice(0,10);
+    var db = b.date || (b.createdAt||'').slice(0,10);
+    return db > da ? 1 : db < da ? -1 : 0;
   });
 
+  // ── Summary totals ──
+  var cashAmt=0, cashCnt=0, cardAmt=0, cardCnt=0, checkAmt=0, checkCnt=0, tradeCnt=0, grandAmt=0;
+  filtered.forEach(function(e) {
+    if (e.type === 'Trade') { tradeCnt++; return; }
+    var amt = e.total || 0;
+    grandAmt += amt;
+    if (e.payment === 'Cash')        { cashAmt  += amt; cashCnt++;  }
+    if (e.payment === 'Credit Card') { cardAmt  += amt; cardCnt++;  }
+    if (e.payment === 'Check')       { checkAmt += amt; checkCnt++; }
+  });
+  document.getElementById('st-cash').textContent       = '$' + cashAmt.toFixed(2);
+  document.getElementById('st-cash-count').textContent = cashCnt + ' transaction' + (cashCnt!==1?'s':'');
+  document.getElementById('st-card').textContent       = '$' + cardAmt.toFixed(2);
+  document.getElementById('st-card-count').textContent = cardCnt + ' transaction' + (cardCnt!==1?'s':'');
+  document.getElementById('st-check').textContent      = '$' + checkAmt.toFixed(2);
+  document.getElementById('st-check-count').textContent= checkCnt + ' transaction' + (checkCnt!==1?'s':'');
+  document.getElementById('st-trades').textContent     = tradeCnt;
+  document.getElementById('st-total').textContent      = '$' + grandAmt.toFixed(2);
+  document.getElementById('st-total-count').textContent= filtered.length + ' entr' + (filtered.length!==1?'ies':'y');
+
+  // ── Build rows ──
   var tbody = document.getElementById('ledger-body');
   tbody.innerHTML = '';
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:32px;color:#94a3b8;font-size:13px">No entries found. Click <strong>＋ New Entry</strong> to add one.</td></tr>';
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#94a3b8">No entries found.</td></tr>';
     return;
   }
 
-  Object.keys(groups).forEach(function(month) {
-    // Period row
-    var pr = document.createElement('tr');
-    pr.className = 'period-row';
-    pr.innerHTML = '<td colspan="14">📅 ' + month + ' &nbsp;·&nbsp; ' + groups[month].length + ' transaction' + (groups[month].length !== 1 ? 's' : '') + '</td>';
-    tbody.appendChild(pr);
+  // Group by month
+  var groups = {};
+  var groupOrder = [];
+  filtered.forEach(function(e) {
+    var entryDate = e.date || (e.createdAt ? e.createdAt.slice(0,10) : null);
+    var key = 'Unsorted';
+    if (entryDate) {
+      var d = new Date(entryDate + 'T12:00:00');
+      key = d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+    }
+    if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+    groups[key].push(e);
+  });
+
+  groupOrder.forEach(function(month) {
+    // Month header
+    var hrow = tbody.insertRow();
+    hrow.innerHTML = '<td colspan="11" style="background:#f1f5f9;padding:6px 10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#64748b">' + month + '</td>';
 
     groups[month].forEach(function(e) {
-      var typeBadge    = '<span class="l-badge lb-' + e.type.toLowerCase() + '">' + e.type + '</span>';
-      var payBadge     = '<span class="l-badge lb-' + (e.payment||'cash').toLowerCase().replace(' ','-') + '">' + (e.payment||'—') + '</span>';
-      var dateStr      = e.createdAt ? new Date(e.createdAt).toLocaleString() : '—';
-      var hasID        = !!ids[e.id];
-      var idCell       = hasID
-        ? '<img src="' + ids[e.id] + '" class="id-thumb-sm" onclick="viewID(\'' + e.id + '\',\'' + e.name.replace(/'/g,'') + '\')" title="View ID">'
-        : '<div class="id-placeholder-sm" onclick="openEntryModal(\'' + e.id + '\')">No ID</div>';
+      var hasID = !!ids[e.id];
+      var typeBadge = {Buy:'#dcfce7:#16a34a', Sell:'#fee2e2:#dc2626', Trade:'#f0f9ff:#0ea5e9', Consignment:'#fef3c7:#d97706'}[e.type] || '#f1f5f9:#64748b';
+      var tbg = typeBadge.split(':')[0], tcol = typeBadge.split(':')[1];
+      var payIcon = {Cash:'💵', 'Credit Card':'💳', Check:'🏦', Trade:'🔄'}[e.payment] || '';
+      var entryDate = e.date ? new Date(e.date + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+      var totalDisp = e.type === 'Trade' ? '—' : '<strong style="color:#16a34a">$' + (e.total||0).toFixed(2) + '</strong>';
 
-      var tr = document.createElement('tr');
+      // Main row
+      var tr = tbody.insertRow();
+      tr.style.cssText = 'border-bottom:1px solid #f1f5f9;cursor:pointer';
+      tr.onclick = function(){ toggleLedgerRow(e.id); };
       tr.innerHTML =
-        '<td><span class="l-fileno">' + (e.fileNo||'—') + '</span></td>' +
-        '<td>' + (e.ref||'—') + '</td>' +
-        '<td style="white-space:nowrap">' + dateStr + '</td>' +
-        '<td>' + typeBadge + '</td>' +
-        '<td><strong>' + (e.name||'—') + '</strong>' + (e.address ? '<br><span style="font-size:10px;color:#94a3b8">' + e.address + '</span>' : '') + '</td>' +
-        '<td style="white-space:nowrap">' + (e.dob||'—') + '</td>' +
-        '<td>' + (e.desc||'—') + (e.notes ? '<br><em style="font-size:10px;color:#94a3b8">' + e.notes + '</em>' : '') + '</td>' +
-        '<td>' + (e.weight||'—') + '</td>' +
-        '<td style="white-space:nowrap"><strong>$' + (e.amount||0).toFixed(2) + '</strong></td>' +
-        '<td>' + payBadge + '</td>' +
-        '<td style="white-space:nowrap">' + (e.plate||'—') + '</td>' +
-        '<td>' + idCell + '</td>' +
-        '<td>' + (e.staff||'—') + '</td>' +
-        '<td class="no-print" style="white-space:nowrap">' +
-          '<button class="adm-btn adm-btn-outline adm-btn-sm" onclick="openEntryModal(\'' + e.id + '\')" style="margin-right:4px">✏️</button>' +
-          '<button class="adm-btn adm-btn-red adm-btn-sm" onclick="deleteEntry(\'' + e.id + '\')">🗑</button>' +
+        '<td style="padding:8px 4px;text-align:center"><span id="expand_'+e.id+'" style="font-size:10px;color:#94a3b8">▶</span></td>' +
+        '<td style="padding:8px 6px;font-size:13px;white-space:nowrap">'+entryDate+'</td>' +
+        '<td style="padding:8px 6px;font-size:12px;color:#64748b">'+(e.ref||'—')+'</td>' +
+        '<td style="padding:8px 6px"><span style="background:'+tbg+';color:'+tcol+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">'+e.type+'</span></td>' +
+        '<td style="padding:8px 6px;font-weight:600;font-size:13px">'+(e.name||'—')+'</td>' +
+        '<td style="padding:8px 6px;font-size:12px;color:#64748b">'+(e.dob ? new Date(e.dob+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—')+'</td>' +
+        '<td style="padding:8px 6px;font-size:12px;color:#64748b;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(e.address||'—')+'</td>' +
+        '<td style="padding:8px 6px;font-size:12px">'+payIcon+' '+(e.payment||'—')+(e.checkNo?' #'+e.checkNo:'')+'</td>' +
+        '<td style="padding:8px 6px">'+totalDisp+'</td>' +
+        '<td style="padding:8px 6px"><button onclick="event.stopPropagation();viewID(\''+e.id+'\',\''+e.name+'\')" style="padding:3px 8px;background:'+(hasID?'#eff6ff':'#f8fafc')+';border:1px solid '+(hasID?'#bfdbfe':'#e2e8f0')+';border-radius:5px;color:'+(hasID?'#1d4ed8':'#94a3b8')+';font-size:11px;cursor:pointer">'+(hasID?'🪪 View':'—')+'</button></td>' +
+        '<td style="padding:8px 6px;white-space:nowrap" class="no-print">'+
+          '<button onclick="event.stopPropagation();openEntryModal(\''+e.id+'\')" style="padding:4px 8px;background:#eff6ff;border:none;border-radius:5px;color:#1d4ed8;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px">✏️</button>'+
+          '<button onclick="event.stopPropagation();deleteEntry(\''+e.id+'\')" style="padding:4px 8px;background:#fef2f2;border:none;border-radius:5px;color:#dc2626;font-size:11px;font-weight:700;cursor:pointer">🗑️</button>'+
         '</td>';
-      tbody.appendChild(tr);
+
+      // Detail row (hidden, expandable)
+      var drow = tbody.insertRow();
+      drow.id = 'detail_' + e.id;
+      drow.style.display = 'none';
+      drow.style.background = '#f8fafc';
+
+      var detailHTML = '<td colspan="11" style="padding:12px 20px 16px 32px">';
+
+      if (e.type === 'Trade') {
+        detailHTML += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#0ea5e9;margin-bottom:8px">🔄 Trade Details</div>';
+        detailHTML += '<div style="display:flex;gap:30px;flex-wrap:wrap">';
+        detailHTML += '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:3px">We Gave</div><div style="font-size:13px">'+(e.trade&&e.trade.gave||'—')+'</div><div style="font-size:12px;color:#64748b;margin-top:2px">Est. Value: $'+(e.trade&&e.trade.gaveVal||0).toFixed(2)+'</div></div>';
+        detailHTML += '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:3px">We Received</div><div style="font-size:13px">'+(e.trade&&e.trade.received||'—')+'</div><div style="font-size:12px;color:#64748b;margin-top:2px">Est. Value: $'+(e.trade&&e.trade.receivedVal||0).toFixed(2)+'</div></div>';
+        detailHTML += '</div>';
+      } else {
+        detailHTML += '<table style="width:100%;border-collapse:collapse;margin-bottom:8px;max-width:600px">';
+        detailHTML += '<thead><tr style="background:#e2e8f0"><th style="padding:5px 10px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b">Item</th><th style="padding:5px 10px;text-align:center;font-size:11px;text-transform:uppercase;color:#64748b;width:50px">Qty</th><th style="padding:5px 10px;text-align:right;font-size:11px;text-transform:uppercase;color:#64748b;width:90px">Each</th><th style="padding:5px 10px;text-align:right;font-size:11px;text-transform:uppercase;color:#64748b;width:90px">Total</th></tr></thead><tbody>';
+        (e.items || []).forEach(function(item) {
+          detailHTML += '<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:5px 10px;font-size:13px">'+item.name+'</td><td style="padding:5px 10px;text-align:center;font-size:13px">'+item.qty+'</td><td style="padding:5px 10px;text-align:right;font-size:13px">$'+item.each.toFixed(2)+'</td><td style="padding:5px 10px;text-align:right;font-size:13px;font-weight:700;color:#16a34a">$'+item.total.toFixed(2)+'</td></tr>';
+        });
+        detailHTML += '</tbody></table>';
+        detailHTML += '<div style="text-align:right;max-width:600px;font-size:14px;font-weight:800;color:#1e293b">TOTAL: <span style="color:#16a34a">$'+(e.total||0).toFixed(2)+'</span></div>';
+      }
+
+      if (e.notes) detailHTML += '<div style="margin-top:8px;font-size:12px;color:#64748b"><strong>Notes:</strong> '+e.notes+'</div>';
+      detailHTML += '</td>';
+      drow.innerHTML = detailHTML;
     });
   });
 }
 
-// ── CSV EXPORT ─────────────────────────────────────────
+// ── EXPORT CSV ─────────────────────────────────────────
 function exportLedgerCSV() {
   var data = getLedger();
-  var headers = ['File #','Ref #','Date','Type','Name','DOB','Address','Phone','Plate #','Staff','Description','Weight','Amount','Payment','Notes'];
-  var rows = data.map(function(e) {
-    return [
-      e.fileNo, e.ref, e.createdAt ? new Date(e.createdAt).toLocaleString() : '',
-      e.type, e.name, e.dob, e.address, e.phone, e.plate, e.staff,
-      e.desc, e.weight, e.amount, e.payment, e.notes
-    ].map(function(v){ return '"' + String(v||'').replace(/"/g,'""') + '"'; }).join(',');
+  var rows = [];
+  rows.push(['Date','Ref #','Type','Customer Name','DOB','Address','Phone','Payment','Check #','Item Name','Qty','Each','Line Total','Entry Total','Notes'].join(','));
+  data.forEach(function(e) {
+    var date = e.date || (e.createdAt ? e.createdAt.slice(0,10) : '');
+    if (e.type === 'Trade') {
+      rows.push([date, e.ref, 'Trade', e.name, e.dob, e.address, e.phone, 'Trade', '',
+        'GAVE: '+(e.trade&&e.trade.gave||''), '', '', (e.trade&&e.trade.gaveVal||0).toFixed(2), '', e.notes
+      ].map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(','));
+      rows.push([date, e.ref, 'Trade', e.name, e.dob, e.address, e.phone, 'Trade', '',
+        'RECEIVED: '+(e.trade&&e.trade.received||''), '', '', (e.trade&&e.trade.receivedVal||0).toFixed(2), '', ''
+      ].map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(','));
+    } else {
+      (e.items||[]).forEach(function(item, idx) {
+        rows.push([date, e.ref, e.type, e.name, e.dob, e.address, e.phone, e.payment, e.checkNo||'',
+          item.name, item.qty, item.each.toFixed(2), item.total.toFixed(2),
+          idx===0 ? (e.total||0).toFixed(2) : '', idx===0 ? e.notes : ''
+        ].map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(','));
+      });
+    }
   });
-  var csv = [headers.join(',')].concat(rows).join('\n');
-  var blob = new Blob([csv], {type:'text/csv'});
+  var blob = new Blob([rows.join('\n')], {type:'text/csv'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'bunyards-ledger-' + new Date().toISOString().slice(0,10) + '.csv';
