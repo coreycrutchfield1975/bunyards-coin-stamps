@@ -657,19 +657,7 @@ function closeProductModal() {
   editingProductId = null;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  var _pmImage = document.getElementById('pm-image');
-  if (_pmImage) _pmImage.addEventListener('change', function() {
-    var file = this.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var prev = document.getElementById('pm-img-preview');
-      if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
-    };
-    reader.readAsDataURL(file);
-  });
-});
+// pm-image listener moved to bottom script block
 
 async function saveProduct() {
   var name = document.getElementById('pm-name').value.trim();
@@ -1222,6 +1210,20 @@ function admTab(name, btn) {
      JAVASCRIPT
 ══════════════════════════════════════════════════════ -->
 <script>
+// pm-image file preview listener (must run after HTML is in DOM)
+(function() {
+  var el = document.getElementById('pm-image');
+  if (el) el.addEventListener('change', function() {
+    var file = this.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var prev = document.getElementById('pm-img-preview');
+      if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
+    };
+    reader.readAsDataURL(file);
+  });
+})();
 
 // ── TAB SWITCHING ──────────────────────────────────────
 function admTab(name, btn) {
