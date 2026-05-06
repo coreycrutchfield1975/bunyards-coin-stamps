@@ -1,6 +1,6 @@
 {
   "name": "bunyards-coin-stamps",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bunyards Coin & Stamps - Poplar Bluff, MO",
   "main": "server.js",
   "scripts": {
