@@ -203,7 +203,7 @@ function invalidateProductCache() { _productCache = null; _productCacheTime = 0;
 
 app.get('/api/admin/products', requireAdmin, async (req, res) => {
   const now = Date.now();
-  if (_productCache && (now - _productCacheTime) < 30000) {
+  if (_productCache && (now - _productCacheTime) < 300000) {
     return res.json(_productCache);
   }
   const products = await Product.find().sort({ createdAt: -1 }).lean();
