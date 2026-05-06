@@ -223,7 +223,7 @@ app.get('/api/admin/products', requireAdmin, async (req, res) => {
   const category = (req.query.category || '').trim();
 
   // Only use cache for default first page with no filters
-  if (!search && !category && page === 1 && _productCache && (now - _productCacheTime) < 300000) {
+  if (!search && !category && page === 1 && _productCache && (now - _productCacheTime) < 1800000) {
     const total = _productCache._total || _productCache.length;
     return res.json({ products: _productCache.products || _productCache, total, page: 1, pages: Math.ceil(total / limit) });
   }
@@ -668,4 +668,18 @@ async function uploadPhoto(file) {
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Bunyards running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Bunyards running on port ${PORT}`);
+  // Pre-warm product cache so first admin visit is instant
+  setTimeout(async () => {
+    try {
+      const total = await Product.countDocuments({});
+      const products = await Product.find({}).sort({ createdAt: -1 }).limit(25).lean();
+      _productCache = { products, total, page: 1, pages: Math.ceil(total / 25) };
+      _productCacheTime = Date.now();
+      console.log(`Product cache pre-warmed: ${total} products`);
+    } catch(e) {
+      console.log('Cache pre-warm skipped:', e.message);
+    }
+  }, 3000);
+});
