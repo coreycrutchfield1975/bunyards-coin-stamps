@@ -19,7 +19,7 @@ const b2Client = new S3Client({
 });
 
 const B2_BUCKET = process.env.B2_BUCKET_NAME || 'bunyards-shop';
-const B2_CDN_URL = process.env.B2_CDN_URL || ('https://f005.backblazeb2.com/file/' + B2_BUCKET);
+const B2_CDN_URL = process.env.B2_CDN_URL || 'https://cdn.bunyardscoins.com/file/bunyards-shop';
 
 async function uploadToB2(buffer, mimetype) {
   const ext = mimetype === 'image/png' ? 'png' : mimetype === 'image/webp' ? 'webp' : 'jpg';
