@@ -5,24 +5,38 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-const streamifier = require('streamifier');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const crypto = require('crypto');
 
-// ── Cloudinary config ────────────────────────────────────────────────────────
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+// ── Backblaze B2 (S3-compatible) config ──────────────────────────────────────
+const b2Client = new S3Client({
+  endpoint: 'https://s3.us-east-005.backblazeb2.com',
+  region: 'us-east-005',
+  credentials: {
+    accessKeyId: process.env.B2_KEY_ID,
+    secretAccessKey: process.env.B2_APP_KEY
+  }
 });
 
-function uploadToCloudinary(buffer, folder='bunyards') {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'image', transformation: [{ quality: 'auto', fetch_format: 'auto' }] },
-      (err, result) => err ? reject(err) : resolve(result.secure_url)
-    );
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
+const B2_BUCKET = process.env.B2_BUCKET_NAME || 'bunyards-shop';
+const B2_CDN_URL = process.env.B2_CDN_URL || ('https://f005.backblazeb2.com/file/' + B2_BUCKET);
+
+async function uploadToB2(buffer, mimetype) {
+  const ext = mimetype === 'image/png' ? 'png' : mimetype === 'image/webp' ? 'webp' : 'jpg';
+  const key = 'products/' + crypto.randomUUID() + '.' + ext;
+  await b2Client.send(new PutObjectCommand({
+    Bucket: B2_BUCKET,
+    Key: key,
+    Body: buffer,
+    ContentType: mimetype,
+    ServerSideEncryption: 'AES256'
+  }));
+  return B2_CDN_URL + '/' + key;
+}
+
+// Alias for drop-in replacement
+function uploadToCloudinary(buffer, _folder, mimetype) {
+  return uploadToB2(buffer, mimetype || 'image/jpeg');
 }
 const nodemailer = require('nodemailer');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
@@ -242,7 +256,7 @@ app.get('/api/admin/products', requireAdmin, async (req, res) => {
 app.post('/api/admin/products', requireAdmin, upload.array('images', 5), async (req, res) => {
   invalidateProductCache();
   const { title, description, category, subcategory, price, stock, shipping, shippingCost, featured } = req.body;
-  const images = await Promise.all((req.files || []).map(f => uploadToCloudinary(f.buffer)));
+  const images = await Promise.all((req.files || []).map(f => uploadToCloudinary(f.buffer, 'bunyards', f.mimetype)));
   const product = new Product({
     title, description, category, subcategory,
     price: parseFloat(price),
@@ -262,7 +276,7 @@ app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 5), asyn
   const { title, description, category, subcategory, price, stock, shipping, shippingCost, featured, active, removeImages } = req.body;
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ error: 'Not found' });
-  const newImages = await Promise.all((req.files || []).map(f => uploadToCloudinary(f.buffer)));
+  const newImages = await Promise.all((req.files || []).map(f => uploadToCloudinary(f.buffer, 'bunyards', f.mimetype)));
   let images = product.images;
   if (removeImages) {
     const toRemove = Array.isArray(removeImages) ? removeImages : [removeImages];
