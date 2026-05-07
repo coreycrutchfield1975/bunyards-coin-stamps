@@ -689,11 +689,7 @@ async function deleteProduct(id){
   catch(e){alert('Error: '+e.message);}
 }
 
-var _origAdmTab = typeof admTab === 'function' ? admTab : function(){};
-function admTab(name,btn){
-  _origAdmTab(name,btn);
-  if(name==='shop')loadShopProducts();
-}
+
 
 </script>
 
@@ -1327,6 +1323,8 @@ function admTab(name, btn) {
   if (pane) pane.classList.add('active');
   // Activate button
   if (btn) btn.classList.add('active');
+  // Load tab data
+  if (name === 'shop') loadShopProducts();
 }
 
 // ── CLOSE ADMIN ────────────────────────────────────────
