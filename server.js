@@ -194,6 +194,20 @@ app.post('/api/trading/rows', requireAdmin, async (req, res) => {
 app.get('/api/admin/check', (req, res) => {
   res.json({ admin: !!req.session?.isAdmin });
 });
+app.get('/api/health', async (req, res) => {
+  const checks = { server: 'ok', timestamp: new Date().toISOString(), uptime: Math.floor(process.uptime()) + 's' };
+  try {
+    // DB ping
+    await Product.findOne().lean();
+    checks.db = 'ok';
+  } catch(e) {
+    checks.db = 'error: ' + e.message;
+  }
+  checks.status = checks.db === 'ok' ? 'healthy' : 'degraded';
+  res.json(checks);
+});
+
+
 
 // ── Products API (public) ────────────────────────────────────────────────────
 app.get('/api/products', async (req, res) => {
