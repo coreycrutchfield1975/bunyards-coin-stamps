@@ -749,6 +749,11 @@ function admTab(name,btn){
         <div style="font-size:20px;font-weight:800;color:#475569" id="st-trades">0</div>
         <div style="font-size:10px;color:#94a3b8">not in totals</div>
       </div>
+      <div class="pay-summary-card" style="background:#fef3c7;border:1.5px solid #fde68a;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#d97706;letter-spacing:.5px">📋 Consignments</div>
+        <div style="font-size:20px;font-weight:800;color:#92400e" id="st-consign-active">0 active</div>
+        <div style="font-size:10px;color:#d97706" id="st-consign-owed">$0.00 owed</div>
+      </div>
       <div class="pay-summary-card" style="background:#1e293b;border:1.5px solid #334155;border-radius:10px;padding:10px 18px;min-width:130px">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.5px">📊 All Transactions</div>
         <div style="font-size:20px;font-weight:800;color:#f1f5f9" id="st-total">$0.00</div>
@@ -1194,6 +1199,61 @@ function admTab(name,btn){
       </div>
     </div>
 
+    <!-- CONSIGNMENT SECTION (shown only for Consignment type) -->
+    <div id="em-consign-section" style="display:none">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#d97706;margin-bottom:8px;letter-spacing:.5px;border-top:2px solid #fef3c7;padding-top:10px">📋 Consignment Details</div>
+      <div class="em-row">
+        <div class="em-group">
+          <label>Consignment Ref # *</label>
+          <input type="text" id="em-consign-ref" placeholder="e.g. C-2024-001">
+        </div>
+        <div class="em-group">
+          <label>Status</label>
+          <select id="em-consign-status">
+            <option value="Active">Active</option>
+            <option value="Sold">Sold</option>
+            <option value="Returned">Returned</option>
+            <option value="Expired">Expired</option>
+          </select>
+        </div>
+      </div>
+      <div class="em-row">
+        <div class="em-group">
+          <label>Asking Price ($) — consignor's net</label>
+          <input type="number" id="em-consign-asking" placeholder="0.00" step="0.01" min="0" oninput="recalcConsign()">
+        </div>
+        <div class="em-group">
+          <label>Store Commission (10% auto)</label>
+          <input type="text" id="em-consign-commission" readonly style="background:#f8fafc;color:#64748b">
+        </div>
+      </div>
+      <div class="em-row">
+        <div class="em-group">
+          <label>Amount Paid to Consignor ($)</label>
+          <input type="number" id="em-consign-paid" placeholder="0.00" step="0.01" min="0" oninput="recalcConsign()">
+        </div>
+        <div class="em-group">
+          <label>Balance Owed to Consignor</label>
+          <input type="text" id="em-consign-balance" readonly style="background:#f8fafc;color:#64748b">
+        </div>
+      </div>
+      <div class="em-row">
+        <div class="em-group">
+          <label>Date Paid (if applicable)</label>
+          <input type="date" id="em-consign-date-paid">
+        </div>
+        <div class="em-group">
+          <label>Payment Method to Consignor</label>
+          <select id="em-consign-pay-method">
+            <option value="">— Select —</option>
+            <option value="Cash">Cash</option>
+            <option value="Check">Check</option>
+            <option value="Credit Card">Credit Card</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- NOTES -->
     <div class="em-row full" style="margin-top:8px">
       <div class="em-group">
@@ -1375,10 +1435,21 @@ function clearLineItems() {
 // ── TYPE / PAYMENT CHANGE ──────────────────────────────
 function onTypeChange() {
   var type = document.getElementById('em-type').value;
-  var isTrade = (type === 'Trade');
-  document.getElementById('em-trade-section').style.display   = isTrade ? 'block' : 'none';
-  document.getElementById('em-items-section').style.display   = isTrade ? 'none'  : 'block';
-  document.getElementById('em-payment-row').style.display     = isTrade ? 'none'  : 'flex';
+  var isTrade   = (type === 'Trade');
+  var isConsign = (type === 'Consignment');
+  document.getElementById('em-trade-section').style.display   = isTrade   ? 'block' : 'none';
+  document.getElementById('em-consign-section').style.display = isConsign ? 'block' : 'none';
+  document.getElementById('em-items-section').style.display   = isTrade   ? 'none'  : 'block';
+  document.getElementById('em-payment-row').style.display     = (isTrade||isConsign) ? 'none' : 'flex';
+  if (isConsign) recalcConsign();
+}
+function recalcConsign() {
+  var asking = parseFloat(document.getElementById('em-consign-asking').value) || 0;
+  var paid   = parseFloat(document.getElementById('em-consign-paid').value)   || 0;
+  var commission = asking * 0.10;
+  var balance    = asking - paid;
+  document.getElementById('em-consign-commission').value = '$' + commission.toFixed(2) + ' (store keeps)';
+  document.getElementById('em-consign-balance').value    = '$' + balance.toFixed(2);
 }
 function onPaymentChange() {
   var pay = document.getElementById('em-payment').value;
@@ -1417,6 +1488,16 @@ function openEntryModal(id) {
     document.getElementById('em-trade-gave-val').value    = (entry.trade && entry.trade.gaveVal)    || '';
     document.getElementById('em-trade-received').value    = (entry.trade && entry.trade.received)    || '';
     document.getElementById('em-trade-received-val').value= (entry.trade && entry.trade.receivedVal) || '';
+    // Consignment fields
+    if (entry.consign) {
+      document.getElementById('em-consign-ref').value         = entry.consign.ref         || '';
+      document.getElementById('em-consign-status').value      = entry.consign.status       || 'Active';
+      document.getElementById('em-consign-asking').value      = entry.consign.asking       || '';
+      document.getElementById('em-consign-paid').value        = entry.consign.paid         || '';
+      document.getElementById('em-consign-date-paid').value   = entry.consign.datePaid     || '';
+      document.getElementById('em-consign-pay-method').value  = entry.consign.payMethod    || '';
+      recalcConsign();
+    }
     // Load line items
     if (entry.items && entry.items.length) {
       entry.items.forEach(function(item){ addLineItem(item); });
@@ -1434,8 +1515,12 @@ function openEntryModal(id) {
   } else {
     document.getElementById('em-modal-title').textContent = 'New Ledger Entry';
     ['em-ref','em-name','em-address','em-phone','em-check-no','em-notes',
-     'em-trade-gave','em-trade-received'].forEach(function(id){ document.getElementById(id).value=''; });
-    ['em-trade-gave-val','em-trade-received-val'].forEach(function(id){ document.getElementById(id).value=''; });
+     'em-trade-gave','em-trade-received',
+     'em-consign-ref','em-consign-commission','em-consign-balance'].forEach(function(id){ document.getElementById(id).value=''; });
+    ['em-trade-gave-val','em-trade-received-val','em-consign-asking','em-consign-paid'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('em-consign-status').value = 'Active';
+    document.getElementById('em-consign-date-paid').value = '';
+    document.getElementById('em-consign-pay-method').value = '';
     document.getElementById('em-type').value    = 'Buy';
     document.getElementById('em-date').value    = today;
     document.getElementById('em-dob').value     = '';
@@ -1507,6 +1592,14 @@ function saveEntry() {
       received:    document.getElementById('em-trade-received').value.trim(),
       receivedVal: parseFloat(document.getElementById('em-trade-received-val').value) || 0
     } : null,
+    consign:   type === 'Consignment' ? {
+      ref:       document.getElementById('em-consign-ref').value.trim(),
+      status:    document.getElementById('em-consign-status').value,
+      asking:    parseFloat(document.getElementById('em-consign-asking').value) || 0,
+      paid:      parseFloat(document.getElementById('em-consign-paid').value)   || 0,
+      datePaid:  document.getElementById('em-consign-date-paid').value,
+      payMethod: document.getElementById('em-consign-pay-method').value
+    } : null,
     notes:     document.getElementById('em-notes').value.trim(),
     createdAt: editingId ? (data.find(function(e){return e.id===editingId;})||{}).createdAt || now : now,
     updatedAt: now
@@ -1545,7 +1638,7 @@ function viewID(id, name) {
   var ids = getIDPhotos();
   if (!ids[id]) { alert('No ID photo on file for ' + name); return; }
   var w = window.open('','_blank','width=600,height=400');
-  w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+ids[id]+'" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
+  w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+ids[id]+'" style="max-width:100%;max-height:100vh;object-fit:contain"><\/body><\/html>');
   w.document.close();
 }
 
@@ -1635,23 +1728,34 @@ function renderLedger() {
 
   // ── Summary totals ──
   var cashAmt=0, cashCnt=0, cardAmt=0, cardCnt=0, checkAmt=0, checkCnt=0, tradeCnt=0, grandAmt=0;
+  var consignActive=0, consignOwed=0;
   filtered.forEach(function(e) {
     if (e.type === 'Trade') { tradeCnt++; return; }
+    if (e.type === 'Consignment') {
+      if (e.consign) {
+        if (e.consign.status === 'Active') consignActive++;
+        var owed = (e.consign.asking||0) - (e.consign.paid||0);
+        if (owed > 0) consignOwed += owed;
+      }
+      return;
+    }
     var amt = e.total || 0;
     grandAmt += amt;
     if (e.payment === 'Cash')        { cashAmt  += amt; cashCnt++;  }
     if (e.payment === 'Credit Card') { cardAmt  += amt; cardCnt++;  }
     if (e.payment === 'Check')       { checkAmt += amt; checkCnt++; }
   });
-  document.getElementById('st-cash').textContent       = '$' + cashAmt.toFixed(2);
-  document.getElementById('st-cash-count').textContent = cashCnt + ' transaction' + (cashCnt!==1?'s':'');
-  document.getElementById('st-card').textContent       = '$' + cardAmt.toFixed(2);
-  document.getElementById('st-card-count').textContent = cardCnt + ' transaction' + (cardCnt!==1?'s':'');
-  document.getElementById('st-check').textContent      = '$' + checkAmt.toFixed(2);
-  document.getElementById('st-check-count').textContent= checkCnt + ' transaction' + (checkCnt!==1?'s':'');
-  document.getElementById('st-trades').textContent     = tradeCnt;
-  document.getElementById('st-total').textContent      = '$' + grandAmt.toFixed(2);
-  document.getElementById('st-total-count').textContent= filtered.length + ' entr' + (filtered.length!==1?'ies':'y');
+  document.getElementById('st-cash').textContent        = '$' + cashAmt.toFixed(2);
+  document.getElementById('st-cash-count').textContent  = cashCnt + ' transaction' + (cashCnt!==1?'s':'');
+  document.getElementById('st-card').textContent        = '$' + cardAmt.toFixed(2);
+  document.getElementById('st-card-count').textContent  = cardCnt + ' transaction' + (cardCnt!==1?'s':'');
+  document.getElementById('st-check').textContent       = '$' + checkAmt.toFixed(2);
+  document.getElementById('st-check-count').textContent = checkCnt + ' transaction' + (checkCnt!==1?'s':'');
+  document.getElementById('st-trades').textContent      = tradeCnt;
+  document.getElementById('st-total').textContent       = '$' + grandAmt.toFixed(2);
+  document.getElementById('st-total-count').textContent = filtered.length + ' entr' + (filtered.length!==1?'ies':'y');
+  document.getElementById('st-consign-active').textContent = consignActive + ' active';
+  document.getElementById('st-consign-owed').textContent   = '$' + consignOwed.toFixed(2) + ' owed';
 
   // ── Build rows ──
   var tbody = document.getElementById('ledger-body');
@@ -1687,7 +1791,13 @@ function renderLedger() {
       var tbg = typeBadge.split(':')[0], tcol = typeBadge.split(':')[1];
       var payIcon = {Cash:'💵', 'Credit Card':'💳', Check:'🏦', Trade:'🔄'}[e.payment] || '';
       var entryDate = e.date ? new Date(e.date + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-      var totalDisp = e.type === 'Trade' ? '—' : '<strong style="color:#16a34a">$' + (e.total||0).toFixed(2) + '</strong>';
+      var consignBadge = '';
+      if (e.type === 'Consignment' && e.consign) {
+        var csColors = {Active:'#d97706:#fef3c7',Sold:'#16a34a:#dcfce7',Returned:'#64748b:#f1f5f9',Expired:'#dc2626:#fee2e2'};
+        var cc = (csColors[e.consign.status]||'#64748b:#f1f5f9').split(':');
+        consignBadge = ' <span style="background:'+cc[1]+';color:'+cc[0]+';font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px">'+e.consign.status+'</span>';
+      }
+      var totalDisp = e.type === 'Trade' ? '—' : e.type === 'Consignment' ? (consignBadge + '<div style="font-size:11px;color:#d97706">Ask: $'+(e.consign&&e.consign.asking||0).toFixed(2)+'</div>') : '<strong style="color:#16a34a">$' + (e.total||0).toFixed(2) + '</strong>';
 
       // Main row
       var tr = tbody.insertRow();
@@ -1723,6 +1833,30 @@ function renderLedger() {
         detailHTML += '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:3px">We Gave</div><div style="font-size:13px">'+(e.trade&&e.trade.gave||'—')+'</div><div style="font-size:12px;color:#64748b;margin-top:2px">Est. Value: $'+(e.trade&&e.trade.gaveVal||0).toFixed(2)+'</div></div>';
         detailHTML += '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:3px">We Received</div><div style="font-size:13px">'+(e.trade&&e.trade.received||'—')+'</div><div style="font-size:12px;color:#64748b;margin-top:2px">Est. Value: $'+(e.trade&&e.trade.receivedVal||0).toFixed(2)+'</div></div>';
         detailHTML += '</div>';
+      } else if (e.type === 'Consignment') {
+        var cs = e.consign || {};
+        var cStatusColors = {Active:'#d97706:#fef3c7', Sold:'#16a34a:#dcfce7', Returned:'#64748b:#f1f5f9', Expired:'#dc2626:#fee2e2'};
+        var csc = (cStatusColors[cs.status]||'#64748b:#f1f5f9').split(':');
+        var cBal = (cs.asking||0) - (cs.paid||0);
+        detailHTML += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">';
+        detailHTML += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#d97706">📋 Consignment</div>';
+        detailHTML += '<span style="background:'+csc[1]+';color:'+csc[0]+';font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px">'+cs.status+'</span>';
+        if (cs.ref) detailHTML += '<span style="font-size:12px;color:#64748b">Ref: <strong>'+cs.ref+'</strong></span>';
+        detailHTML += '</div>';
+        // Line items
+        detailHTML += '<table style="width:100%;border-collapse:collapse;margin-bottom:10px;max-width:600px">';
+        detailHTML += '<thead><tr style="background:#fef3c7"><th style="padding:5px 10px;text-align:left;font-size:11px;text-transform:uppercase;color:#92400e">Item</th><th style="padding:5px 10px;text-align:center;font-size:11px;text-transform:uppercase;color:#92400e;width:50px">Qty</th><th style="padding:5px 10px;text-align:right;font-size:11px;text-transform:uppercase;color:#92400e;width:90px">Each</th><th style="padding:5px 10px;text-align:right;font-size:11px;text-transform:uppercase;color:#92400e;width:90px">Total</th></tr></thead><tbody>';
+        (e.items || []).forEach(function(item) {
+          detailHTML += '<tr style="border-bottom:1px solid #fde68a"><td style="padding:5px 10px;font-size:13px">'+item.name+'</td><td style="padding:5px 10px;text-align:center;font-size:13px">'+item.qty+'</td><td style="padding:5px 10px;text-align:right;font-size:13px">$'+item.each.toFixed(2)+'</td><td style="padding:5px 10px;text-align:right;font-size:13px;font-weight:700;color:#d97706">$'+item.total.toFixed(2)+'</td></tr>';
+        });
+        detailHTML += '</tbody></table>';
+        // Payment summary
+        detailHTML += '<div style="display:flex;gap:20px;flex-wrap:wrap;background:#fffbeb;border-radius:8px;padding:10px 14px;max-width:500px">';
+        detailHTML += '<div><div style="font-size:10px;text-transform:uppercase;color:#92400e;font-weight:700">Asking Price</div><div style="font-size:15px;font-weight:800;color:#d97706">$'+(cs.asking||0).toFixed(2)+'</div></div>';
+        detailHTML += '<div><div style="font-size:10px;text-transform:uppercase;color:#92400e;font-weight:700">Store (10%)</div><div style="font-size:15px;font-weight:800;color:#64748b">$'+((cs.asking||0)*0.1).toFixed(2)+'</div></div>';
+        detailHTML += '<div><div style="font-size:10px;text-transform:uppercase;color:#92400e;font-weight:700">Paid to Consignor</div><div style="font-size:15px;font-weight:800;color:#16a34a">$'+(cs.paid||0).toFixed(2)+'</div>'+(cs.datePaid?'<div style="font-size:10px;color:#64748b">'+new Date(cs.datePaid+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+(cs.payMethod?' · '+cs.payMethod:'')+'</div>':'')+'</div>';
+        detailHTML += '<div><div style="font-size:10px;text-transform:uppercase;color:#92400e;font-weight:700">Balance Owed</div><div style="font-size:15px;font-weight:800;color:'+(cBal>0?'#dc2626':'#16a34a')+'">$'+cBal.toFixed(2)+'</div></div>';
+        detailHTML += '</div>';
       } else {
         detailHTML += '<table style="width:100%;border-collapse:collapse;margin-bottom:8px;max-width:600px">';
         detailHTML += '<thead><tr style="background:#e2e8f0"><th style="padding:5px 10px;text-align:left;font-size:11px;text-transform:uppercase;color:#64748b">Item</th><th style="padding:5px 10px;text-align:center;font-size:11px;text-transform:uppercase;color:#64748b;width:50px">Qty</th><th style="padding:5px 10px;text-align:right;font-size:11px;text-transform:uppercase;color:#64748b;width:90px">Each</th><th style="padding:5px 10px;text-align:right;font-size:11px;text-transform:uppercase;color:#64748b;width:90px">Total</th></tr></thead><tbody>';
@@ -1734,10 +1868,56 @@ function renderLedger() {
       }
 
       if (e.notes) detailHTML += '<div style="margin-top:8px;font-size:12px;color:#64748b"><strong>Notes:</strong> '+e.notes+'</div>';
+      // Print single entry button
+      detailHTML += '<div style="margin-top:10px" class="no-print"><button onclick="printEntry(''+e.id+'')" style="padding:5px 14px;background:#1e293b;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">🖨 Print This Entry</button></div>';
       detailHTML += '</td>';
       drow.innerHTML = detailHTML;
     });
   });
+}
+
+// ── PRINT SINGLE ENTRY ────────────────────────────────
+function printEntry(id) {
+  var entry = getLedger().find(function(e){ return e.id === id; });
+  if (!entry) return;
+  var ids = getIDPhotos();
+  var idPhoto = ids[id] ? '<img src="'+ids[id]+'" style="max-width:220px;max-height:150px;border-radius:6px;border:1px solid #e2e8f0;margin-top:8px">' : '<div style="color:#94a3b8;font-size:12px;font-style:italic">No ID photo on file</div>';
+  var entryDate = entry.date ? new Date(entry.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'}) : '—';
+
+  var itemsHTML = '';
+  if (entry.type === 'Trade') {
+    itemsHTML = '<table style="width:100%;border-collapse:collapse"><tr><td style="padding:8px;vertical-align:top;width:50%"><strong>We Gave:</strong><br>'+((entry.trade&&entry.trade.gave)||'—')+'<br><em>Est. Value: $'+((entry.trade&&entry.trade.gaveVal)||0).toFixed(2)+'</em></td><td style="padding:8px;vertical-align:top"><strong>We Received:</strong><br>'+((entry.trade&&entry.trade.received)||'—')+'<br><em>Est. Value: $'+((entry.trade&&entry.trade.receivedVal)||0).toFixed(2)+'</em></td></tr></table>';
+  } else if (entry.type === 'Consignment') {
+    var cs = entry.consign || {};
+    itemsHTML = '<table style="width:100%;border-collapse:collapse;margin-bottom:8px"><thead><tr style="background:#fef3c7"><th style="padding:6px 10px;text-align:left">Item</th><th style="text-align:center;padding:6px 8px">Qty</th><th style="text-align:right;padding:6px 8px">Each</th><th style="text-align:right;padding:6px 8px">Total</th></tr></thead><tbody>';
+    (entry.items||[]).forEach(function(item){ itemsHTML += '<tr style="border-bottom:1px solid #fde68a"><td style="padding:5px 10px">'+item.name+'</td><td style="text-align:center;padding:5px 8px">'+item.qty+'</td><td style="text-align:right;padding:5px 8px">$'+item.each.toFixed(2)+'</td><td style="text-align:right;padding:5px 8px;font-weight:700">$'+item.total.toFixed(2)+'</td></tr>'; });
+    itemsHTML += '</tbody></table>';
+    itemsHTML += '<div style="background:#fffbeb;border-radius:6px;padding:10px;display:flex;gap:20px;flex-wrap:wrap"><span><strong>Asking:</strong> $'+(cs.asking||0).toFixed(2)+'</span><span><strong>Store (10%):</strong> $'+((cs.asking||0)*0.1).toFixed(2)+'</span><span><strong>Paid Out:</strong> $'+(cs.paid||0).toFixed(2)+'</span><span><strong>Balance Owed:</strong> $'+((cs.asking||0)-(cs.paid||0)).toFixed(2)+'</span><span><strong>Status:</strong> '+cs.status+'</span></div>';
+  } else {
+    itemsHTML = '<table style="width:100%;border-collapse:collapse;margin-bottom:8px"><thead><tr style="background:#f1f5f9"><th style="padding:6px 10px;text-align:left">Item</th><th style="text-align:center;padding:6px 8px">Qty</th><th style="text-align:right;padding:6px 8px">Each</th><th style="text-align:right;padding:6px 8px">Total</th></tr></thead><tbody>';
+    (entry.items||[]).forEach(function(item){ itemsHTML += '<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:5px 10px">'+item.name+'</td><td style="text-align:center;padding:5px 8px">'+item.qty+'</td><td style="text-align:right;padding:5px 8px">$'+item.each.toFixed(2)+'</td><td style="text-align:right;padding:5px 8px;font-weight:700;color:#16a34a">$'+item.total.toFixed(2)+'</td></tr>'; });
+    itemsHTML += '</tbody></table><div style="text-align:right;font-weight:800;font-size:15px">TOTAL: $'+(entry.total||0).toFixed(2)+'</div>';
+  }
+
+  var payInfo = entry.payment + (entry.checkNo ? ' — Check #'+entry.checkNo : '');
+
+  var w = window.open('','_blank','width=700,height=900');
+  w.document.write('<html><head><title>Bunyards Entry — '+entryDate+'</title><style>body{font-family:Arial,sans-serif;margin:30px;color:#1e293b;font-size:13px}h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:14px 0 6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}table{width:100%;border-collapse:collapse}.meta{display:flex;gap:20px;flex-wrap:wrap;margin:10px 0;background:#f8fafc;border-radius:6px;padding:10px}.meta div{min-width:120px}label{font-size:10px;text-transform:uppercase;color:#64748b;font-weight:700;display:block}@media print{button{display:none}}</style></head><body>');
+  w.document.write('<div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1e293b"><h1>Bunyards Coin and Stamps</h1><div style="font-size:11px;color:#64748b">1912 N. Westwood Blvd., Poplar Bluff, MO &nbsp;·&nbsp; RSMo §407.300 Compliant</div></div>');
+  w.document.write('<div style="display:flex;justify-content:space-between;align-items:center"><div><span style="font-size:18px;font-weight:800">'+entry.type+'</span>'+(entry.ref?' &nbsp;<span style="font-size:13px;color:#64748b">Ref: '+entry.ref+'</span>':'')+'</div><div style="font-size:13px;color:#64748b">'+entryDate+'</div></div>');
+  w.document.write('<h2>Customer Information</h2>');
+  w.document.write('<div class="meta"><div><label>Name</label>'+entry.name+'</div><div><label>DOB</label>'+(entry.dob||'—')+'</div><div><label>Phone</label>'+(entry.phone||'—')+'</div></div>');
+  w.document.write('<div><label>Address</label>'+(entry.address||'—')+'</div>');
+  w.document.write('<h2>'+(entry.type==='Trade'?'Trade Details':entry.type==='Consignment'?'Consignment Items':'Items')+'</h2>');
+  w.document.write(itemsHTML);
+  if (entry.type !== 'Trade' && entry.type !== 'Consignment') {
+    w.document.write('<div style="margin-top:8px"><label>Payment</label>'+payInfo+'</div>');
+  }
+  if (entry.notes) w.document.write('<div style="margin-top:10px;padding:8px 12px;background:#f8fafc;border-radius:6px"><label>Notes</label>'+entry.notes+'</div>');
+  w.document.write('<h2>Customer ID</h2>'+idPhoto);
+  w.document.write('<div style="margin-top:20px;text-align:center"><button onclick="window.print()" style="padding:10px 30px;background:#1e293b;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨 Print</button></div>');
+  w.document.write('<\/body><\/html>');
+  w.document.close();
 }
 
 // ── EXPORT CSV ─────────────────────────────────────────
