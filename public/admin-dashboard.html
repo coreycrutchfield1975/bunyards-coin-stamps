@@ -1867,7 +1867,7 @@ function renderLedger() {
 
       if (e.notes) detailHTML += '<div style="margin-top:8px;font-size:12px;color:#64748b"><strong>Notes:</strong> '+e.notes+'</div>';
       // Print single entry button
-      detailHTML += '<div style="margin-top:10px" class="no-print"><button onclick="printEntry(''+e.id+'')" style="padding:5px 14px;background:#1e293b;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">🖨 Print This Entry</button></div>';
+      detailHTML += '<div style="margin-top:10px" class="no-print"><button onclick="printEntry(\'' + e.id + '\')" style="padding:5px 14px;background:#1e293b;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">🖨 Print This Entry</button></div>';
       detailHTML += '</td>';
       drow.innerHTML = detailHTML;
     });
