@@ -548,7 +548,6 @@ app.get('/trading-tv.html', (req, res) => res.sendFile(path.join(__dirname, 'pub
 // ══════════════════════════════════════════
 // QR PHOTO UPLOAD SESSION ROUTES
 // ══════════════════════════════════════════
-const crypto = require('crypto');
 const qrSessions = {}; // token -> { image: base64, created: timestamp }
 
 // Clean up sessions older than 10 minutes
