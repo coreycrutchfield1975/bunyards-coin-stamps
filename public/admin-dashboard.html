@@ -751,6 +751,21 @@ async function deleteProduct(id){
         <div style="font-size:20px;font-weight:800;color:#92400e" id="st-consign-active">0 active</div>
         <div style="font-size:10px;color:#d97706" id="st-consign-owed">$0.00 owed</div>
       </div>
+      <div class="pay-summary-card" style="background:#f0fdf4;border:2px solid #4ade80;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#16a34a;letter-spacing:.5px">🛒 Sold (Revenue)</div>
+        <div style="font-size:20px;font-weight:800;color:#15803d" id="st-sell">$0.00</div>
+        <div style="font-size:10px;color:#86efac" id="st-sell-count">0 sales</div>
+      </div>
+      <div class="pay-summary-card" style="background:#fef2f2;border:2px solid #fca5a5;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#dc2626;letter-spacing:.5px">📦 Bought (Cost)</div>
+        <div style="font-size:20px;font-weight:800;color:#b91c1c" id="st-buy">$0.00</div>
+        <div style="font-size:10px;color:#fca5a5" id="st-buy-count">0 buys</div>
+      </div>
+      <div class="pay-summary-card" style="background:#1e293b;border:2px solid #334155;border-radius:10px;padding:10px 18px;min-width:130px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.5px">💹 Net (Sell−Buy)</div>
+        <div style="font-size:20px;font-weight:800" id="st-net">$0.00</div>
+        <div style="font-size:10px;color:#64748b" id="st-net-label">break even</div>
+      </div>
       <div class="pay-summary-card" style="background:#1e293b;border:1.5px solid #334155;border-radius:10px;padding:10px 18px;min-width:130px">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.5px">📊 All Transactions</div>
         <div style="font-size:20px;font-weight:800;color:#f1f5f9" id="st-total">$0.00</div>
@@ -1728,6 +1743,7 @@ function renderLedger() {
   // ── Summary totals ──
   var cashAmt=0, cashCnt=0, cardAmt=0, cardCnt=0, checkAmt=0, checkCnt=0, tradeCnt=0, grandAmt=0;
   var consignActive=0, consignOwed=0;
+  var buyAmt=0, buyCnt=0, sellAmt=0, sellCnt=0;
   filtered.forEach(function(e) {
     if (e.type === 'Trade') { tradeCnt++; return; }
     if (e.type === 'Consignment') {
@@ -1740,6 +1756,8 @@ function renderLedger() {
     }
     var amt = e.total || 0;
     grandAmt += amt;
+    if (e.type === 'Buy')  { buyAmt  += amt; buyCnt++;  }
+    if (e.type === 'Sell') { sellAmt += amt; sellCnt++; }
     if (e.payment === 'Cash')        { cashAmt  += amt; cashCnt++;  }
     if (e.payment === 'Credit Card') { cardAmt  += amt; cardCnt++;  }
     if (e.payment === 'Check')       { checkAmt += amt; checkCnt++; }
@@ -1751,6 +1769,17 @@ function renderLedger() {
   document.getElementById('st-check').textContent       = '$' + checkAmt.toFixed(2);
   document.getElementById('st-check-count').textContent = checkCnt + ' transaction' + (checkCnt!==1?'s':'');
   document.getElementById('st-trades').textContent      = tradeCnt;
+  var netAmt = sellAmt - buyAmt;
+  document.getElementById('st-sell').textContent       = '$' + sellAmt.toFixed(2);
+  document.getElementById('st-sell-count').textContent = sellCnt + ' sale' + (sellCnt!==1?'s':'');
+  document.getElementById('st-buy').textContent        = '$' + buyAmt.toFixed(2);
+  document.getElementById('st-buy-count').textContent  = buyCnt + ' buy' + (buyCnt!==1?'s':'');
+  var netEl = document.getElementById('st-net');
+  var netLbl = document.getElementById('st-net-label');
+  netEl.textContent = (netAmt >= 0 ? '+' : '') + '$' + netAmt.toFixed(2);
+  netEl.style.color = netAmt > 0 ? '#4ade80' : netAmt < 0 ? '#fca5a5' : '#94a3b8';
+  netLbl.textContent = netAmt > 0 ? '▲ profitable' : netAmt < 0 ? '▼ spent more than sold' : 'break even';
+  netLbl.style.color = netAmt > 0 ? '#4ade80' : netAmt < 0 ? '#fca5a5' : '#94a3b8';
   document.getElementById('st-total').textContent       = '$' + grandAmt.toFixed(2);
   document.getElementById('st-total-count').textContent = filtered.length + ' entr' + (filtered.length!==1?'ies':'y');
   document.getElementById('st-consign-active').textContent = consignActive + ' active';
