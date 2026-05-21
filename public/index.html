@@ -1302,9 +1302,10 @@ function doAdminLogin(){
     document.getElementById('admin-pw-input').focus();
   }
 }
-function openAdmin(){
+async function openAdmin(){
   document.getElementById('admin-section').style.display='block';
   document.body.style.overflow='hidden';
+  await migrateLedgerIfNeeded();
   renderLedger();
   populateMonthFilter();
 }
@@ -1334,22 +1335,45 @@ function showConsignPage(p){
 }
 
 // ═══════════════════════════════════════════
-// LEDGER DATA  (localStorage for persistence)
+// LEDGER DATA  (server-side MongoDB)
 // ═══════════════════════════════════════════
-function getLedger(){ try{ return JSON.parse(localStorage.getItem('bunyards_ledger')||'[]'); }catch(e){return [];} }
-function saveLedger(data){ localStorage.setItem('bunyards_ledger', JSON.stringify(data)); }
+let _ledgerCache = null;
 
-// ID photos stored separately (base64)
-function getIDPhotos(){ try{ return JSON.parse(localStorage.getItem('bunyards_ids')||'{}'); }catch(e){return {};} }
-function saveIDPhotos(data){ localStorage.setItem('bunyards_ids', JSON.stringify(data)); }
+async function getLedger(){
+  if(_ledgerCache) return _ledgerCache;
+  try {
+    const r = await fetch('/api/admin/ledger');
+    if(!r.ok) return [];
+    _ledgerCache = await r.json();
+    return _ledgerCache;
+  } catch(e){ return []; }
+}
+
+function invalidateLedgerCache(){ _ledgerCache = null; }
+
+// Migrate any existing localStorage data to server on first load
+async function migrateLedgerIfNeeded(){
+  try {
+    const local = JSON.parse(localStorage.getItem('bunyards_ledger')||'[]');
+    const localIds = JSON.parse(localStorage.getItem('bunyards_ids')||'{}');
+    if(!local.length) return;
+    const server = await getLedger();
+    if(server.length) return; // server already has data, don't overwrite
+    const entries = local.map(e => ({ ...e, idPhoto: localIds[e.id]||null }));
+    await fetch('/api/admin/ledger/bulk', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(entries) });
+    localStorage.removeItem('bunyards_ledger');
+    localStorage.removeItem('bunyards_ids');
+    invalidateLedgerCache();
+  } catch(e){ console.warn('Migration skipped:', e); }
+}
 
 let editingId = null;
 
-function openEntryModal(id){
+async function openEntryModal(id){
   editingId = id || null;
   const modal = document.getElementById('entry-modal');
   if(id){
-    const entry = getLedger().find(e=>e.id===id);
+    const entry = (await getLedger()).find(e=>e.id===id);
     if(!entry) return;
     document.getElementById('em-title').textContent = '✏️ Edit Entry';
     document.getElementById('em-fileno').value = entry.fileno;
@@ -1385,7 +1409,7 @@ function openEntryModal(id){
     document.getElementById('id-zone-text').textContent='Click to upload ID photo';
     document.getElementById('em-id-file').value='';
     // Auto file number
-    const existing = getLedger();
+    const existing = await getLedger();
     const now = new Date();
     const mon = String(now.getMonth()+1).padStart(2,'0');
     const yr = now.getFullYear();
@@ -1413,7 +1437,7 @@ function previewIDUpload(input){
   reader.readAsDataURL(input.files[0]);
 }
 
-function saveEntry(){
+async function saveEntry(){
   const fileno = document.getElementById('em-fileno').value.trim();
   const type = document.getElementById('em-type').value;
   const date = document.getElementById('em-date').value;
@@ -1432,7 +1456,6 @@ function saveEntry(){
   }
 
   const entry = {
-    id: editingId || Date.now().toString(),
     fileno, type, date, time, name, dob, addr, gender,
     refno: document.getElementById('em-refno').value.trim(),
     phone: document.getElementById('em-phone').value.trim(),
@@ -1444,49 +1467,44 @@ function saveEntry(){
     notes: document.getElementById('em-notes').value.trim(),
   };
 
-  const ledger = getLedger();
-  if(editingId){
-    const idx = ledger.findIndex(e=>e.id===editingId);
-    if(idx>-1) ledger[idx] = entry;
-  } else {
-    ledger.push(entry);
-  }
-  saveLedger(ledger);
+  if(pendingIDData) entry.idPhoto = pendingIDData;
 
-  if(pendingIDData){
-    const ids = getIDPhotos();
-    ids[entry.id] = pendingIDData;
-    saveIDPhotos(ids);
-    pendingIDData = null;
-  }
+  try {
+    if(editingId){
+      await fetch('/api/admin/ledger/'+editingId, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(entry) });
+    } else {
+      await fetch('/api/admin/ledger', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(entry) });
+    }
+  } catch(e){ alert('Error saving entry. Please try again.'); return; }
 
+  pendingIDData = null;
+  invalidateLedgerCache();
   closeEntryModal();
   renderLedger();
 }
 
-function deleteEntry(id){
+async function deleteEntry(id){
   if(!confirm('Delete this entry? This cannot be undone.')) return;
-  const ledger = getLedger().filter(e=>e.id!==id);
-  saveLedger(ledger);
-  const ids = getIDPhotos();
-  delete ids[id];
-  saveIDPhotos(ids);
+  try {
+    await fetch('/api/admin/ledger/'+id, { method:'DELETE' });
+  } catch(e){ alert('Error deleting entry.'); return; }
+  invalidateLedgerCache();
   renderLedger();
 }
 
-function viewID(id, name){
-  const ids = getIDPhotos();
-  if(!ids[id]){ alert('No ID photo on file for this entry.'); return; }
+async function viewID(id, name){
+  const entry = (await getLedger()).find(e=>e.id===id);
+  if(!entry?.idPhoto){ alert('No ID photo on file for this entry.'); return; }
   document.getElementById('id-viewer-name').textContent = name;
-  document.getElementById('id-viewer-img').src = ids[id];
+  document.getElementById('id-viewer-img').src = entry.idPhoto;
   document.getElementById('id-viewer-modal').classList.add('open');
 }
 
 // ═══════════════════════════════════════════
 // RENDER LEDGER
 // ═══════════════════════════════════════════
-function populateMonthFilter(){
-  const ledger = getLedger();
+async function populateMonthFilter(){
+  const ledger = await getLedger();
   const months = [...new Set(ledger.map(e=>e.date.slice(0,7)))].sort().reverse();
   const sel = document.getElementById('lf-month');
   const cur = sel.value;
@@ -1498,8 +1516,8 @@ function populateMonthFilter(){
   });
 }
 
-function renderLedger(){
-  let data = getLedger();
+async function renderLedger(){
+  let data = await getLedger();
   const search = (document.getElementById('lf-search')||{}).value||'';
   const month = (document.getElementById('lf-month')||{}).value||'';
   const quarter = (document.getElementById('lf-quarter')||{}).value||'';
@@ -1537,7 +1555,6 @@ function renderLedger(){
     return;
   }
 
-  const ids = getIDPhotos();
   const badgeType = {Buy:'lb-buy',Sell:'lb-sell',Trade:'lb-trade',Consignment:'lb-consign'};
   const badgePay = {Cash:'lb-cash',Check:'lb-check','Credit Card':'lb-card'};
 
@@ -1559,7 +1576,7 @@ function renderLedger(){
 
     const dateDisp = e.date.split('-').slice(1).concat(e.date.split('-')[0]).join('/');
     const dobDisp = e.dob ? e.dob.split('-').slice(1).concat(e.dob.split('-')[0]).join('/') : '—';
-    const hasID = !!ids[e.id];
+    const hasID = !!e.idPhoto;
     const amtColor = e.type==='Buy'?'color:#15803d':e.type==='Sell'?'color:#dc2626':'color:#b45309';
 
     html += `<tr>
@@ -1588,8 +1605,8 @@ function renderLedger(){
   tbody.innerHTML = html;
 }
 
-function exportLedgerCSV(){
-  const data = getLedger();
+async function exportLedgerCSV(){
+  const data = await getLedger();
   if(!data.length){ alert('No entries to export.'); return; }
   const headers = ['File #','Ref #','Date','Time','Type','Name','DOB','Address','Gender','Phone','Plate','Description','Weight(g)','Amount','Payment','Staff','Notes'];
   const rows = data.map(e=>[e.fileno,e.refno||'',e.date,e.time,e.type,e.name,e.dob,e.addr,e.gender,e.phone||'',e.plate,e.desc,e.weight||'',e.amount,e.payment,e.staff||'',e.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));

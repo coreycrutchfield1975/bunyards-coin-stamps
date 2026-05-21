@@ -83,6 +83,30 @@ const orderSchema = new mongoose.Schema({
 const Product = mongoose.model('Product', productSchema);
 const Order = mongoose.model('Order', orderSchema);
 
+const transactionSchema = new mongoose.Schema({
+  fileno:  { type: String, required: true },
+  refno:   String,
+  type:    { type: String, enum: ['Buy','Sell','Trade','Consignment'], required: true },
+  date:    { type: String, required: true },
+  time:    String,
+  name:    { type: String, required: true },
+  dob:     String,
+  addr:    String,
+  gender:  String,
+  phone:   String,
+  plate:   String,
+  desc:    String,
+  weight:  String,
+  amount:  { type: Number, required: true },
+  payment: String,
+  staff:   String,
+  notes:   String,
+  idPhoto: String,
+  createdAt: { type: Date, default: Date.now }
+});
+transactionSchema.index({ date: -1 });
+const Transaction = mongoose.model('Transaction', transactionSchema);
+
 // ── Multer (image uploads — memory only, Cloudinary handles storage) ──────────
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadMem = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
@@ -333,6 +357,43 @@ app.get('/api/admin/orders', requireAdmin, async (req, res) => {
 app.put('/api/admin/orders/:id', requireAdmin, async (req, res) => {
   const order = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
   res.json(order);
+});
+
+// ── Ledger (Transaction) API ─────────────────────────────────────────────────
+app.get('/api/admin/ledger', requireAdmin, async (req, res) => {
+  try {
+    const entries = await Transaction.find().sort({ date: -1, time: -1 }).lean();
+    res.json(entries.map(e => ({ ...e, id: e._id.toString() })));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/ledger', requireAdmin, async (req, res) => {
+  try {
+    const entry = await Transaction.create(req.body);
+    res.json({ ...entry.toObject(), id: entry._id.toString() });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/ledger/bulk', requireAdmin, async (req, res) => {
+  try {
+    const entries = await Transaction.insertMany(req.body);
+    res.json({ ok: true, count: entries.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/admin/ledger/:id', requireAdmin, async (req, res) => {
+  try {
+    const entry = await Transaction.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!entry) return res.status(404).json({ error: 'Not found' });
+    res.json({ ...entry.toObject(), id: entry._id.toString() });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/admin/ledger/:id', requireAdmin, async (req, res) => {
+  try {
+    await Transaction.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Stripe Checkout ──────────────────────────────────────────────────────────
