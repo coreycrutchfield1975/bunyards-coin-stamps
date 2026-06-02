@@ -1357,19 +1357,37 @@ function showConsignPage(n) {
   document.getElementById('btn-sheet').className  = 'adm-btn ' + (n === 2 ? 'adm-btn-dark' : 'adm-btn-outline');
 }
 
-// ── LOCAL STORAGE HELPERS ──────────────────────────────
-function getLedger() {
-  try { return JSON.parse(localStorage.getItem('bunyards_ledger') || '[]'); } catch(e) { return []; }
+// ── SERVER-BACKED LEDGER ───────────────────────────────
+var _allEntries = [];  // in-memory cache loaded from server
+
+async function loadLedgerFromServer() {
+  try {
+    var r = await fetch('/api/admin/ledger');
+    if (r.status === 401 || r.status === 403) { window.location.href = '/admin-login.html'; return; }
+    if (!r.ok) throw new Error(r.status);
+    _allEntries = await r.json();
+    // One-time migration: push any leftover localStorage entries to server
+    var local = [];
+    try { local = JSON.parse(localStorage.getItem('bunyards_ledger') || '[]'); } catch(e) {}
+    if (local.length) {
+      await fetch('/api/admin/ledger/bulk', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(local) });
+      localStorage.removeItem('bunyards_ledger');
+      var r2 = await fetch('/api/admin/ledger');
+      _allEntries = await r2.json();
+    }
+  } catch(e) {
+    console.error('Ledger load error:', e);
+    _allEntries = [];
+  }
 }
-function saveLedger(data) {
-  localStorage.setItem('bunyards_ledger', JSON.stringify(data));
-}
+
+function getLedger() { return _allEntries; }
+
+// ID photos stay in localStorage (compliance photos, device-local is acceptable)
 function getIDPhotos() {
   try { return JSON.parse(localStorage.getItem('bunyards_id_photos') || '{}'); } catch(e) { return {}; }
 }
-function saveIDPhotos(obj) {
-  localStorage.setItem('bunyards_id_photos', JSON.stringify(obj));
-}
+function saveIDPhotos(obj) { localStorage.setItem('bunyards_id_photos', JSON.stringify(obj)); }
 
 // ── FILE NUMBER GENERATION ─────────────────────────────
 function genFileNo() {
@@ -1377,19 +1395,9 @@ function genFileNo() {
   var yy = d.getFullYear().toString().slice(-2);
   var mm = String(d.getMonth()+1).padStart(2,'0');
   var dd = String(d.getDate()).padStart(2,'0');
-  var seq = (getLedger().length + 1).toString().padStart(3,'0');
+  var seq = (_allEntries.length + 1).toString().padStart(3,'0');
   return 'BCS-' + yy + mm + dd + '-' + seq;
 }
-
-// ── LOCAL STORAGE HELPERS ──────────────────────────────
-function getLedger() {
-  try { return JSON.parse(localStorage.getItem('bunyards_ledger') || '[]'); } catch(e) { return []; }
-}
-function saveLedger(data) { localStorage.setItem('bunyards_ledger', JSON.stringify(data)); }
-function getIDPhotos() {
-  try { return JSON.parse(localStorage.getItem('bunyards_id_photos') || '{}'); } catch(e) { return {}; }
-}
-function saveIDPhotos(obj) { localStorage.setItem('bunyards_id_photos', JSON.stringify(obj)); }
 
 // ── LINE ITEMS ─────────────────────────────────────────
 var _lineItemCount = 0;
@@ -1485,7 +1493,7 @@ function openEntryModal(id) {
   var today = new Date().toISOString().slice(0,10);
 
   if (id) {
-    var entry = getLedger().find(function(e){ return e.id === id; });
+    var entry = getLedger().find(function(e){ return e.id === id || e._id === id; });
     if (!entry) return;
     document.getElementById('em-modal-title').textContent = 'Edit Entry';
     document.getElementById('em-type').value    = entry.type    || 'Buy';
@@ -1570,7 +1578,7 @@ function previewIDUpload(input) {
   reader.readAsDataURL(input.files[0]);
 }
 
-function saveEntry() {
+async function saveEntry() {
   var type = document.getElementById('em-type').value;
   var name = document.getElementById('em-name').value.trim();
   var date = document.getElementById('em-date').value;
@@ -1585,28 +1593,27 @@ function saveEntry() {
     total = items.reduce(function(s,i){ return s + i.total; }, 0);
   }
 
-  var data = getLedger();
-  var now  = new Date().toISOString();
-  var entry = {
-    id:        editingId || Date.now().toString(),
-    type:      type,
-    date:      date,
-    ref:       document.getElementById('em-ref').value.trim(),
-    name:      name,
-    dob:       document.getElementById('em-dob').value,
-    address:   document.getElementById('em-address').value.trim(),
-    phone:     document.getElementById('em-phone').value.trim(),
-    payment:   type === 'Trade' ? 'Trade' : document.getElementById('em-payment').value,
-    checkNo:   document.getElementById('em-check-no').value.trim(),
-    items:     items,
-    total:     total,
-    trade:     type === 'Trade' ? {
+  var now = new Date().toISOString();
+  var payload = {
+    fileno:  editingId ? undefined : genFileNo(),
+    type:    type,
+    date:    date,
+    ref:     document.getElementById('em-ref').value.trim(),
+    name:    name,
+    dob:     document.getElementById('em-dob').value,
+    address: document.getElementById('em-address').value.trim(),
+    phone:   document.getElementById('em-phone').value.trim(),
+    payment: type === 'Trade' ? 'Trade' : document.getElementById('em-payment').value,
+    checkNo: document.getElementById('em-check-no').value.trim(),
+    items:   items,
+    total:   total,
+    trade:   type === 'Trade' ? {
       gave:        document.getElementById('em-trade-gave').value.trim(),
       gaveVal:     parseFloat(document.getElementById('em-trade-gave-val').value) || 0,
       received:    document.getElementById('em-trade-received').value.trim(),
       receivedVal: parseFloat(document.getElementById('em-trade-received-val').value) || 0
     } : null,
-    consign:   type === 'Consignment' ? {
+    consign: type === 'Consignment' ? {
       ref:       document.getElementById('em-consign-ref').value.trim(),
       status:    document.getElementById('em-consign-status').value,
       asking:    parseFloat(document.getElementById('em-consign-asking').value) || 0,
@@ -1615,37 +1622,64 @@ function saveEntry() {
       payMethod: document.getElementById('em-consign-pay-method').value
     } : null,
     notes:     document.getElementById('em-notes').value.trim(),
-    createdAt: editingId ? (data.find(function(e){return e.id===editingId;})||{}).createdAt || now : now,
     updatedAt: now
   };
 
-  if (editingId) {
-    var idx = data.findIndex(function(e){ return e.id === editingId; });
-    if (idx > -1) data[idx] = entry; else data.push(entry);
-  } else {
-    data.push(entry);
-  }
+  try {
+    var r, saved;
+    if (editingId) {
+      r = await fetch('/api/admin/ledger/' + editingId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      r = await fetch('/api/admin/ledger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+    if (!r.ok) { alert('Save failed: ' + (await r.text())); return; }
+    saved = await r.json();
+    var savedId = saved.id || saved._id;
 
-  if (pendingIDData || qrPhotoData) {
-    var ids = getIDPhotos();
-    ids[entry.id] = pendingIDData || qrPhotoData;
-    saveIDPhotos(ids);
-    pendingIDData = null; qrPhotoData = null;
-  }
+    // Update local cache
+    if (editingId) {
+      var idx = _allEntries.findIndex(function(e){ return e.id === editingId; });
+      if (idx > -1) _allEntries[idx] = saved; else _allEntries.push(saved);
+    } else {
+      _allEntries.unshift(saved);
+    }
 
-  saveLedger(data);
-  closeEntryModal();
-  populateMonthFilter();
-  renderLedger();
+    if (pendingIDData || qrPhotoData) {
+      var ids = getIDPhotos();
+      ids[savedId] = pendingIDData || qrPhotoData;
+      saveIDPhotos(ids);
+      pendingIDData = null; qrPhotoData = null;
+    }
+
+    closeEntryModal();
+    populateMonthFilter();
+    renderLedger();
+  } catch(e) {
+    alert('Error saving entry: ' + e.message);
+  }
 }
 
-function deleteEntry(id) {
+async function deleteEntry(id) {
   if (!confirm('Delete this entry? This cannot be undone.')) return;
-  var data = getLedger().filter(function(e){ return e.id !== id; });
-  saveLedger(data);
-  var ids = getIDPhotos();
-  delete ids[id]; saveIDPhotos(ids);
-  renderLedger();
+  try {
+    var r = await fetch('/api/admin/ledger/' + id, { method: 'DELETE' });
+    if (!r.ok) { alert('Delete failed: ' + (await r.text())); return; }
+    _allEntries = _allEntries.filter(function(e){ return e.id !== id; });
+    var ids = getIDPhotos();
+    delete ids[id]; saveIDPhotos(ids);
+    populateMonthFilter();
+    renderLedger();
+  } catch(e) {
+    alert('Error deleting entry: ' + e.message);
+  }
 }
 
 function viewID(id, name) {
@@ -1979,8 +2013,10 @@ function exportLedgerCSV() {
 }
 
 // ── INIT ───────────────────────────────────────────────
-renderLedger();
-populateMonthFilter();
+loadLedgerFromServer().then(function() {
+  populateMonthFilter();
+  renderLedger();
+});
 
 </script>
 </body>

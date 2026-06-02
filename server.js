@@ -84,26 +84,34 @@ const Product = mongoose.model('Product', productSchema);
 const Order = mongoose.model('Order', orderSchema);
 
 const transactionSchema = new mongoose.Schema({
-  fileno:  { type: String, required: true },
-  refno:   String,
-  type:    { type: String, enum: ['Buy','Sell','Trade','Consignment'], required: true },
-  date:    { type: String, required: true },
-  time:    String,
-  name:    { type: String, required: true },
-  dob:     String,
-  addr:    String,
-  gender:  String,
-  phone:   String,
-  plate:   String,
-  desc:    String,
-  weight:  String,
-  amount:  { type: Number, required: true },
-  payment: String,
-  staff:   String,
-  notes:   String,
-  idPhoto: String,
-  createdAt: { type: Date, default: Date.now }
-});
+  fileno:   String,
+  refno:    String,
+  ref:      String,
+  type:     { type: String, enum: ['Buy','Sell','Trade','Consignment'], required: true },
+  date:     { type: String, required: true },
+  time:     String,
+  name:     { type: String, required: true },
+  dob:      String,
+  addr:     String,
+  address:  String,
+  gender:   String,
+  phone:    String,
+  plate:    String,
+  desc:     String,
+  weight:   String,
+  amount:   Number,
+  total:    Number,
+  payment:  String,
+  checkNo:  String,
+  staff:    String,
+  notes:    String,
+  idPhoto:  String,
+  items:    mongoose.Schema.Types.Mixed,
+  trade:    mongoose.Schema.Types.Mixed,
+  consign:  mongoose.Schema.Types.Mixed,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: Date
+}, { strict: false });
 transactionSchema.index({ date: -1 });
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
