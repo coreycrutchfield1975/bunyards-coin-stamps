@@ -717,11 +717,7 @@ async function deleteProduct(id){
     <div class="print-ledger-header" style="display:none;text-align:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #1e293b">
       <div style="font-size:18px;font-weight:800;font-family:'Playfair Display',serif">Bunyards Coin and Stamps</div>
       <div style="font-size:12px;color:#555">1912 N. Westwood Blvd., Poplar Bluff, MO &nbsp;|&nbsp; Secondhand Dealer Ledger</div>
-      <div style="font-size:11px;color:#64748b;margin-top:4px">Printed: <script>document.write(new Date().toLocaleDateString())</script> &nbsp;·&nbsp; RSMo §407.300 Compliant &nbsp;·&nbsp; Records retained 36 months minimum</div>
-    </div>
-
-    <div class="legal-strip">
-      <strong>⚖️ Missouri RSMo §407.300 Compliance</strong> — Records maintained min. 36 months &nbsp;·&nbsp; Available for law enforcement inspection &nbsp;·&nbsp; Driver's license copy required per transaction.
+      <div style="font-size:11px;color:#64748b;margin-top:4px">Printed: <script>document.write(new Date().toLocaleDateString())</script></div>
     </div>
 
     <!-- PAYMENT TOTALS SUMMARY BAR -->
@@ -830,7 +826,7 @@ async function deleteProduct(id){
     </div>
 
     <div style="font-size:10px;color:#94a3b8;text-align:right;margin-top:8px">
-      ⚖️ Records per RSMo §407.300 &nbsp;·&nbsp; Min. 36-month retention &nbsp;·&nbsp; Admin use only
+      Admin use only
     </div>
   </div>
 
@@ -1109,7 +1105,7 @@ async function deleteProduct(id){
 <div class="entry-modal-overlay" id="entry-modal-overlay">
   <div class="entry-modal">
     <div class="em-title" id="em-modal-title">New Ledger Entry</div>
-    <div class="mo-notice">⚖️ <strong>Missouri RSMo §407.300</strong> — Customer ID required. All fields marked * are legally required.</div>
+    <div class="mo-notice">Customer ID required. All fields marked * are required.</div>
 
     <!-- ROW 1: Type + Date + Ref -->
     <div class="em-row">
@@ -1965,7 +1961,7 @@ function printEntry(id) {
 
   var w = window.open('','_blank','width=700,height=900');
   w.document.write('<html><head><title>Bunyards Entry — '+entryDate+'</title><style>body{font-family:Arial,sans-serif;margin:30px;color:#1e293b;font-size:13px}h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:14px 0 6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}table{width:100%;border-collapse:collapse}.meta{display:flex;gap:20px;flex-wrap:wrap;margin:10px 0;background:#f8fafc;border-radius:6px;padding:10px}.meta div{min-width:120px}label{font-size:10px;text-transform:uppercase;color:#64748b;font-weight:700;display:block}@media print{button{display:none}}</style></head><body>');
-  w.document.write('<div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1e293b"><h1>Bunyards Coin and Stamps</h1><div style="font-size:11px;color:#64748b">1912 N. Westwood Blvd., Poplar Bluff, MO &nbsp;·&nbsp; RSMo §407.300 Compliant</div></div>');
+  w.document.write('<div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1e293b"><h1>Bunyards Coin and Stamps</h1><div style="font-size:11px;color:#64748b">1912 N. Westwood Blvd., Poplar Bluff, MO</div></div>');
   w.document.write('<div style="display:flex;justify-content:space-between;align-items:center"><div><span style="font-size:18px;font-weight:800">'+entry.type+'</span>'+(entry.ref?' &nbsp;<span style="font-size:13px;color:#64748b">Ref: '+entry.ref+'</span>':'')+'</div><div style="font-size:13px;color:#64748b">'+entryDate+'</div></div>');
   w.document.write('<h2>Customer Information</h2>');
   w.document.write('<div class="meta"><div><label>Name</label>'+entry.name+'</div><div><label>DOB</label>'+(entry.dob||'—')+'</div><div><label>Phone</label>'+(entry.phone||'—')+'</div></div>');

@@ -1020,10 +1020,7 @@ if (document.readyState === 'loading') {
     <div class="print-ledger-header" style="display:none;text-align:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #000">
       <div style="font-size:18px;font-weight:700;font-family:'Playfair Display',serif">Bunyards Coin and Stamps</div>
       <div style="font-size:12px">1912 N. Westwood Blvd., Poplar Bluff, MO · Transaction Ledger · Admin Use Only</div>
-      <div style="font-size:11px;color:#555;margin-top:4px">Printed: <span id="print-date"></span> · RSMo §407.300 Compliant · Records retained 36 months minimum</div>
-    </div>
-    <div class="legal-strip">
-      <strong>⚖️ Missouri RSMo §407.300 Compliance</strong> — Records maintained min. 36 months · Available for law enforcement inspection · Driver's license copy required per transaction.
+      <div style="font-size:11px;color:#555;margin-top:4px">Printed: <span id="print-date"></span></div>
     </div>
 
     <!-- STATS -->
@@ -1082,7 +1079,7 @@ if (document.readyState === 'loading') {
     </div>
 
     <div style="font-size:10px;color:#94a3b8;text-align:right;margin-top:8px" id="ledger-compliance-note">
-      ⚖️ Records per RSMo §407.300 · Min. 36-month retention · Admin use only
+      Admin use only
     </div>
   </div>
 
@@ -1211,7 +1208,7 @@ if (document.readyState === 'loading') {
       <div class="em-group"><label>Date *</label><input type="date" id="em-date"></div>
       <div class="em-group"><label>Time *</label><input type="time" id="em-time"></div>
     </div>
-    <div class="mo-notice">⚖️ <strong>RSMo §407.300 Required Fields</strong></div>
+    <div class="mo-notice">Required Fields</div>
     <div class="em-row">
       <div class="em-group"><label>Customer Full Name *</label><input type="text" id="em-name" placeholder="As shown on ID"></div>
       <div class="em-group"><label>Date of Birth *</label><input type="date" id="em-dob"></div>
@@ -1223,7 +1220,7 @@ if (document.readyState === 'loading') {
     </div>
     <div class="em-row">
       <div class="em-group"><label>Phone</label><input type="tel" id="em-phone" placeholder="573-555-0000"></div>
-      <div class="em-group"><label>Vehicle License Plate *</label><input type="text" id="em-plate" placeholder="MO · ABC 1234"><div class="req-note">Required — RSMo §407.300</div></div>
+      <div class="em-group"><label>Vehicle License Plate *</label><input type="text" id="em-plate" placeholder="MO · ABC 1234"><div class="req-note">Required</div></div>
     </div>
     <div class="em-row full">
       <div class="em-group"><label>Item Description *</label><textarea id="em-desc" placeholder="Full description: type, date, mint, grade, condition, any identifying marks..."></textarea></div>
@@ -1246,10 +1243,10 @@ if (document.readyState === 'loading') {
       <div class="id-zone" id="id-zone" onclick="document.getElementById('em-id-file').click()">
         <div style="font-size:24px;margin-bottom:4px">📷</div>
         <div style="font-weight:700;font-size:12px" id="id-zone-text">Click to upload ID photo</div>
-        <div style="font-size:10px;color:#94a3b8;margin-top:2px">JPG or PNG · Required by RSMo §407.300</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:2px">JPG or PNG</div>
       </div>
       <input type="file" id="em-id-file" accept="image/*" style="display:none" onchange="previewIDUpload(this)">
-      <div class="req-note">Required by RSMo §407.300</div>
+      <div class="req-note">Required</div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:10px;border-top:1px solid #e2e8f0">
       <button class="adm-btn adm-btn-outline" onclick="closeEntryModal()">Cancel</button>
@@ -1263,7 +1260,7 @@ if (document.readyState === 'loading') {
   <div class="entry-modal" style="max-width:480px;text-align:center">
     <div class="em-title">🪪 ID Photo — <span id="id-viewer-name"></span></div>
     <img id="id-viewer-img" src="" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:12px">
-    <div style="font-size:11px;color:#64748b;margin-bottom:12px">Private · Admin access only · RSMo §407.300</div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:12px">Private · Admin access only</div>
     <button class="adm-btn adm-btn-outline" onclick="document.getElementById('id-viewer-modal').classList.remove('open')">Close</button>
   </div>
 </div>
