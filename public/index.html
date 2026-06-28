@@ -3,7 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bunyards Coin & Stamps — Poplar Bluff, MO</title>
+<title>Bunyards Coin & Stamps — Poplar Bluff, MO | Coins, Currency & Stamps</title>
+<meta name="description" content="Bunyards Coin & Stamps in Poplar Bluff, MO — buy and sell gold, silver, coins, currency, and stamps. Professional appraisals, identification, and bullion since 2023. Visit our shop or shop online.">
+<meta name="keywords" content="coin shop Poplar Bluff, coin dealer Missouri, buy gold Poplar Bluff, silver coins, stamp collecting, coin appraisal, bullion dealer, numismatics, Bunyards">
+<link rel="canonical" href="https://www.bunyardscoins.com/">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png">
+<link rel="apple-touch-icon" href="/favicon-192.png">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.bunyardscoins.com/">
+<meta property="og:title" content="Bunyards Coin & Stamps — Poplar Bluff, MO">
+<meta property="og:description" content="Local coin shop in Poplar Bluff, MO. Buy and sell gold, silver, coins, currency, stamps. Appraisals, identification, and live WhatNot auctions.">
+<meta property="og:image" content="https://www.bunyardscoins.com/logo.png">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bunyards Coin & Stamps — Poplar Bluff, MO">
+<meta name="twitter:description" content="Local coin shop in Poplar Bluff, MO. Gold, silver, coins, currency, stamps, appraisals & more.">
+<meta name="twitter:image" content="https://www.bunyardscoins.com/logo.png">
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Bunyards Coin & Stamps",
+  "image": "https://www.bunyardscoins.com/logo.png",
+  "url": "https://www.bunyardscoins.com",
+  "telephone": "(573) 772-0889",
+  "email": "dalebunyard@hotmail.com",
+  "description": "Local coin shop in Poplar Bluff, MO specializing in gold, silver, coins, currency, stamps, and professional appraisals.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Poplar Bluff",
+    "addressRegion": "MO",
+    "addressCountry": "US"
+  },
+  "openingHoursSpecification": [
+    {"@type": "OpeningHoursSpecification", "dayOfWeek": "Tuesday", "opens": "10:00", "closes": "17:00"},
+    {"@type": "OpeningHoursSpecification", "dayOfWeek": "Wednesday", "opens": "10:00", "closes": "17:00"},
+    {"@type": "OpeningHoursSpecification", "dayOfWeek": "Thursday", "opens": "10:00", "closes": "17:00"},
+    {"@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "10:00", "closes": "17:00"}
+  ],
+  "priceRange": "$$",
+  "areaServed": "Poplar Bluff",
+  "sameAs": ["https://www.whatnot.com/search?query=bunyards"]
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -882,9 +929,7 @@
       Prices shown are for reference only and subject to change based on live spot prices. All sales final unless otherwise agreed. Bunyards Coin & Stamps is not responsible for typographical errors in pricing or descriptions. Always verify value independently before making large purchases.
     </div>
     <div class="footer-copy">© 2025 Bunyards Coin & Stamps · 1912 N. Westwood Blvd, Poplar Bluff, MO 63901 · (573) 772-0889</div>
-    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #333;">
-      <a href="/admin" style="font-size:11px;color:#888;text-decoration:none;font-family:monospace;letter-spacing:1px;">🔐 admin access</a>
-    </div>
+    <!-- admin link removed from public view -->
   </div>
 </footer>
 
@@ -1270,7 +1315,6 @@ if (document.readyState === 'loading') {
 // ═══════════════════════════════════════════
 // ADMIN AUTH
 // ═══════════════════════════════════════════
-const ADMIN_PASS = 'Coinguy6$';
 let adminAuthed = false;
 // Set print date (replaces broken inline script)
 const _pd = document.getElementById('print-date');
@@ -1289,15 +1333,20 @@ function closeAdminLogin(){
 }
 function doAdminLogin(){
   const pw = document.getElementById('admin-pw-input').value;
-  if(pw === ADMIN_PASS){
-    adminAuthed = true;
-    closeAdminLogin();
-    openAdmin();
-  } else {
+  fetch('/api/admin/login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({password: pw})
+  }).then(r=>r.json()).then(d=>{
+    if(d.ok){
+      adminAuthed = true;
+      closeAdminLogin();
+      openAdmin();
+    } else {
+      document.getElementById('login-err').style.display='block';
+    }
+  }).catch(()=>{
     document.getElementById('login-err').style.display='block';
-    document.getElementById('admin-pw-input').value='';
-    document.getElementById('admin-pw-input').focus();
-  }
+  });
 }
 async function openAdmin(){
   document.getElementById('admin-section').style.display='block';
