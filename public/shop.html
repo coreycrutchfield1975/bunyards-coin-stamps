@@ -497,6 +497,15 @@ function selectRate(i) {
 
 function schedulePayPal() {
   if (!cart.length) return;
+  // Require a shipping rate if any item is set to 'ship'
+  const hasShipItems = cart.some(x => x.shipping === 'ship');
+  if (hasShipItems && !selectedRate) {
+    resetPayPal();
+    document.getElementById('pp-loading').style.display = 'none';
+    const container = document.getElementById('paypal-button-container');
+    if (container) container.innerHTML = '<p style="color:#dc2626;font-size:13px;text-align:center;padding:8px">📦 Enter ZIP and select a shipping rate to continue</p>';
+    return;
+  }
   resetPayPal();
   // Wait for SDK + small render delay
   let attempts = 0;
