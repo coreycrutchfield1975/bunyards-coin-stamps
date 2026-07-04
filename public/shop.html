@@ -62,7 +62,8 @@ nav{background:var(--dark);padding:0 24px;display:flex;align-items:center;justif
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
 .modal-img-wrap{width:100%;height:280px;overflow:hidden;border-radius:12px 12px 0 0;background:var(--parchment);display:flex;align-items:center;justify-content:center;font-size:60px;color:var(--lightgray)}
-.modal-img-wrap img{width:100%;height:280px;object-fit:cover}
+.modal-img-wrap img{width:100%;height:280px;object-fit:contain;cursor:zoom-in}
+.modal-img-wrap img.fullscreen{position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:contain;background:rgba(0,0,0,.9);z-index:10000;padding:20px;cursor:zoom-out}
 .modal-body{padding:22px}
 .modal-cat{font-size:12px;color:var(--red);font-weight:700;letter-spacing:1px;text-transform:uppercase}
 .modal-title{font-family:'Playfair Display',serif;font-size:22px;margin:6px 0}
@@ -299,7 +300,7 @@ function openModal(id) {
   if (!currentProduct) return;
   const p = currentProduct;
   document.getElementById('modal-img').innerHTML = p.images && p.images.length
-    ? `<img src="${p.images[0]}" alt="${p.title}">`
+    ? `<img src="${p.images[0]}" alt="${p.title}" onclick="this.classList.toggle('fullscreen')">`
     : '🪙';
   document.getElementById('modal-cat').textContent = p.category || '';
   document.getElementById('modal-title').textContent = p.title;
