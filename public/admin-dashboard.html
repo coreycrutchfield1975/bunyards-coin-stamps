@@ -564,6 +564,7 @@ function openProductModal() {
   document.getElementById('pm-stock').value='1';
   document.getElementById('pm-weight').value='4';
   document.getElementById('pm-featured').checked=false;
+  document.getElementById('pm-active').checked=true;
   document.getElementById('pm-image').value='';
   document.getElementById('pm-img-preview').style.display='none';
   document.getElementById('pm-qr-panel').style.display='none';
@@ -580,6 +581,7 @@ function editProduct(p) {
   document.getElementById('pm-stock').value=p.stock!==undefined?p.stock:1;
   document.getElementById('pm-weight').value=p.weightOz!==undefined?p.weightOz:4;
   document.getElementById('pm-featured').checked=!!p.featured;
+  document.getElementById('pm-active').checked=p.active!==undefined?!!p.active:true;
   document.getElementById('pm-image').value='';
   document.getElementById('pm-qr-panel').style.display='none';
   var prev=document.getElementById('pm-img-preview');
@@ -665,6 +667,7 @@ async function saveProduct() {
   fd.append('stock',document.getElementById('pm-stock').value||1);
   fd.append('weightOz',document.getElementById('pm-weight').value||4);
   fd.append('featured',document.getElementById('pm-featured').checked?'true':'false');
+  fd.append('active',document.getElementById('pm-active').checked?'true':'false');
   if(_pmQRPhotoData){
     var arr=_pmQRPhotoData.split(','),mime=arr[0].match(/:(.*?);/)[1];
     var bstr=atob(arr[1]),n=bstr.length,u8=new Uint8Array(n);
@@ -1068,6 +1071,10 @@ async function deleteProduct(id){
       <div style="display:flex;align-items:center;gap:10px">
         <input id="pm-featured" type="checkbox" style="width:16px;height:16px;cursor:pointer">
         <label for="pm-featured" style="font-size:13px;font-weight:600;color:#1e293b;cursor:pointer">⭐ Featured product (shows first in shop)</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input id="pm-active" type="checkbox" style="width:16px;height:16px;cursor:pointer" checked>
+        <label for="pm-active" style="font-size:13px;font-weight:600;color:#1e293b;cursor:pointer">✅ Active (visible in shop)</label>
       </div>
       <div>
         <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;margin-bottom:4px">Product Image</label>
