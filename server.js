@@ -344,7 +344,7 @@ app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 5), asyn
     shippingCost: parseFloat(shippingCost) || product.shippingCost || 0,
     images,
     featured: featured === 'true' || featured === 'on',
-    active: active === 'true' || active === 'on'
+    active: active !== undefined ? (active === 'true' || active === 'on') : product.active
   });
   await product.save();
   res.json(product);
