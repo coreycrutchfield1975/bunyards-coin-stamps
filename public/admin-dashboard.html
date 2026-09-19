@@ -376,10 +376,23 @@ body {
 <body>
 
 <script>
-// Auth gate — must run before body renders
-if (sessionStorage.getItem('bunyards_admin') !== '1') {
-  window.location.replace('/admin');
-}
+// Auth gate — the SERVER session is the source of truth; the sessionStorage flag
+// is only a fast path (private-mode / storage-blocked browsers and brand-new tabs
+// have no flag, which used to bounce a valid login straight back to the password
+// page). Runs before the body is revealed so nothing flashes.
+(function () {
+  var flagged = false;
+  try { flagged = sessionStorage.getItem('bunyards_admin') === '1'; } catch (e) {}
+  if (flagged) return;
+  document.documentElement.style.visibility = 'hidden';
+  fetch('/api/admin/check')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d && d.admin) { document.documentElement.style.visibility = ''; }
+      else { window.location.replace('/admin'); }
+    })
+    .catch(function () { window.location.replace('/admin'); });
+})();
 
 // ══════════════════════════════════════════
 // QR PHOTO UPLOAD

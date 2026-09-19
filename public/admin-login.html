@@ -32,25 +32,31 @@
   <a href="/" class="back">← Back to site</a>
 </div>
 <script>
-const PASS = 'Coinguy6$';
 async function login(){
-  const v = document.getElementById('pw').value;
-  if(v === PASS){
-    sessionStorage.setItem('bunyards_admin','1');
-    // Also set server-side session so /trading auto-unlocks
-    try {
-      await fetch('/api/admin/login', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ password: v })
-      });
-    } catch(e) { /* non-fatal */ }
-    window.location.href = '/admin-dashboard';
-  } else {
-    document.getElementById('err').style.display='block';
-    document.getElementById('pw').value='';
-    document.getElementById('pw').focus();
+  const el = document.getElementById('pw');
+  const err = document.getElementById('err');
+  const v = (el.value || '').trim();
+  err.style.display = 'none';
+  if (!v) { err.textContent = 'Enter the admin password.'; err.style.display = 'block'; el.focus(); return; }
+  // The SERVER decides (no password is embedded in this page any more).
+  let ok = false;
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: v })
+    });
+    ok = res.ok;
+  } catch (e) { ok = false; }
+  if (!ok) {
+    err.textContent = 'Incorrect password. Try again.';
+    err.style.display = 'block';
+    el.value = ''; el.focus();
+    return;
   }
+  // Best-effort local flag — blocked/private-mode storage must not break login.
+  try { sessionStorage.setItem('bunyards_admin', '1'); } catch (e) {}
+  window.location.href = '/admin-dashboard';
 }
 document.getElementById('pw').focus();
 </script>
